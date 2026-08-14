@@ -83,10 +83,12 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
 
     get student_portal_url(token: token)
     assert_response :success
+    assert_match "History of Ukraine", response.body
 
     post student_start_url(token: token)
     follow_redirect!
     assert_response :success
+    assert_match "History of Ukraine", response.body
 
     attempt = assignment.attempts.last
     mcq, short_q, open_q, ordering, matching, source = exam.questions.order(:position)

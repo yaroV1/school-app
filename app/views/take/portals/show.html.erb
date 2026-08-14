@@ -2,6 +2,7 @@
 <div class="space-y-6">
   <div>
     <p class="text-sm text-slate-500"><%= t("take.hello", name: @student.name) %></p>
+    <p class="mt-1 text-sm text-slate-500"><%= @exam.subject.name %></p>
     <h1 class="mt-1 text-3xl font-semibold"><%= @exam.title %></h1>
     <% if @exam.description.present? %>
       <p class="mt-3 text-slate-700 whitespace-pre-wrap"><%= @exam.description %></p>

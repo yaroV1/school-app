@@ -8,7 +8,7 @@ module Take
     private
 
     def set_assignment
-      @assignment = Assignment.find_by!(access_token: params[:token])
+      @assignment = Assignment.includes(exam: :subject).find_by!(access_token: params[:token])
       @exam = @assignment.exam
       @student = @assignment.student
     end

@@ -2,7 +2,10 @@
 <% server_now = Time.current %>
 
 <div class="mb-6 flex items-center justify-between gap-3">
-  <h1 class="text-xl font-semibold"><%= @exam.title %></h1>
+  <div>
+    <p class="text-sm text-slate-500"><%= @exam.subject.name %></p>
+    <h1 class="text-xl font-semibold"><%= @exam.title %></h1>
+  </div>
   <% if @attempt.deadline_at %>
     <div data-controller="countdown"
          data-countdown-deadline-value="<%= @attempt.deadline_at.iso8601 %>"
