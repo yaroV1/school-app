@@ -1,0 +1,15 @@
+---
+description: Commands to run after code changes (see AGENTS.md Quality)
+alwaysApply: true
+---
+
+# Quality loop
+
+Follow `AGENTS.md` § Quality. After behavior changes, before stopping (commit only if the user asked):
+
+1. Add or extend Minitest.
+2. `bin/rails test`
+3. `bin/rubocop` (or `bin/rubocop -A path` for files you touched)
+4. No ESLint/Prettier. `bin/importmap audit` only if JS dependencies changed.
+
+`bin/ci` is a CI-style local check, not a clone of GitHub Actions (GitHub runs system tests; `bin/ci` replants seeds and skips system tests).

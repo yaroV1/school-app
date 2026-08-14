@@ -44,7 +44,7 @@ class QuestionTest < ActiveSupport::TestCase
     assert_includes question.errors[:config], I18n.t("activerecord.errors.models.question.attributes.config.blank_source")
   end
 
-  test "sanitizer omits correct order and pairs" do
+  test "sanitizer strips answer keys and shuffles order-sensitive lists" do
     ordering = @exam.questions.create!(
       question_type: :ordering,
       prompt: "Order",
@@ -76,18 +76,40 @@ class QuestionTest < ActiveSupport::TestCase
       position: 2,
       config: { "source" => "A short passage.", "rubric" => "secret rubric" }
     )
+    mcq = @exam.questions.create!(
+      question_type: :mcq,
+      prompt: "Pick",
+      points: 1,
+      position: 3,
+      config: {
+        "options" => [
+          { "id" => "a", "text" => "No", "is_correct" => false },
+          { "id" => "b", "text" => "Yes", "is_correct" => true }
+        ]
+      }
+    )
 
-    ordering_payload = QuestionSanitizer.for_student(ordering)
-    matching_payload = QuestionSanitizer.for_student(matching)
+    seed = 42
+    ordering_payload = QuestionSanitizer.for_student(ordering, seed: seed)
+    matching_payload = QuestionSanitizer.for_student(matching, seed: seed)
     source_payload = QuestionSanitizer.for_student(source)
+    mcq_payload = QuestionSanitizer.for_student(mcq)
 
-    assert_equal %w[e1 e2 e3], ordering_payload[:items].map { |item| item["id"] }
-    assert_nil ordering_payload[:options]
+    assert_equal ordering.shuffled_items(seed).map { |item| item["id"] },
+                 ordering_payload[:items].map { |item| item["id"] }
+    assert_equal %w[e1 e2 e3].sort, ordering_payload[:items].map { |item| item["id"] }.sort
+    ordering_payload[:items].each { |item| assert_equal %w[id text], item.keys.sort }
+
     refute matching_payload.key?(:pairs)
-    assert_equal %w[l1 l2], matching_payload[:left].map { |item| item["id"] }
-    assert_equal %w[r1 r2], matching_payload[:right].map { |item| item["id"] }
+    assert_equal matching.student_facing_left, matching_payload[:left]
+    assert_equal matching.shuffled_right_items(seed).map { |item| item["id"] },
+                 matching_payload[:right].map { |item| item["id"] }
+
     assert_equal "A short passage.", source_payload[:source]
     assert_equal "Summarize", source_payload[:prompt]
     refute_includes source_payload.values, "secret rubric"
+
+    assert_equal %w[a b], mcq_payload[:options].map { |opt| opt["id"] }
+    mcq_payload[:options].each { |opt| refute opt.key?("is_correct") }
   end
 end

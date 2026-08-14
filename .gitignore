@@ -33,6 +33,10 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# Some global gitignores exclude /AGENTS.md (local Codex/agent files).
+# This contract must stay trackable: git add -f AGENTS.md
+!/AGENTS.md
+
 
 /app/assets/builds/*
 !/app/assets/builds/.keep

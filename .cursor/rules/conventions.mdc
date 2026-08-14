@@ -1,0 +1,10 @@
+---
+description: Load AGENTS.md as the canonical project contract
+alwaysApply: true
+---
+
+# Cursor
+
+`AGENTS.md` at the repo root is canonical. Follow it for naming, style, security, quality, git, and when to ask.
+
+Do not restate those rules here. If this file and `AGENTS.md` disagree, `AGENTS.md` wins.
