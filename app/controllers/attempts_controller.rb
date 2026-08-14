@@ -3,7 +3,7 @@ class AttemptsController < ApplicationController
 
   def show
     @exam = @attempt.exam
-    @questions = @exam.questions
+    @questions = @exam.questions.with_attached_photo
     @answers = @attempt.answers.index_by(&:question_id)
     @grade = @attempt.grade
   end

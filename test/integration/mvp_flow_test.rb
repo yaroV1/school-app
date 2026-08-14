@@ -24,6 +24,7 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
         prompt: "2+2?",
         points: 1,
         correct_index: "1",
+        photo: fixture_file_upload("pixel.png", "image/png"),
         options: {
           "0" => { text: "3" },
           "1" => { text: "4" }
@@ -89,6 +90,7 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_match "History of Ukraine", response.body
+    assert_select "img[alt=?]", I18n.t("exams.show.photo_alt")
 
     attempt = assignment.attempts.last
     mcq, short_q, open_q, ordering, matching, source = exam.questions.order(:position)

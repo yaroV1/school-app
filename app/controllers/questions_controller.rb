@@ -48,7 +48,7 @@ class QuestionsController < ApplicationController
   end
 
   def question_params
-    params.require(:question).permit(:question_type, :prompt, :points, :position)
+    params.require(:question).permit(:question_type, :prompt, :points, :position, :photo)
   end
 
   def apply_config!(question)

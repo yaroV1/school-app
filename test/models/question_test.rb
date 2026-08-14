@@ -112,4 +112,32 @@ class QuestionTest < ActiveSupport::TestCase
     assert_equal %w[a b], mcq_payload[:options].map { |opt| opt["id"] }
     mcq_payload[:options].each { |opt| refute opt.key?("is_correct") }
   end
+
+  test "photo is optional" do
+    question = @exam.questions.new(
+      question_type: :short_text,
+      prompt: "Look",
+      points: 1,
+      position: 0,
+      config: {}
+    )
+    assert question.valid?
+  end
+
+  test "photo must be an image" do
+    question = @exam.questions.new(
+      question_type: :short_text,
+      prompt: "Look",
+      points: 1,
+      position: 0,
+      config: {}
+    )
+    question.photo.attach(
+      io: StringIO.new("not an image"),
+      filename: "notes.txt",
+      content_type: "text/plain"
+    )
+    assert_not question.valid?
+    assert_includes question.errors[:photo], I18n.t("activerecord.errors.models.question.attributes.photo.invalid_type")
+  end
 end

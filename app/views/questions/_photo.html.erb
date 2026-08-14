@@ -1,0 +1,5 @@
+<% if question.photo.attached? %>
+  <div class="mb-3">
+    <%= image_tag question.photo, class: "max-h-80 w-auto max-w-full rounded-md border border-slate-200", alt: t("exams.show.photo_alt") %>
+  </div>
+<% end %>

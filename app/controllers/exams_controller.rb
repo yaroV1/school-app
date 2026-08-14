@@ -3,7 +3,7 @@ class ExamsController < ApplicationController
   before_action :set_exam, only: %i[show edit update destroy publish close results live]
 
   def show
-    @questions = @exam.questions
+    @questions = @exam.questions.with_attached_photo
   end
 
   def new

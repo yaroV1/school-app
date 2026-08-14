@@ -18,7 +18,7 @@ module Take
         return redirect_to student_done_path(token: @assignment.access_token), alert: t("take.errors.time_up")
       end
 
-      @questions = @exam.questions
+      @questions = @exam.questions.with_attached_photo
       @answers = @attempt.answers.index_by(&:question_id)
     end
   end

@@ -49,6 +49,7 @@
         </span>
         <span class="text-xs text-slate-600"><%= t("take.type_hint.#{question.question_type}") %></span>
       </div>
+      <%= render "questions/photo", question: question %>
       <% unless question.source? %>
         <p class="mb-3 whitespace-pre-wrap font-medium"><%= question.prompt %></p>
       <% end %>

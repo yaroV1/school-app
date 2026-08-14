@@ -1,6 +1,10 @@
 class Question < ApplicationRecord
+  PHOTO_TYPES = %w[image/jpeg image/png image/webp image/gif].freeze
+  PHOTO_MAX_BYTES = 8.megabytes
+
   belongs_to :exam, inverse_of: :questions
   has_many :answers, dependent: :destroy
+  has_one_attached :photo
 
   enum :question_type, { mcq: 0, short_text: 1, open: 2, ordering: 3, matching: 4, source: 5 }, validate: true
 
@@ -10,6 +14,7 @@ class Question < ApplicationRecord
   validate :ordering_has_items
   validate :matching_has_pairs
   validate :source_has_text
+  validate :acceptable_photo
 
   def auto_gradable?
     mcq? || ordering? || matching?
@@ -127,5 +132,12 @@ class Question < ApplicationRecord
     return unless source?
 
     errors.add(:config, :blank_source) if source_text.strip.blank?
+  end
+
+  def acceptable_photo
+    return unless photo.attached?
+
+    errors.add(:photo, :invalid_type) unless photo.content_type.in?(PHOTO_TYPES)
+    errors.add(:photo, :too_big) if photo.byte_size > PHOTO_MAX_BYTES
   end
 end
