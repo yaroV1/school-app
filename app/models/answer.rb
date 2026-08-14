@@ -28,4 +28,3 @@ class Answer < ApplicationRecord
     (payload["pairs"] || {}).stringify_keys
   end
 end
-

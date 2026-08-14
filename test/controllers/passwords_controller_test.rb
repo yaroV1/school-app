@@ -67,4 +67,3 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
       end
     end
 end
-
