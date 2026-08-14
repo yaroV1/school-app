@@ -1,0 +1,12 @@
+<% content_for :title, "Submitted" %>
+<div class="space-y-4 text-center">
+  <h1 class="text-2xl font-semibold">Submission received</h1>
+  <p class="text-slate-600">Thank you, <%= @student.name %>. Your responses for <strong><%= @exam.title %></strong> have been recorded.</p>
+  <% if @latest %>
+    <p class="text-sm text-slate-500">
+      Attempt #<%= @latest.attempt_no %> · <%= @latest.status.humanize %>
+      <% if @latest.submitted_at %> · <%= l(@latest.submitted_at, format: :short) %><% end %>
+    </p>
+  <% end %>
+  <p class="text-sm text-slate-500">You can close this window.</p>
+</div>

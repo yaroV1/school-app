@@ -1,0 +1,52 @@
+<% content_for :title, "Results — #{@exam.title}" %>
+<div class="mb-6">
+  <%= link_to "← Back to test", test_path(@exam), class: "text-sm text-slate-600 underline" %>
+  <h1 class="mt-2 text-2xl font-semibold">Results: <%= @exam.title %></h1>
+</div>
+
+<% if @assignments.any? %>
+  <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-50 text-left text-slate-600">
+        <tr>
+          <th class="px-3 py-2">Student</th>
+          <th class="px-3 py-2">Latest status</th>
+          <th class="px-3 py-2">Started</th>
+          <th class="px-3 py-2">Submitted</th>
+          <th class="px-3 py-2">Score</th>
+          <th class="px-3 py-2"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <% @assignments.each do |assignment| %>
+          <% attempt = assignment.attempts.order(attempt_no: :desc).first %>
+          <tr>
+            <td class="px-3 py-2"><%= link_to assignment.student.name, student_path(assignment.student), class: "underline" %></td>
+            <td class="px-3 py-2">
+              <% if attempt %>
+                <%= status_badge(attempt.status) %> (#<%= attempt.attempt_no %>)
+              <% else %>
+                <span class="text-slate-500">Not started</span>
+              <% end %>
+            </td>
+            <td class="px-3 py-2"><%= attempt ? l(attempt.started_at, format: :short) : "—" %></td>
+            <td class="px-3 py-2"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : "—" %></td>
+            <td class="px-3 py-2">
+              <% if attempt&.grade %>
+                <%= attempt.grade.total_score || "—" %>/<%= attempt.grade.max_score %>
+                <%= "· finalized" if attempt.grade.finalized_by_teacher? %>
+              <% else %>
+                —
+              <% end %>
+            </td>
+            <td class="px-3 py-2 text-right">
+              <% if attempt %><%= link_to "Grade", attempt_path(attempt), class: "underline" %><% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="text-slate-600">No assignments yet.</p>
+<% end %>

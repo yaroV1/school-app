@@ -1,0 +1,37 @@
+<%= form_with model: exam, url: exam.persisted? ? test_path(exam) : tests_path, class: "space-y-4 max-w-xl" do |f| %>
+  <% if exam.errors.any? %>
+    <div class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"><%= exam.errors.full_messages.to_sentence %></div>
+  <% end %>
+  <div>
+    <%= f.label :title, class: "text-sm font-medium" %>
+    <%= f.text_field :title, required: true, class: field_class %>
+  </div>
+  <div>
+    <%= f.label :description, class: "text-sm font-medium" %>
+    <%= f.text_area :description, rows: 3, class: field_class %>
+  </div>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <%= f.label :time_limit_sec, "Time limit (seconds, optional)", class: "text-sm font-medium" %>
+      <%= f.number_field :time_limit_sec, min: 1, class: field_class %>
+    </div>
+    <div>
+      <%= f.label :max_attempts, class: "text-sm font-medium" %>
+      <%= f.number_field :max_attempts, min: 1, required: true, class: field_class %>
+    </div>
+  </div>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <%= f.label :available_from, "Available from (optional)", class: "text-sm font-medium" %>
+      <%= f.datetime_local_field :available_from, class: field_class,
+            value: exam.available_from&.strftime("%Y-%m-%dT%H:%M") %>
+    </div>
+    <div>
+      <%= f.label :available_until, "Available until (optional)", class: "text-sm font-medium" %>
+      <%= f.datetime_local_field :available_until, class: field_class,
+            value: exam.available_until&.strftime("%Y-%m-%dT%H:%M") %>
+    </div>
+  </div>
+  <p class="text-xs text-slate-500">Outside this window, students cannot start a new attempt. In-progress attempts can still finish until their deadline.</p>
+  <%= f.submit class: btn_primary %>
+<% end %>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Test" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="min-h-screen bg-white text-slate-900">
+    <main class="mx-auto max-w-2xl px-4 py-8">
+      <% if notice = flash[:notice] %>
+        <p class="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700"><%= notice %></p>
+      <% end %>
+      <% if alert = flash[:alert] %>
+        <p class="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"><%= alert %></p>
+      <% end %>
+      <%= yield %>
+    </main>
+  </body>
+</html>

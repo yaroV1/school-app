@@ -1,0 +1,21 @@
+<% content_for :title, "Classes" %>
+<div class="mb-6 flex items-center justify-between gap-4">
+  <h1 class="text-2xl font-semibold">Classes</h1>
+  <%= link_to "New class", new_class_group_path, class: btn_primary %>
+</div>
+
+<% if @class_groups.any? %>
+  <ul class="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
+    <% @class_groups.each do |group| %>
+      <li class="flex items-center justify-between px-4 py-3">
+        <div>
+          <%= link_to group.name, group, class: "font-medium hover:underline" %>
+          <span class="text-sm text-slate-500"> · <%= pluralize(group.students.size, "student") %></span>
+        </div>
+        <%= link_to "Manage", group, class: btn_secondary %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="text-slate-600">No classes yet.</p>
+<% end %>

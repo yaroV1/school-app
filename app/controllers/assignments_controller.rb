@@ -1,0 +1,72 @@
+class AssignmentsController < ApplicationController
+  before_action :set_exam, only: %i[index create manage bulk_revoke]
+  before_action :set_assignment, only: %i[revoke regenerate_token]
+
+  def index
+    redirect_to manage_test_assignments_path(@exam)
+  end
+
+  def manage
+    @assignments = @exam.assignments.includes(:student, :attempts).joins(:student).order("students.name")
+    @students = Current.user.students.active.order(:name)
+    @class_groups = Current.user.class_groups.order(:name)
+  end
+
+  def create
+    student_ids = resolve_student_ids
+    created = 0
+
+    student_ids.each do |student_id|
+      assignment = @exam.assignments.find_or_initialize_by(student_id: student_id)
+      if assignment.new_record?
+        assignment.save!
+        created += 1
+      elsif assignment.revoked?
+        assignment.regenerate_token!
+        created += 1
+      end
+    end
+
+    redirect_to manage_test_assignments_path(@exam), notice: "Assigned to #{created} student(s)."
+  end
+
+  def bulk_revoke
+    ids = Array(params[:assignment_ids]).map(&:to_i)
+    scope = @exam.assignments.active.where(id: ids)
+    count = 0
+    scope.find_each do |assignment|
+      assignment.revoke!
+      count += 1
+    end
+    redirect_to manage_test_assignments_path(@exam), notice: "Revoked #{count} link(s)."
+  end
+
+  def revoke
+    @assignment.revoke!
+    redirect_to manage_test_assignments_path(@assignment.exam), notice: "Link revoked."
+  end
+
+  def regenerate_token
+    @assignment.regenerate_token!
+    redirect_to manage_test_assignments_path(@assignment.exam), notice: "Link regenerated."
+  end
+
+  private
+
+  def set_exam
+    @exam = Current.user.exams.find(params[:exam_id] || params[:test_id])
+  end
+
+  def set_assignment
+    @assignment = Assignment.joins(:exam).where(exams: { teacher_id: Current.user.id }).find(params[:id])
+  end
+
+  def resolve_student_ids
+    ids = Array(params[:student_ids]).map(&:to_i)
+    if params[:class_group_id].present?
+      group = Current.user.class_groups.find(params[:class_group_id])
+      ids.concat(group.students.active.pluck(:id))
+    end
+    Current.user.students.active.where(id: ids.uniq).pluck(:id)
+  end
+end

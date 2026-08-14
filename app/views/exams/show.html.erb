@@ -1,0 +1,122 @@
+<% content_for :title, @exam.title %>
+<div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+  <div>
+    <div class="mb-2 flex items-center gap-2">
+      <h1 class="text-2xl font-semibold"><%= @exam.title %></h1>
+      <%= status_badge(@exam.status) %>
+    </div>
+    <% if @exam.description.present? %><p class="text-slate-600"><%= @exam.description %></p><% end %>
+    <p class="mt-2 text-sm text-slate-500">
+      <%= @exam.time_limit_sec ? "#{@exam.time_limit_sec / 60} min limit" : "Untimed" %>
+      · <%= pluralize(@exam.max_attempts, "attempt") %>
+      <% if @exam.available_from || @exam.available_until %>
+        · Window:
+        <%= @exam.available_from ? l(@exam.available_from, format: :short) : "now" %>
+        –
+        <%= @exam.available_until ? l(@exam.available_until, format: :short) : "open" %>
+      <% end %>
+    </p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <%= link_to "Edit settings", edit_test_path(@exam), class: btn_secondary %>
+    <% if @exam.draft? %>
+      <%= button_to "Publish", publish_test_path(@exam), class: btn_primary %>
+    <% elsif @exam.published? %>
+      <%= button_to "Close test", close_test_path(@exam), class: btn_secondary %>
+    <% end %>
+    <% if @exam.published? || @exam.closed? %>
+      <%= link_to "Live board", live_test_path(@exam), class: btn_primary %>
+      <%= link_to "Assign / links", manage_test_assignments_path(@exam), class: btn_secondary %>
+      <%= link_to "Results", results_test_path(@exam), class: btn_secondary %>
+    <% end %>
+  </div>
+</div>
+
+<section class="mb-10">
+  <h2 class="mb-3 text-lg font-medium">Questions</h2>
+  <% if @questions.any? %>
+    <ol class="space-y-4">
+      <% @questions.each_with_index do |question, index| %>
+        <li class="rounded-lg border border-slate-200 bg-white p-4">
+          <div class="mb-1 flex items-center justify-between gap-2">
+            <p class="text-sm font-medium text-slate-500">Q<%= index + 1 %> · <%= question.question_type.humanize %> · <%= pluralize(question.points, "point") %></p>
+            <% if @exam.questions_editable? %>
+              <%= button_to "Remove", test_question_path(@exam, question), method: :delete, form: { data: { turbo_confirm: "Remove question?" } }, class: "text-sm text-red-600 underline" %>
+            <% end %>
+          </div>
+          <p class="whitespace-pre-wrap"><%= question.prompt %></p>
+          <% if question.mcq? %>
+            <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+              <% question.options.each do |opt| %>
+                <li><%= opt["text"] %><% if opt["is_correct"] %> <span class="text-emerald-700">(correct)</span><% end %></li>
+              <% end %>
+            </ul>
+          <% end %>
+        </li>
+      <% end %>
+    </ol>
+  <% else %>
+    <p class="text-slate-600">No questions yet.</p>
+  <% end %>
+</section>
+
+<% if @exam.questions_editable? %>
+  <section class="rounded-lg border border-slate-200 bg-white p-4">
+    <h2 class="mb-4 text-lg font-medium">Add question</h2>
+    <%= form_with url: test_questions_path(@exam), scope: :question, class: "space-y-4" do |f| %>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <%= f.label :question_type, "Type", class: "text-sm font-medium" %>
+          <%= f.select :question_type, Question.question_types.keys.map { |k| [k.humanize, k] }, {}, class: field_class, id: "question_type_select" %>
+        </div>
+        <div>
+          <%= f.label :points, class: "text-sm font-medium" %>
+          <%= f.number_field :points, value: 1, min: 1, class: field_class %>
+        </div>
+      </div>
+      <div>
+        <%= f.label :prompt, class: "text-sm font-medium" %>
+        <%= f.text_area :prompt, rows: 3, required: true, class: field_class %>
+      </div>
+
+      <div id="mcq_fields" class="space-y-2">
+        <p class="text-sm font-medium">Options (mark one correct)</p>
+        <% 4.times do |i| %>
+          <div class="flex items-center gap-2">
+            <%= radio_button_tag "question[correct_index]", i, i == 0, id: "correct_#{i}" %>
+            <input type="text" name="question[options][<%= i %>][text]" placeholder="Option <%= i + 1 %>" class="<%= field_class %>">
+          </div>
+        <% end %>
+        <p class="text-xs text-slate-500">Use the radio to pick the correct option. Leave unused options blank.</p>
+      </div>
+
+      <div id="text_fields" class="hidden space-y-3">
+        <div>
+          <label class="text-sm font-medium">Rubric (optional)</label>
+          <textarea name="question[rubric]" rows="2" class="<%= field_class %>"></textarea>
+        </div>
+        <div>
+          <label class="text-sm font-medium">Model answer (optional)</label>
+          <textarea name="question[model_answer]" rows="2" class="<%= field_class %>"></textarea>
+        </div>
+      </div>
+
+      <%= f.submit "Add question", class: btn_primary %>
+    <% end %>
+  </section>
+
+  <script>
+    (function() {
+      const select = document.getElementById("question_type_select");
+      const mcq = document.getElementById("mcq_fields");
+      const text = document.getElementById("text_fields");
+      function sync() {
+        const isMcq = select.value === "mcq";
+        mcq.classList.toggle("hidden", !isMcq);
+        text.classList.toggle("hidden", isMcq);
+      }
+      select.addEventListener("change", sync);
+      sync();
+    })();
+  </script>
+<% end %>

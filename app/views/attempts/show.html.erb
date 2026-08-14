@@ -1,0 +1,57 @@
+<% content_for :title, "Grade attempt" %>
+<div class="mb-6">
+  <%= link_to "← Results", results_test_path(@exam), class: "text-sm text-slate-600 underline" %>
+  <h1 class="mt-2 text-2xl font-semibold">Grade: <%= @attempt.student.name %></h1>
+  <p class="text-slate-600"><%= @exam.title %> · Attempt #<%= @attempt.attempt_no %> · <%= status_badge(@attempt.status) %></p>
+  <% if @grade %>
+    <p class="mt-1 text-sm text-slate-500">
+      Current: <%= @grade.total_score || "—" %>/<%= @grade.max_score %>
+      <%= @grade.finalized_by_teacher? ? "· Finalized" : "· Not finalized" %>
+    </p>
+  <% end %>
+</div>
+
+<%= form_with url: attempt_path(@attempt), method: :patch, class: "space-y-6" do %>
+  <% @questions.each_with_index do |question, index| %>
+    <% answer = @answers[question.id] %>
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="text-sm font-medium text-slate-500">Q<%= index + 1 %> · <%= question.question_type.humanize %> · <%= pluralize(question.points, "pt") %></p>
+      <p class="mt-1 whitespace-pre-wrap font-medium"><%= question.prompt %></p>
+
+      <div class="mt-3 rounded bg-slate-50 p-3 text-sm">
+        <p class="mb-1 text-slate-500">Student answer</p>
+        <% if answer.nil? %>
+          <p class="italic text-slate-400">No answer</p>
+        <% elsif question.mcq? %>
+          <% selected = question.options.find { |o| o["id"] == answer.option_id } %>
+          <p><%= selected ? selected["text"] : answer.option_id %></p>
+          <p class="mt-1 text-slate-600">Auto-score: <%= answer.auto_score %></p>
+        <% else %>
+          <p class="whitespace-pre-wrap"><%= answer.text_response.presence || "—" %></p>
+        <% end %>
+      </div>
+
+      <%= hidden_field_tag "answers[][question_id]", question.id %>
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <div>
+          <label class="text-sm font-medium">Teacher score</label>
+          <%= number_field_tag "answers[][teacher_score]", answer&.teacher_score || (question.mcq? ? answer&.auto_score : nil), min: 0, max: question.points, step: 0.5, class: field_class %>
+        </div>
+        <div>
+          <label class="text-sm font-medium">Comment</label>
+          <%= text_field_tag "answers[][teacher_comment]", answer&.teacher_comment, class: field_class %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div>
+    <label class="text-sm font-medium">Overall comment</label>
+    <%= text_area_tag :teacher_comment, @grade&.teacher_comment, rows: 2, class: field_class %>
+  </div>
+
+  <div class="flex flex-wrap gap-2">
+    <%= submit_tag "Save scores", class: btn_secondary %>
+    <%= submit_tag "Save & finalize", name: "finalize", value: "1", class: btn_primary %>
+  </div>
+<% end %>

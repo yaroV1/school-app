@@ -1,0 +1,24 @@
+<% content_for :title, "Tests" %>
+<div class="mb-6 flex items-center justify-between gap-4">
+  <h1 class="text-2xl font-semibold">Tests</h1>
+  <%= link_to "New test", new_test_path, class: btn_primary %>
+</div>
+
+<% if @exams.any? %>
+  <ul class="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
+    <% @exams.each do |exam| %>
+      <li class="flex items-center justify-between gap-3 px-4 py-3">
+        <div>
+          <%= link_to exam.title, test_path(exam), class: "font-medium hover:underline" %>
+          <div class="mt-1 flex items-center gap-2 text-sm text-slate-500">
+            <%= status_badge(exam.status) %>
+            <span><%= pluralize(exam.questions.size, "question") %></span>
+          </div>
+        </div>
+        <%= link_to "Open", test_path(exam), class: btn_secondary %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="text-slate-600">No tests yet. Create one to get started.</p>
+<% end %>

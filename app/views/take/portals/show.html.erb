@@ -1,0 +1,43 @@
+<% content_for :title, @exam.title %>
+<div class="space-y-6">
+  <div>
+    <p class="text-sm text-slate-500">Hello, <%= @student.name %></p>
+    <h1 class="mt-1 text-3xl font-semibold"><%= @exam.title %></h1>
+    <% if @exam.description.present? %>
+      <p class="mt-3 text-slate-700 whitespace-pre-wrap"><%= @exam.description %></p>
+    <% end %>
+  </div>
+
+  <ul class="space-y-1 text-sm text-slate-700">
+    <li>Time limit: <%= @exam.time_limit_sec ? "#{@exam.time_limit_sec / 60} minutes" : "None" %></li>
+    <li>Attempts used: <%= @attempts_used %> / <%= @exam.max_attempts %></li>
+    <li>Questions: <%= @exam.questions.count %></li>
+    <% if @exam.available_from %>
+      <li>Opens: <%= l(@exam.available_from, format: :short) %></li>
+    <% end %>
+    <% if @exam.available_until %>
+      <li>Closes: <%= l(@exam.available_until, format: :short) %></li>
+    <% end %>
+  </ul>
+
+  <% if @assignment.revoked? %>
+    <p class="rounded-md bg-red-50 px-3 py-2 text-red-700">This link has been revoked.</p>
+  <% elsif @active_attempt %>
+    <%= button_to "Resume test", student_start_path(token: @assignment.access_token), class: "#{btn_primary} w-full justify-center" %>
+  <% elsif @can_start %>
+    <%= button_to "Start test", student_start_path(token: @assignment.access_token), class: "#{btn_primary} w-full justify-center" %>
+  <% else %>
+    <% if @availability == :not_yet_open %>
+      <p class="rounded-md bg-amber-50 px-3 py-2 text-amber-800">This test is not available yet.</p>
+    <% elsif @availability == :closed_window %>
+      <p class="rounded-md bg-amber-50 px-3 py-2 text-amber-800">This test is no longer available.</p>
+    <% elsif !@exam.published? %>
+      <p class="rounded-md bg-slate-100 px-3 py-2 text-slate-700">This test is not open.</p>
+    <% else %>
+      <p class="rounded-md bg-slate-100 px-3 py-2 text-slate-700">You cannot start this test right now.</p>
+    <% end %>
+    <% if @assignment.attempts.where(status: %i[submitted expired]).exists? %>
+      <%= link_to "View submission confirmation", student_done_path(token: @assignment.access_token), class: "underline text-sm" %>
+    <% end %>
+  <% end %>
+</div>

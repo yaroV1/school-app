@@ -1,0 +1,68 @@
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static values = {
+    interval: { type: Number, default: 4000 },
+    src: String
+  }
+
+  connect() {
+    this.knownSubmitted = new Set()
+    this.timer = setInterval(() => this.refresh(), this.intervalValue)
+    // Capture baseline after first frame load
+    setTimeout(() => this.captureSubmitted(), 500)
+  }
+
+  disconnect() {
+    clearInterval(this.timer)
+  }
+
+  async refresh() {
+    const frame = document.getElementById("live_board")
+    if (!frame || !this.srcValue) return
+
+    try {
+      const response = await fetch(this.srcValue, {
+        headers: { Accept: "text/vnd.turbo-stream.html, text/html", "Turbo-Frame": "live_board" }
+      })
+      const html = await response.text()
+      const doc = new DOMParser().parseFromString(html, "text/html")
+      const next = doc.getElementById("live_board")
+      if (next) {
+        const previous = this.currentSubmittedIds()
+        frame.replaceWith(next)
+        this.announceNewSubmits(previous)
+      }
+    } catch (e) {
+      // ignore transient network errors while polling
+    }
+  }
+
+  captureSubmitted() {
+    this.knownSubmitted = this.currentSubmittedIds()
+  }
+
+  currentSubmittedIds() {
+    const el = document.getElementById("live-board-data")
+    if (!el) return new Set()
+    const raw = el.dataset.submittedIds || ""
+    return new Set(raw.split(",").filter(Boolean))
+  }
+
+  announceNewSubmits(previous) {
+    const current = this.currentSubmittedIds()
+    let added = 0
+    current.forEach((id) => {
+      if (!previous.has(id) && !this.knownSubmitted.has(id)) added += 1
+    })
+    this.knownSubmitted = current
+    if (added === 0) return
+
+    const toast = document.getElementById("live-toast")
+    if (!toast) return
+    toast.textContent = added === 1 ? "New submission received" : `${added} new submissions received`
+    toast.classList.remove("hidden")
+    clearTimeout(this.toastTimer)
+    this.toastTimer = setTimeout(() => toast.classList.add("hidden"), 4000)
+  }
+}

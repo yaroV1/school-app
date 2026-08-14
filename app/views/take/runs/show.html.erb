@@ -1,0 +1,50 @@
+<% content_for :title, @exam.title %>
+<% server_now = Time.current %>
+
+<div class="mb-6 flex items-center justify-between gap-3">
+  <h1 class="text-xl font-semibold"><%= @exam.title %></h1>
+  <% if @attempt.deadline_at %>
+    <div data-controller="countdown"
+         data-countdown-deadline-value="<%= @attempt.deadline_at.iso8601 %>"
+         data-countdown-server-time-value="<%= server_now.iso8601 %>"
+         class="rounded-md bg-slate-900 px-3 py-1 font-mono text-white">
+      <span data-countdown-target="display">--:--</span>
+    </div>
+  <% end %>
+</div>
+
+<%= form_with url: student_submit_path(token: @assignment.access_token), method: :post,
+      data: {
+        controller: "autosave",
+        autosave_url_value: student_answers_path(token: @assignment.access_token),
+        autosave_attempt_id_value: @attempt.id,
+        autosave_lock_version_value: @attempt.lock_version,
+        action: "countdown:ended@window->autosave#save"
+      },
+      class: "space-y-6" do %>
+  <%= hidden_field_tag :attempt_id, @attempt.id %>
+  <p class="text-xs text-slate-500" data-autosave-target="status">Answers save automatically</p>
+
+  <% @questions.each_with_index do |question, index| %>
+    <% answer = @answers[question.id] %>
+    <fieldset class="rounded-lg border border-slate-200 p-4">
+      <legend class="px-1 text-sm font-medium text-slate-500">Question <%= index + 1 %> · <%= pluralize(question.points, "point") %></legend>
+      <p class="mb-3 whitespace-pre-wrap font-medium"><%= question.prompt %></p>
+
+      <% if question.mcq? %>
+        <div class="space-y-2">
+          <% question.student_facing_options.each do |opt| %>
+            <label class="flex items-start gap-2 text-sm">
+              <%= radio_button_tag "answers[#{question.id}][option_id]", opt["id"], answer&.option_id == opt["id"] %>
+              <span><%= opt["text"] %></span>
+            </label>
+          <% end %>
+        </div>
+      <% else %>
+        <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response, rows: question.open? ? 6 : 3, class: field_class %>
+      <% end %>
+    </fieldset>
+  <% end %>
+
+  <%= submit_tag "Submit test", class: "#{btn_primary} w-full justify-center", data: { turbo_confirm: "Submit your answers? You cannot change them after submitting." } %>
+<% end %>
