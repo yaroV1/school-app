@@ -59,6 +59,8 @@ class QuestionsController < ApplicationController
       apply_ordering_config!(question)
     when "matching"
       apply_matching_config!(question)
+    when "source"
+      apply_source_config!(question)
     else
       question.config = {
         "rubric" => params.dig(:question, :rubric).to_s,
@@ -120,5 +122,13 @@ class QuestionsController < ApplicationController
       pairs[left_id] = right_id
     end
     question.config = { "left" => left, "right" => right, "pairs" => pairs }
+  end
+
+  def apply_source_config!(question)
+    question.config = {
+      "source" => params.dig(:question, :source).to_s,
+      "rubric" => params.dig(:question, :rubric).to_s,
+      "model_answer" => params.dig(:question, :model_answer).to_s
+    }
   end
 end

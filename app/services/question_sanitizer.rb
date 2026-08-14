@@ -19,6 +19,8 @@ class QuestionSanitizer
     elsif question.matching?
       payload[:left] = question.student_facing_left
       payload[:right] = question.student_facing_right
+    elsif question.source?
+      payload[:source] = question.source_text
     end
 
     payload

@@ -203,6 +203,16 @@ seed_exam!(teacher,
       prompt: "What is the main function of the cell membrane?",
       points: 2,
       config: { "rubric" => "Controls what enters/leaves the cell.", "model_answer" => "Selective barrier / transport control" }
+    },
+    {
+      type: :source,
+      prompt: "In 2–3 sentences, explain what this passage says about the nucleus.",
+      points: 3,
+      config: {
+        "source" => "The nucleus is a membrane-bound organelle that contains the cell's genetic material. It controls growth and reproduction by regulating gene expression. Most eukaryotic cells have a single nucleus.",
+        "rubric" => "Mentions genetic material / control of the cell.",
+        "model_answer" => "The nucleus stores DNA and directs cell activity through gene expression."
+      }
     }
   ]
 )

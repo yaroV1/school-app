@@ -2,13 +2,14 @@ class Question < ApplicationRecord
   belongs_to :exam, inverse_of: :questions
   has_many :answers, dependent: :destroy
 
-  enum :question_type, { mcq: 0, short_text: 1, open: 2, ordering: 3, matching: 4 }, validate: true
+  enum :question_type, { mcq: 0, short_text: 1, open: 2, ordering: 3, matching: 4, source: 5 }, validate: true
 
   validates :prompt, presence: true
   validates :points, numericality: { only_integer: true, greater_than: 0 }
   validate :mcq_has_correct_option
   validate :ordering_has_items
   validate :matching_has_pairs
+  validate :source_has_text
 
   def auto_gradable?
     mcq? || ordering? || matching?
@@ -40,6 +41,10 @@ class Question < ApplicationRecord
 
   def model_answer
     config["model_answer"]
+  end
+
+  def source_text
+    config["source"].to_s
   end
 
   def correct_option_id
@@ -116,5 +121,11 @@ class Question < ApplicationRecord
     return unless matching?
 
     errors.add(:config, :too_few_pairs) if left_items.size < 2 || pairs.size < 2
+  end
+
+  def source_has_text
+    return unless source?
+
+    errors.add(:config, :blank_source) if source_text.strip.blank?
   end
 end

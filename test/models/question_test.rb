@@ -32,6 +32,18 @@ class QuestionTest < ActiveSupport::TestCase
     assert_not question.valid?
   end
 
+  test "source requires pasted text" do
+    question = @exam.questions.new(
+      question_type: :source,
+      prompt: "Summarize",
+      points: 1,
+      position: 0,
+      config: { "source" => "  " }
+    )
+    assert_not question.valid?
+    assert_includes question.errors[:config], I18n.t("activerecord.errors.models.question.attributes.config.blank_source")
+  end
+
   test "sanitizer omits correct order and pairs" do
     ordering = @exam.questions.create!(
       question_type: :ordering,
@@ -57,14 +69,25 @@ class QuestionTest < ActiveSupport::TestCase
         "pairs" => { "l1" => "r1", "l2" => "r2" }
       }
     )
+    source = @exam.questions.create!(
+      question_type: :source,
+      prompt: "Summarize",
+      points: 2,
+      position: 2,
+      config: { "source" => "A short passage.", "rubric" => "secret rubric" }
+    )
 
     ordering_payload = QuestionSanitizer.for_student(ordering)
     matching_payload = QuestionSanitizer.for_student(matching)
+    source_payload = QuestionSanitizer.for_student(source)
 
     assert_equal %w[e1 e2 e3], ordering_payload[:items].map { |item| item["id"] }
     assert_nil ordering_payload[:options]
     refute matching_payload.key?(:pairs)
     assert_equal %w[l1 l2], matching_payload[:left].map { |item| item["id"] }
     assert_equal %w[r1 r2], matching_payload[:right].map { |item| item["id"] }
+    assert_equal "A short passage.", source_payload[:source]
+    assert_equal "Summarize", source_payload[:prompt]
+    refute_includes source_payload.values, "secret rubric"
   end
 end

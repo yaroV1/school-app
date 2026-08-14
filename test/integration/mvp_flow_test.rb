@@ -61,6 +61,16 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
       }
     }
 
+    post test_questions_url(exam), params: {
+      question: {
+        question_type: "source",
+        prompt: "Summarize the passage",
+        points: 2,
+        source: "Kyiv is the capital of Ukraine.",
+        rubric: "Mentions capital"
+      }
+    }
+
     post publish_test_url(exam)
     exam.reload
     assert exam.published?
@@ -79,7 +89,7 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     attempt = assignment.attempts.last
-    mcq, short_q, open_q, ordering, matching = exam.questions.order(:position)
+    mcq, short_q, open_q, ordering, matching, source = exam.questions.order(:position)
 
     put student_answers_url(token: token), params: {
       attempt_id: attempt.id,
@@ -88,7 +98,8 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
         { question_id: short_q.id, payload: { text: "blue" } },
         { question_id: open_q.id, payload: { text: "Because..." } },
         { question_id: ordering.id, payload: { order: ordering.correct_order_ids } },
-        { question_id: matching.id, payload: { pairs: matching.pairs } }
+        { question_id: matching.id, payload: { pairs: matching.pairs } },
+        { question_id: source.id, payload: { text: "Kyiv is the capital." } }
       ]
     }, as: :json
     assert_response :success
@@ -100,5 +111,7 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_equal 1, attempt.answers.find_by!(question: mcq).auto_score.to_i
     assert_equal 2, attempt.answers.find_by!(question: ordering).auto_score.to_i
     assert_equal 3, attempt.answers.find_by!(question: matching).auto_score.to_i
+    assert_equal "Kyiv is the capital.", attempt.answers.find_by!(question: source).text_response
+    assert_nil attempt.answers.find_by!(question: source).auto_score
   end
 end
