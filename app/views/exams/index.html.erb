@@ -1,7 +1,7 @@
-<% content_for :title, "Tests" %>
+<% content_for :title, t("exams.index.title") %>
 <div class="mb-6 flex items-center justify-between gap-4">
-  <h1 class="text-2xl font-semibold">Tests</h1>
-  <%= link_to "New test", new_test_path, class: btn_primary %>
+  <h1 class="text-2xl font-semibold"><%= t("exams.index.title") %></h1>
+  <%= link_to t("exams.index.new"), new_test_path, class: btn_primary %>
 </div>
 
 <% if @exams.any? %>
@@ -12,13 +12,13 @@
           <%= link_to exam.title, test_path(exam), class: "font-medium hover:underline" %>
           <div class="mt-1 flex items-center gap-2 text-sm text-slate-500">
             <%= status_badge(exam.status) %>
-            <span><%= pluralize(exam.questions.size, "question") %></span>
+            <span><%= t("exams.questions_count", count: exam.questions.size) %></span>
           </div>
         </div>
-        <%= link_to "Open", test_path(exam), class: btn_secondary %>
+        <%= link_to t("common.open"), test_path(exam), class: btn_secondary %>
       </li>
     <% end %>
   </ul>
 <% else %>
-  <p class="text-slate-600">No tests yet. Create one to get started.</p>
+  <p class="text-slate-600"><%= t("exams.index.empty") %></p>
 <% end %>

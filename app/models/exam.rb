@@ -49,6 +49,6 @@ class Exam < ApplicationRecord
     return if available_from.blank? || available_until.blank?
     return if available_until > available_from
 
-    errors.add(:available_until, "must be after available from")
+    errors.add(:available_until, :after_available_from)
   end
 end

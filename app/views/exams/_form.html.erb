@@ -12,7 +12,7 @@
   </div>
   <div class="grid gap-4 sm:grid-cols-2">
     <div>
-      <%= f.label :time_limit_sec, "Time limit (seconds, optional)", class: "text-sm font-medium" %>
+      <%= f.label :time_limit_sec, t("exams.form.time_limit"), class: "text-sm font-medium" %>
       <%= f.number_field :time_limit_sec, min: 1, class: field_class %>
     </div>
     <div>
@@ -22,16 +22,16 @@
   </div>
   <div class="grid gap-4 sm:grid-cols-2">
     <div>
-      <%= f.label :available_from, "Available from (optional)", class: "text-sm font-medium" %>
+      <%= f.label :available_from, t("exams.form.available_from"), class: "text-sm font-medium" %>
       <%= f.datetime_local_field :available_from, class: field_class,
             value: exam.available_from&.strftime("%Y-%m-%dT%H:%M") %>
     </div>
     <div>
-      <%= f.label :available_until, "Available until (optional)", class: "text-sm font-medium" %>
+      <%= f.label :available_until, t("exams.form.available_until"), class: "text-sm font-medium" %>
       <%= f.datetime_local_field :available_until, class: field_class,
             value: exam.available_until&.strftime("%Y-%m-%dT%H:%M") %>
     </div>
   </div>
-  <p class="text-xs text-slate-500">Outside this window, students cannot start a new attempt. In-progress attempts can still finish until their deadline.</p>
+  <p class="text-xs text-slate-500"><%= t("exams.form.window_hint") %></p>
   <%= f.submit class: btn_primary %>
 <% end %>

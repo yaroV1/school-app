@@ -1,12 +1,12 @@
-<% content_for :title, "Submitted" %>
+<% content_for :title, t("take.done_title") %>
 <div class="space-y-4 text-center">
-  <h1 class="text-2xl font-semibold">Submission received</h1>
-  <p class="text-slate-600">Thank you, <%= @student.name %>. Your responses for <strong><%= @exam.title %></strong> have been recorded.</p>
+  <h1 class="text-2xl font-semibold"><%= t("take.done_heading") %></h1>
+  <p class="text-slate-600"><%= t("take.done_body", name: @student.name, title: @exam.title) %></p>
   <% if @latest %>
     <p class="text-sm text-slate-500">
-      Attempt #<%= @latest.attempt_no %> · <%= @latest.status.humanize %>
+      <%= t("take.done_attempt", n: @latest.attempt_no) %> · <%= t("statuses.#{@latest.status}") %>
       <% if @latest.submitted_at %> · <%= l(@latest.submitted_at, format: :short) %><% end %>
     </p>
   <% end %>
-  <p class="text-sm text-slate-500">You can close this window.</p>
+  <p class="text-sm text-slate-500"><%= t("take.close_window") %></p>
 </div>

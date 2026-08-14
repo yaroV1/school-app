@@ -9,9 +9,9 @@ module Take
         AttemptLifecycle.autosave!(attempt, answers)
       end
       AttemptLifecycle.submit!(attempt)
-      redirect_to student_done_path(token: @assignment.access_token), notice: "Submitted. Thank you!"
+      redirect_to student_done_path(token: @assignment.access_token), notice: t("take.errors.submitted")
     rescue AttemptLifecycle::Expired
-      redirect_to student_done_path(token: @assignment.access_token), alert: "Time is up. Your last saved answers were kept."
+      redirect_to student_done_path(token: @assignment.access_token), alert: t("take.errors.time_up_kept")
     rescue AttemptLifecycle::NotAllowed => e
       redirect_to student_run_path(token: @assignment.access_token), alert: e.message
     end

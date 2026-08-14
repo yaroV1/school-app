@@ -27,7 +27,7 @@ class AssignmentsController < ApplicationController
       end
     end
 
-    redirect_to manage_test_assignments_path(@exam), notice: "Assigned to #{created} student(s)."
+    redirect_to manage_test_assignments_path(@exam), notice: t("exams.flash.assigned", count: created)
   end
 
   def bulk_revoke
@@ -38,17 +38,17 @@ class AssignmentsController < ApplicationController
       assignment.revoke!
       count += 1
     end
-    redirect_to manage_test_assignments_path(@exam), notice: "Revoked #{count} link(s)."
+    redirect_to manage_test_assignments_path(@exam), notice: t("exams.flash.revoked_many", count: count)
   end
 
   def revoke
     @assignment.revoke!
-    redirect_to manage_test_assignments_path(@assignment.exam), notice: "Link revoked."
+    redirect_to manage_test_assignments_path(@assignment.exam), notice: t("exams.flash.revoked")
   end
 
   def regenerate_token
     @assignment.regenerate_token!
-    redirect_to manage_test_assignments_path(@assignment.exam), notice: "Link regenerated."
+    redirect_to manage_test_assignments_path(@assignment.exam), notice: t("exams.flash.regenerated")
   end
 
   private

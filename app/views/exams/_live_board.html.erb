@@ -8,7 +8,7 @@
     <div class="mb-4 flex flex-wrap gap-3 text-sm">
       <% %w[in_progress not_started submitted expired revoked].each do |status| %>
         <span class="rounded-full border border-slate-200 bg-white px-3 py-1">
-          <%= status.humanize %>: <strong><%= @counts[status].to_i %></strong>
+          <%= t("statuses.#{status}") %>: <strong><%= @counts[status].to_i %></strong>
         </span>
       <% end %>
     </div>
@@ -18,12 +18,12 @@
         <table class="min-w-full text-sm">
           <thead class="bg-slate-50 text-left text-slate-600">
             <tr>
-              <th class="px-3 py-2">Student</th>
-              <th class="px-3 py-2">Status</th>
-              <th class="px-3 py-2">Started</th>
-              <th class="px-3 py-2">Last activity</th>
-              <th class="px-3 py-2">Submitted</th>
-              <th class="px-3 py-2">Time left</th>
+              <th class="px-3 py-2"><%= t("exams.assign.student") %></th>
+              <th class="px-3 py-2"><%= t("exams.assign.status") %></th>
+              <th class="px-3 py-2"><%= t("attempts.history.started") %></th>
+              <th class="px-3 py-2"><%= t("exams.live.last_activity") %></th>
+              <th class="px-3 py-2"><%= t("exams.results.submitted") %></th>
+              <th class="px-3 py-2"><%= t("exams.live.time_left") %></th>
               <th class="px-3 py-2"></th>
             </tr>
           </thead>
@@ -33,19 +33,19 @@
               <tr>
                 <td class="px-3 py-2 font-medium"><%= assignment.student.name %></td>
                 <td class="px-3 py-2"><%= status_badge(assignment.board_status) %></td>
-                <td class="px-3 py-2"><%= attempt ? l(attempt.started_at, format: :short) : "—" %></td>
-                <td class="px-3 py-2"><%= attempt ? l(attempt.last_activity_at, format: :short) : "—" %></td>
-                <td class="px-3 py-2"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : "—" %></td>
+                <td class="px-3 py-2"><%= attempt ? l(attempt.started_at, format: :short) : t("common.dash") %></td>
+                <td class="px-3 py-2"><%= attempt ? l(attempt.last_activity_at, format: :short) : t("common.dash") %></td>
+                <td class="px-3 py-2"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : t("common.dash") %></td>
                 <td class="px-3 py-2 font-mono">
                   <% if attempt&.in_progress? && attempt.deadline_at %>
-                    <%= attempt.seconds_remaining(@server_time) %>s
+                    <%= attempt.seconds_remaining(@server_time) %>с
                   <% else %>
-                    —
+                    <%= t("common.dash") %>
                   <% end %>
                 </td>
                 <td class="px-3 py-2 text-right">
                   <% if attempt && (attempt.submitted? || attempt.expired?) %>
-                    <%= link_to "Grade", attempt_path(attempt), class: "underline", data: { turbo_frame: "_top" } %>
+                    <%= link_to t("exams.results.grade"), attempt_path(attempt), class: "underline", data: { turbo_frame: "_top" } %>
                   <% end %>
                 </td>
               </tr>
@@ -55,8 +55,8 @@
       </div>
     <% else %>
       <p class="text-slate-600">
-        No assignments yet.
-        <%= link_to "Assign students", manage_test_assignments_path(@exam), class: "underline", data: { turbo_frame: "_top" } %>.
+        <%= t("exams.live.empty") %>
+        <%= link_to t("exams.live.assign_students"), manage_test_assignments_path(@exam), class: "underline", data: { turbo_frame: "_top" } %>.
       </p>
     <% end %>
   </div>

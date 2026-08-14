@@ -1,7 +1,7 @@
-<% content_for :title, "Results — #{@exam.title}" %>
+<% content_for :title, t("exams.results.title", title: @exam.title) %>
 <div class="mb-6">
-  <%= link_to "← Back to test", test_path(@exam), class: "text-sm text-slate-600 underline" %>
-  <h1 class="mt-2 text-2xl font-semibold">Results: <%= @exam.title %></h1>
+  <%= link_to t("exams.assign.back"), test_path(@exam), class: "text-sm text-slate-600 underline" %>
+  <h1 class="mt-2 text-2xl font-semibold"><%= t("exams.results.title", title: @exam.title) %></h1>
 </div>
 
 <% if @assignments.any? %>
@@ -9,11 +9,11 @@
     <table class="min-w-full text-sm">
       <thead class="bg-slate-50 text-left text-slate-600">
         <tr>
-          <th class="px-3 py-2">Student</th>
-          <th class="px-3 py-2">Latest status</th>
-          <th class="px-3 py-2">Started</th>
-          <th class="px-3 py-2">Submitted</th>
-          <th class="px-3 py-2">Score</th>
+          <th class="px-3 py-2"><%= t("exams.assign.student") %></th>
+          <th class="px-3 py-2"><%= t("exams.results.latest_status") %></th>
+          <th class="px-3 py-2"><%= t("attempts.history.started") %></th>
+          <th class="px-3 py-2"><%= t("exams.results.submitted") %></th>
+          <th class="px-3 py-2"><%= t("exams.results.score") %></th>
           <th class="px-3 py-2"></th>
         </tr>
       </thead>
@@ -24,23 +24,23 @@
             <td class="px-3 py-2"><%= link_to assignment.student.name, student_path(assignment.student), class: "underline" %></td>
             <td class="px-3 py-2">
               <% if attempt %>
-                <%= status_badge(attempt.status) %> (#<%= attempt.attempt_no %>)
+                <%= status_badge(attempt.status) %> (№<%= attempt.attempt_no %>)
               <% else %>
-                <span class="text-slate-500">Not started</span>
+                <span class="text-slate-500"><%= t("statuses.not_started") %></span>
               <% end %>
             </td>
-            <td class="px-3 py-2"><%= attempt ? l(attempt.started_at, format: :short) : "—" %></td>
-            <td class="px-3 py-2"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : "—" %></td>
+            <td class="px-3 py-2"><%= attempt ? l(attempt.started_at, format: :short) : t("common.dash") %></td>
+            <td class="px-3 py-2"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : t("common.dash") %></td>
             <td class="px-3 py-2">
               <% if attempt&.grade %>
-                <%= attempt.grade.total_score || "—" %>/<%= attempt.grade.max_score %>
-                <%= "· finalized" if attempt.grade.finalized_by_teacher? %>
+                <%= attempt.grade.total_score || t("common.dash") %>/<%= attempt.grade.max_score %>
+                <%= "· #{t("exams.results.finalized")}" if attempt.grade.finalized_by_teacher? %>
               <% else %>
-                —
+                <%= t("common.dash") %>
               <% end %>
             </td>
             <td class="px-3 py-2 text-right">
-              <% if attempt %><%= link_to "Grade", attempt_path(attempt), class: "underline" %><% end %>
+              <% if attempt %><%= link_to t("exams.results.grade"), attempt_path(attempt), class: "underline" %><% end %>
             </td>
           </tr>
         <% end %>
@@ -48,5 +48,5 @@
     </table>
   </div>
 <% else %>
-  <p class="text-slate-600">No assignments yet.</p>
+  <p class="text-slate-600"><%= t("exams.results.empty") %></p>
 <% end %>

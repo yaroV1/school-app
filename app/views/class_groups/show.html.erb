@@ -2,12 +2,12 @@
 <div class="mb-6 flex items-start justify-between gap-4">
   <h1 class="text-2xl font-semibold"><%= @class_group.name %></h1>
   <div class="flex gap-2">
-    <%= link_to "Edit", edit_class_group_path(@class_group), class: btn_secondary %>
-    <%= button_to "Delete", class_group_path(@class_group), method: :delete, form: { data: { turbo_confirm: "Delete this class?" } }, class: btn_secondary %>
+    <%= link_to t("common.edit"), edit_class_group_path(@class_group), class: btn_secondary %>
+    <%= button_to t("common.delete"), class_group_path(@class_group), method: :delete, form: { data: { turbo_confirm: t("classes.show.delete_confirm") } }, class: btn_secondary %>
   </div>
 </div>
 
-<h2 class="mb-3 text-lg font-medium">Members</h2>
+<h2 class="mb-3 text-lg font-medium"><%= t("classes.show.members") %></h2>
 <%= form_with url: members_class_group_path(@class_group), method: :put, class: "space-y-4" do %>
   <ul class="max-h-96 space-y-2 overflow-y-auto rounded-lg border border-slate-200 bg-white p-4">
     <% @students.each do |student| %>
@@ -19,5 +19,5 @@
       </li>
     <% end %>
   </ul>
-  <%= submit_tag "Save members", class: btn_primary %>
+  <%= submit_tag t("classes.show.save_members"), class: btn_primary %>
 <% end %>

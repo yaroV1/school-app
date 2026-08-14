@@ -23,13 +23,13 @@ class Phase11Test < ActiveSupport::TestCase
   test "available_from blocks new starts" do
     @exam.update!(available_from: 1.hour.from_now)
     error = assert_raises(AttemptLifecycle::NotAllowed) { AttemptLifecycle.start!(@assignment) }
-    assert_match(/not available yet/i, error.message)
+    assert_equal I18n.t("take.errors.not_available_yet"), error.message
   end
 
   test "available_until blocks new starts" do
     @exam.update!(available_until: 1.hour.ago)
     error = assert_raises(AttemptLifecycle::NotAllowed) { AttemptLifecycle.start!(@assignment) }
-    assert_match(/no longer available/i, error.message)
+    assert_equal I18n.t("take.errors.no_longer_available"), error.message
   end
 
   test "in-progress attempt can resume after availability window ends" do

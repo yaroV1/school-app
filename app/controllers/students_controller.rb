@@ -20,7 +20,7 @@ class StudentsController < ApplicationController
   def create
     @student = Current.user.students.new(student_params)
     if @student.save
-      redirect_to students_path, notice: "Student created."
+      redirect_to students_path, notice: t("students.flash.created")
     else
       render :new, status: :unprocessable_entity
     end
@@ -31,7 +31,7 @@ class StudentsController < ApplicationController
 
   def update
     if @student.update(student_params)
-      redirect_to @student, notice: "Student updated."
+      redirect_to @student, notice: t("students.flash.updated")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -39,12 +39,12 @@ class StudentsController < ApplicationController
 
   def archive
     @student.archive!
-    redirect_to students_path, notice: "Student archived."
+    redirect_to students_path, notice: t("students.flash.archived")
   end
 
   def unarchive
     @student.unarchive!
-    redirect_to students_path, notice: "Student restored."
+    redirect_to students_path, notice: t("students.flash.restored")
   end
 
   private

@@ -1,11 +1,11 @@
-<% content_for :title, "Students" %>
+<% content_for :title, t("students.index.title") %>
 <div class="mb-6 flex items-center justify-between gap-4">
-  <h1 class="text-2xl font-semibold">Students</h1>
-  <%= link_to "Add student", new_student_path, class: btn_primary %>
+  <h1 class="text-2xl font-semibold"><%= t("students.index.title") %></h1>
+  <%= link_to t("students.index.add"), new_student_path, class: btn_primary %>
 </div>
 
 <p class="mb-4 text-sm text-slate-600">
-  <%= link_to params[:include_archived] == "1" ? "Hide archived" : "Show archived", students_path(include_archived: params[:include_archived] == "1" ? nil : "1"), class: "underline" %>
+  <%= link_to params[:include_archived] == "1" ? t("students.index.hide_archived") : t("students.index.show_archived"), students_path(include_archived: params[:include_archived] == "1" ? nil : "1"), class: "underline" %>
 </p>
 
 <% if @students.any? %>
@@ -15,19 +15,19 @@
         <div>
           <%= link_to student.name, student, class: "font-medium hover:underline" %>
           <% if student.email.present? %><span class="text-sm text-slate-500"> · <%= student.email %></span><% end %>
-          <% if student.archived? %><span class="ml-2 text-xs text-slate-500">(archived)</span><% end %>
+          <% if student.archived? %><span class="ml-2 text-xs text-slate-500"><%= t("students.index.archived") %></span><% end %>
         </div>
         <div class="flex gap-2">
-          <%= link_to "Edit", edit_student_path(student), class: btn_secondary %>
+          <%= link_to t("common.edit"), edit_student_path(student), class: btn_secondary %>
           <% if student.archived? %>
-            <%= button_to "Restore", unarchive_student_path(student), class: btn_secondary %>
+            <%= button_to t("students.index.restore"), unarchive_student_path(student), class: btn_secondary %>
           <% else %>
-            <%= button_to "Archive", archive_student_path(student), class: btn_secondary %>
+            <%= button_to t("students.index.archive"), archive_student_path(student), class: btn_secondary %>
           <% end %>
         </div>
       </li>
     <% end %>
   </ul>
 <% else %>
-  <p class="text-slate-600">No students yet.</p>
+  <p class="text-slate-600"><%= t("students.index.empty") %></p>
 <% end %>

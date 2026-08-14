@@ -1,3 +1,3 @@
-<% content_for :title, "Edit student" %>
-<h1 class="mb-6 text-2xl font-semibold">Edit student</h1>
+<% content_for :title, t("students.edit.title") %>
+<h1 class="mb-6 text-2xl font-semibold"><%= t("students.edit.title") %></h1>
 <%= render "form", student: @student %>

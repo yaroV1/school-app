@@ -1,0 +1,348 @@
+uk:
+  app_name: "Платформа тестів"
+
+  common:
+    edit: "Редагувати"
+    delete: "Видалити"
+    open: "Відкрити"
+    save: "Зберегти"
+    apply: "Застосувати"
+    copy: "Копіювати"
+    copied: "Скопійовано"
+    manage: "Керувати"
+    back: "← Назад"
+    dash: "—"
+    now: "зараз"
+    open_ended: "без обмеження"
+
+  statuses:
+    draft: "Чернетка"
+    published: "Опубліковано"
+    closed: "Закрито"
+    not_started: "Не розпочато"
+    in_progress: "У процесі"
+    submitted: "Здано"
+    expired: "Час вийшов"
+    revoked: "Відкликано"
+    abandoned: "Перервано"
+    active: "Активне"
+
+  question_types:
+    mcq: "Вибір відповіді"
+    short_text: "Коротка відповідь"
+    open: "Розгорнута відповідь"
+
+  nav:
+    tests: "Тести"
+    students: "Учні"
+    classes: "Класи"
+    sign_out: "Вийти"
+
+  auth:
+    sign_in: "Увійти"
+    email: "Email"
+    password: "Пароль"
+    forgot_password: "Забули пароль?"
+    invalid_credentials: "Інший email або пароль."
+    try_again_later: "Спробуйте пізніше."
+    passwords:
+      forgot_title: "Забули пароль?"
+      email_placeholder: "Введіть email"
+      send_instructions: "Надіслати інструкції"
+      update_title: "Новий пароль"
+      new_placeholder: "Новий пароль"
+      confirm_placeholder: "Повторіть пароль"
+      reset_sent: "Якщо такий email є, інструкції надіслано."
+      reset_success: "Пароль змінено."
+      mismatch: "Паролі не збігаються."
+      invalid_link: "Посилання для скидання пароля недійсне або прострочене."
+      mail_intro: "Скинути пароль можна на"
+      mail_link: "цій сторінці"
+      mail_expiry: "Посилання дійсне %{duration}."
+
+  students:
+    index:
+      title: "Учні"
+      add: "Додати учня"
+      show_archived: "Показати архів"
+      hide_archived: "Сховати архів"
+      archived: "(в архіві)"
+      archive: "В архів"
+      restore: "Відновити"
+      empty: "Ще немає учнів."
+    new:
+      title: "Новий учень"
+    edit:
+      title: "Редагувати учня"
+    form:
+      email_optional: "Email (необов’язково)"
+    show:
+      history: "Історія спроб"
+      empty_history: "Ще немає спроб."
+      draft_score: "(чернетка)"
+    count:
+      one: "%{count} учень"
+      few: "%{count} учні"
+      many: "%{count} учнів"
+      other: "%{count} учня"
+    flash:
+      created: "Учня створено."
+      updated: "Учня оновлено."
+      archived: "Учня в архіві."
+      restored: "Учня відновлено."
+
+  classes:
+    index:
+      title: "Класи"
+      new: "Новий клас"
+      empty: "Ще немає класів."
+    new:
+      title: "Новий клас"
+    edit:
+      title: "Редагувати клас"
+    show:
+      members: "Учасники"
+      save_members: "Зберегти склад"
+      delete_confirm: "Видалити цей клас?"
+    flash:
+      created: "Клас створено."
+      updated: "Клас оновлено."
+      deleted: "Клас видалено."
+      members_updated: "Склад класу оновлено."
+
+  exams:
+    index:
+      title: "Тести"
+      new: "Новий тест"
+      empty: "Ще немає тестів. Створіть перший."
+    new:
+      title: "Новий тест"
+    edit:
+      title: "Редагувати тест"
+    form:
+      time_limit: "Ліміт часу (секунди, необов’язково)"
+      available_from: "Доступ з (необов’язково)"
+      available_until: "Доступ до (необов’язково)"
+      window_hint: "Поза цим вікном учні не можуть почати нову спробу. Поточну спробу можна завершити до дедлайну."
+    show:
+      untimed: "Без ліміту часу"
+      minutes_limit: "ліміт %{minutes} хв"
+      window: "Вікно"
+      edit_settings: "Налаштування"
+      publish: "Опублікувати"
+      close: "Закрити тест"
+      live_board: "Онлайн-табло"
+      assign: "Призначити / посилання"
+      results: "Результати"
+      questions: "Питання"
+      no_questions: "Ще немає питань."
+      remove: "Видалити"
+      remove_confirm: "Видалити питання?"
+      correct: "(правильна)"
+      add_question: "Додати питання"
+      type: "Тип"
+      options_hint_title: "Варіанти (позначте один правильний)"
+      option_placeholder: "Варіант %{n}"
+      options_hint: "Радіокнопка — правильний варіант. Порожні рядки ігноруються."
+      rubric: "Критерії (необов’язково)"
+      model_answer: "Зразок відповіді (необов’язково)"
+      submit_question: "Додати питання"
+    questions_count:
+      one: "%{count} питання"
+      few: "%{count} питання"
+      many: "%{count} питань"
+      other: "%{count} питання"
+    attempts_count:
+      one: "%{count} спроба"
+      few: "%{count} спроби"
+      many: "%{count} спроб"
+      other: "%{count} спроби"
+    points:
+      one: "%{count} бал"
+      few: "%{count} бали"
+      many: "%{count} балів"
+      other: "%{count} бала"
+    points_short:
+      one: "%{count} б."
+      few: "%{count} б."
+      many: "%{count} б."
+      other: "%{count} б."
+    flash:
+      created: "Тест створено."
+      updated: "Тест оновлено."
+      deleted: "Тест видалено."
+      published: "Тест опубліковано."
+      publish_need_question: "Додайте хоча б одне питання перед публікацією."
+      closed: "Тест закрито. Нові спроби заборонені."
+      questions_locked: "Питання можна змінювати лише в чернетці."
+      question_added: "Питання додано."
+      question_updated: "Питання оновлено."
+      question_removed: "Питання видалено."
+      assigned: "Призначено %{count} учням."
+      revoked_many: "Відкликано %{count} посилань."
+      revoked: "Посилання відкликано."
+      regenerated: "Посилання оновлено."
+    live:
+      title: "Онлайн-табло: %{title}"
+      title_prefix: "Онлайн-табло"
+      hint: "Оновлюється кожні 4 секунди. Час за годинником сервера."
+      filter: "Фільтр за класом"
+      all_students: "Усі учні"
+      loading: "Завантаження табло…"
+      last_activity: "Остання активність"
+      time_left: "Залишилось"
+      empty: "Ще немає призначень."
+      assign_students: "Призначити учнів"
+      toast_one: "Нова робота здана"
+      toast_other: "Нових здач: %{count}"
+    results:
+      title: "Результати: %{title}"
+      latest_status: "Останній статус"
+      submitted: "Здано"
+      score: "Бал"
+      finalized: "затверджено"
+      grade: "Оцінити"
+      empty: "Ще немає призначень."
+    assign:
+      title: "Призначити: %{title}"
+      back: "← Назад до тесту"
+      publish_hint: "Опублікуйте тест, щоб учні могли почати. Посилання можна створити вже зараз."
+      assign_students: "Призначити учнів"
+      class_optional: "Клас (необов’язково)"
+      select_class: "Оберіть клас"
+      or_pick: "Або оберіть учнів"
+      create_links: "Створити / відновити посилання"
+      access_links: "Посилання доступу"
+      open_live: "Відкрити онлайн-табло"
+      revoke_selected: "Відкликати вибрані"
+      revoke_confirm: "Відкликати вибрані посилання?"
+      student: "Учень"
+      link: "Посилання"
+      status: "Статус"
+      attempts: "Спроби"
+      empty: "Ще немає призначень."
+      revoke: "Відкликати"
+      regenerate: "Нове посилання"
+
+  attempts:
+    grade:
+      title: "Оцінити спробу"
+      back: "← Результати"
+      heading: "Оцінка: %{name}"
+      attempt: "Спроба №%{n}"
+      current: "Зараз"
+      finalized: "Затверджено"
+      not_finalized: "Не затверджено"
+      student_answer: "Відповідь учня"
+      no_answer: "Немає відповіді"
+      auto_score: "Автобал"
+      teacher_score: "Бал учителя"
+      comment: "Коментар"
+      overall_comment: "Загальний коментар"
+      save: "Зберегти бали"
+      save_finalize: "Зберегти і затвердити"
+    history:
+      test: "Тест"
+      attempt: "Спроба"
+      status: "Статус"
+      started: "Початок"
+      score: "Бал"
+    flash:
+      need_scores: "Поставте бали за всі короткі та розгорнуті відповіді перед затвердженням."
+      finalized: "Оцінку затверджено."
+      saved: "Бали збережено."
+
+  take:
+    hello: "Привіт, %{name}"
+    time_limit: "Ліміт часу: %{value}"
+    minutes: "%{count} хв"
+    none: "Немає"
+    attempts_used: "Використано спроб: %{used} / %{max}"
+    questions: "Питань: %{count}"
+    opens: "Відкривається: %{time}"
+    closes: "Закривається: %{time}"
+    resume: "Продовжити тест"
+    start: "Почати тест"
+    view_done: "Переглянути підтвердження"
+    cannot_start: "Зараз цей тест почати не можна."
+    not_open: "Тест ще не відкрито."
+    autosave: "Відповіді зберігаються автоматично"
+    saving: "Збереження…"
+    saved: "Збережено"
+    save_failed: "Не вдалося зберегти"
+    question_legend: "Питання %{n}"
+    type_hint:
+      mcq: "Оберіть одну відповідь"
+      short_text: "Коротка відповідь — кілька слів або речення"
+      open: "Розгорнута відповідь — напишіть повне пояснення"
+    placeholder:
+      short_text: "Введіть коротку відповідь…"
+      open: "Напишіть розгорнуту відповідь…"
+    submit: "Здати тест"
+    submit_confirm: "Здати відповіді? Після цього змінити їх не можна."
+    done_title: "Роботу прийнято"
+    done_heading: "Відповіді отримано"
+    done_body: "Дякуємо, %{name}. Відповіді на тест «%{title}» збережено."
+    done_attempt: "Спроба №%{n}"
+    close_window: "Можна закрити це вікно."
+    errors:
+      link_revoked: "Це посилання відкликано."
+      test_not_open: "Цей тест не відкрито."
+      not_available_yet: "Тест ще недоступний."
+      no_longer_available: "Термін доступу до тесту минув."
+      no_attempts: "Спроб більше немає."
+      time_up: "Час вийшов."
+      time_up_kept: "Час вийшов. Збережено останні відповіді."
+      not_in_progress: "Спроба не в процесі."
+      start_first: "Спочатку почніть тест."
+      save_conflict: "Не вдалося зберегти відповіді. Спробуйте ще раз."
+      submitted: "Дякуємо, роботу здано!"
+
+  helpers:
+    submit:
+      create: "Створити"
+      update: "Зберегти"
+      student:
+        create: "Створити учня"
+        update: "Зберегти учня"
+      class_group:
+        create: "Створити клас"
+        update: "Зберегти клас"
+      exam:
+        create: "Створити тест"
+        update: "Зберегти тест"
+
+  activerecord:
+    models:
+      student: "Учень"
+      class_group: "Клас"
+      exam: "Тест"
+      question: "Питання"
+    attributes:
+      student:
+        name: "Ім’я"
+        email: "Email"
+      class_group:
+        name: "Назва"
+      exam:
+        title: "Назва"
+        description: "Опис"
+        time_limit_sec: "Ліміт часу (секунди)"
+        max_attempts: "Максимум спроб"
+        available_from: "Доступ з"
+        available_until: "Доступ до"
+      question:
+        prompt: "Формулювання"
+        points: "Бали"
+        question_type: "Тип"
+    errors:
+      models:
+        exam:
+          attributes:
+            available_until:
+              after_available_from: "має бути пізніше за початок доступу"
+        question:
+          attributes:
+            config:
+              blank_options: "має містити варіанти"
+              one_correct: "має мати рівно один правильний варіант"

@@ -3,7 +3,9 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static values = {
     interval: { type: Number, default: 4000 },
-    src: String
+    src: String,
+    toastOne: String,
+    toastOther: String
   }
 
   connect() {
@@ -60,7 +62,9 @@ export default class extends Controller {
 
     const toast = document.getElementById("live-toast")
     if (!toast) return
-    toast.textContent = added === 1 ? "New submission received" : `${added} new submissions received`
+    toast.textContent = added === 1
+      ? (this.toastOneValue || "New submission received")
+      : (this.toastOtherValue || `${added} new submissions received`).replaceAll("__COUNT__", String(added))
     toast.classList.remove("hidden")
     clearTimeout(this.toastTimer)
     this.toastTimer = setTimeout(() => toast.classList.add("hidden"), 4000)

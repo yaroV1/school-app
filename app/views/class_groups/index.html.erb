@@ -1,7 +1,7 @@
-<% content_for :title, "Classes" %>
+<% content_for :title, t("classes.index.title") %>
 <div class="mb-6 flex items-center justify-between gap-4">
-  <h1 class="text-2xl font-semibold">Classes</h1>
-  <%= link_to "New class", new_class_group_path, class: btn_primary %>
+  <h1 class="text-2xl font-semibold"><%= t("classes.index.title") %></h1>
+  <%= link_to t("classes.index.new"), new_class_group_path, class: btn_primary %>
 </div>
 
 <% if @class_groups.any? %>
@@ -10,12 +10,12 @@
       <li class="flex items-center justify-between px-4 py-3">
         <div>
           <%= link_to group.name, group, class: "font-medium hover:underline" %>
-          <span class="text-sm text-slate-500"> · <%= pluralize(group.students.size, "student") %></span>
+          <span class="text-sm text-slate-500"> · <%= t("students.count", count: group.students.size) %></span>
         </div>
-        <%= link_to "Manage", group, class: btn_secondary %>
+        <%= link_to t("common.manage"), group, class: btn_secondary %>
       </li>
     <% end %>
   </ul>
 <% else %>
-  <p class="text-slate-600">No classes yet.</p>
+  <p class="text-slate-600"><%= t("classes.index.empty") %></p>
 <% end %>

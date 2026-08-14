@@ -16,7 +16,7 @@ class ExamsController < ApplicationController
   def create
     @exam = Current.user.exams.new(exam_params)
     if @exam.save
-      redirect_to test_path(@exam), notice: "Test created."
+      redirect_to test_path(@exam), notice: t("exams.flash.created")
     else
       render :new, status: :unprocessable_entity
     end
@@ -27,7 +27,7 @@ class ExamsController < ApplicationController
 
   def update
     if @exam.update(exam_params)
-      redirect_to test_path(@exam), notice: "Test updated."
+      redirect_to test_path(@exam), notice: t("exams.flash.updated")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -35,19 +35,19 @@ class ExamsController < ApplicationController
 
   def destroy
     @exam.destroy!
-    redirect_to tests_path, notice: "Test deleted."
+    redirect_to tests_path, notice: t("exams.flash.deleted")
   end
 
   def publish
     @exam.publish!
-    redirect_to test_path(@exam), notice: "Test published."
+    redirect_to test_path(@exam), notice: t("exams.flash.published")
   rescue ActiveRecord::RecordInvalid
-    redirect_to test_path(@exam), alert: "Add at least one question before publishing."
+    redirect_to test_path(@exam), alert: t("exams.flash.publish_need_question")
   end
 
   def close
     @exam.close!
-    redirect_to test_path(@exam), notice: "Test closed. New starts are blocked."
+    redirect_to test_path(@exam), notice: t("exams.flash.closed")
   end
 
   def results

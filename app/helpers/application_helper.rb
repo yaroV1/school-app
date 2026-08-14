@@ -28,7 +28,7 @@ module ApplicationHelper
       "revoked" => "bg-red-100 text-red-700",
       "abandoned" => "bg-slate-100 text-slate-600"
     }
-    content_tag(:span, status.to_s.humanize, class: "inline-flex rounded-full px-2 py-0.5 text-xs font-medium #{colors[status.to_s] || 'bg-slate-100'}")
+    content_tag(:span, t("statuses.#{status}"), class: "inline-flex rounded-full px-2 py-0.5 text-xs font-medium #{colors[status.to_s] || 'bg-slate-100'}")
   end
 end
 

@@ -34,11 +34,11 @@ class Question < ApplicationRecord
     return unless mcq?
 
     if options.blank?
-      errors.add(:config, "must include options")
+    errors.add(:config, :blank_options)
       return
     end
 
     correct = options.count { |o| o["is_correct"] }
-    errors.add(:config, "must have exactly one correct option") unless correct == 1
+    errors.add(:config, :one_correct) unless correct == 1
   end
 end

@@ -1,20 +1,20 @@
 <div class="mx-auto w-full max-w-md">
-  <h1 class="mb-6 text-3xl font-semibold">Sign in</h1>
+  <h1 class="mb-6 text-3xl font-semibold"><%= t("auth.sign_in") %></h1>
 
   <%= form_with url: session_url, class: "space-y-4" do |form| %>
     <div>
-      <%= form.label :email_address, "Email", class: "text-sm font-medium" %>
+      <%= form.label :email_address, t("auth.email"), class: "text-sm font-medium" %>
       <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", value: params[:email_address], class: field_class %>
     </div>
 
     <div>
-      <%= form.label :password, class: "text-sm font-medium" %>
+      <%= form.label :password, t("auth.password"), class: "text-sm font-medium" %>
       <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72, class: field_class %>
     </div>
 
     <div class="flex flex-wrap items-center gap-4">
-      <%= form.submit "Sign in", class: btn_primary %>
-      <%= link_to "Forgot password?", new_password_path, class: "text-sm text-slate-600 underline" %>
+      <%= form.submit t("auth.sign_in"), class: btn_primary %>
+      <%= link_to t("auth.forgot_password"), new_password_path, class: "text-sm text-slate-600 underline" %>
     </div>
   <% end %>
 </div>

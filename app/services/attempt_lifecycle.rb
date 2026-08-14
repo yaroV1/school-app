@@ -26,8 +26,8 @@ class AttemptLifecycle
   end
 
   def start!
-    raise NotAllowed, "This link has been revoked" if @assignment.revoked?
-    raise NotAllowed, "This test is not open" unless @exam.published?
+    raise NotAllowed, I18n.t("take.errors.link_revoked") if @assignment.revoked?
+    raise NotAllowed, I18n.t("take.errors.test_not_open") unless @exam.published?
 
     if (active = @assignment.in_progress_attempt)
       expire_if_needed!(active)
@@ -37,13 +37,13 @@ class AttemptLifecycle
     unless @exam.within_availability_window?
       case @exam.availability_status
       when :not_yet_open
-        raise NotAllowed, "This test is not available yet"
+        raise NotAllowed, I18n.t("take.errors.not_available_yet")
       else
-        raise NotAllowed, "This test is no longer available"
+        raise NotAllowed, I18n.t("take.errors.no_longer_available")
       end
     end
 
-    raise NotAllowed, "No attempts remaining" if @assignment.attempts_used >= @exam.max_attempts
+    raise NotAllowed, I18n.t("take.errors.no_attempts") if @assignment.attempts_used >= @exam.max_attempts
 
     now = Time.current
     deadline = @exam.time_limit_sec.present? ? now + @exam.time_limit_sec.seconds : nil
@@ -59,22 +59,22 @@ class AttemptLifecycle
 
   def autosave!(attempt, answers_payload, expected_version: nil)
     expire_if_needed!(attempt)
-    raise Expired, "Time is up" if attempt.expired?
-    raise NotAllowed, "Attempt is not in progress" unless attempt.in_progress?
+    raise Expired, I18n.t("take.errors.time_up") if attempt.expired?
+    raise NotAllowed, I18n.t("take.errors.not_in_progress") unless attempt.in_progress?
 
     retries = 0
     begin
       Attempt.transaction do
         locked = Attempt.lock.find(attempt.id)
-        raise NotAllowed, "Attempt is not in progress" unless locked.in_progress?
-        raise Expired, "Time is up" if locked.past_deadline?
+        raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
+        raise Expired, I18n.t("take.errors.time_up") if locked.past_deadline?
 
         apply_answers!(locked, answers_payload)
 
         # If client version is stale, reload and re-apply (last-write-wins).
         if expected_version.present? && locked.lock_version != expected_version.to_i
           locked.reload
-          raise NotAllowed, "Attempt is not in progress" unless locked.in_progress?
+          raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
           apply_answers!(locked, answers_payload)
         end
 
@@ -83,7 +83,7 @@ class AttemptLifecycle
     rescue ActiveRecord::StaleObjectError
       retries += 1
       retry if retries < 2
-      raise Conflict, "Could not save answers; please try again"
+      raise Conflict, I18n.t("take.errors.save_conflict")
     end
 
     attempt.reload
@@ -91,13 +91,13 @@ class AttemptLifecycle
 
   def submit!(attempt)
     expire_if_needed!(attempt)
-    raise Expired, "Time is up" if attempt.expired?
-    raise NotAllowed, "Attempt is not in progress" unless attempt.in_progress?
+    raise Expired, I18n.t("take.errors.time_up") if attempt.expired?
+    raise NotAllowed, I18n.t("take.errors.not_in_progress") unless attempt.in_progress?
 
     Attempt.transaction do
       locked = Attempt.lock.find(attempt.id)
-      raise Expired, "Time is up" if locked.expired? || locked.past_deadline?
-      raise NotAllowed, "Attempt is not in progress" unless locked.in_progress?
+      raise Expired, I18n.t("take.errors.time_up") if locked.expired? || locked.past_deadline?
+      raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
 
       Scoring.score_all_mcq!(locked)
 

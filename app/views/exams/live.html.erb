@@ -1,34 +1,36 @@
-<% content_for :title, "Live — #{@exam.title}" %>
+<% content_for :title, t("exams.live.title", title: @exam.title) %>
 
 <div data-controller="live-board"
      data-live-board-interval-value="4000"
-     data-live-board-src-value="<%= live_test_path(@exam, class_group_id: @class_group&.id) %>">
+     data-live-board-src-value="<%= live_test_path(@exam, class_group_id: @class_group&.id) %>"
+     data-live-board-toast-one-value="<%= t("exams.live.toast_one") %>"
+     data-live-board-toast-other-value="<%= t("exams.live.toast_other", count: "__COUNT__") %>">
   <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
     <div>
-      <%= link_to "← Back to test", test_path(@exam), class: "text-sm text-slate-600 underline" %>
-      <h1 class="mt-2 text-2xl font-semibold">Live board: <%= @exam.title %></h1>
-      <p class="text-sm text-slate-500">Auto-refreshes every 4 seconds. Times use the server clock.</p>
+      <%= link_to t("exams.assign.back"), test_path(@exam), class: "text-sm text-slate-600 underline" %>
+      <h1 class="mt-2 text-2xl font-semibold"><%= t("exams.live.title", title: @exam.title) %></h1>
+      <p class="text-sm text-slate-500"><%= t("exams.live.hint") %></p>
     </div>
     <div class="flex flex-wrap gap-2">
-      <%= link_to "Results", results_test_path(@exam), class: btn_secondary %>
-      <%= link_to "Assign / links", manage_test_assignments_path(@exam), class: btn_secondary %>
+      <%= link_to t("exams.show.results"), results_test_path(@exam), class: btn_secondary %>
+      <%= link_to t("exams.show.assign"), manage_test_assignments_path(@exam), class: btn_secondary %>
     </div>
   </div>
 
   <%= form_with url: live_test_path(@exam), method: :get, local: true, class: "mb-4 flex flex-wrap items-end gap-3" do %>
     <div>
-      <label class="text-sm font-medium">Filter by class</label>
+      <label class="text-sm font-medium"><%= t("exams.live.filter") %></label>
       <%= select_tag :class_group_id,
             options_from_collection_for_select(@class_groups, :id, :name, @class_group&.id),
-            include_blank: "All students",
+            include_blank: t("exams.live.all_students"),
             class: field_class %>
     </div>
-    <%= submit_tag "Apply", class: btn_secondary %>
+    <%= submit_tag t("common.apply"), class: btn_secondary %>
   <% end %>
 
   <p id="live-toast" class="mb-3 hidden rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800"></p>
 
   <%= turbo_frame_tag "live_board", src: live_test_path(@exam, class_group_id: @class_group&.id) do %>
-    <p class="text-slate-500">Loading board…</p>
+    <p class="text-slate-500"><%= t("exams.live.loading") %></p>
   <% end %>
 </div>

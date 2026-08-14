@@ -9,7 +9,7 @@ class QuestionsController < ApplicationController
     apply_config!(@question)
 
     if @question.save
-      redirect_to test_path(@exam), notice: "Question added."
+      redirect_to test_path(@exam), notice: t("exams.flash.question_added")
     else
       redirect_to test_path(@exam), alert: @question.errors.full_messages.to_sentence
     end
@@ -20,7 +20,7 @@ class QuestionsController < ApplicationController
     apply_config!(@question)
 
     if @question.save
-      redirect_to test_path(@exam), notice: "Question updated."
+      redirect_to test_path(@exam), notice: t("exams.flash.question_updated")
     else
       redirect_to test_path(@exam), alert: @question.errors.full_messages.to_sentence
     end
@@ -28,7 +28,7 @@ class QuestionsController < ApplicationController
 
   def destroy
     @question.destroy!
-    redirect_to test_path(@exam), notice: "Question removed."
+    redirect_to test_path(@exam), notice: t("exams.flash.question_removed")
   end
 
   private
@@ -44,7 +44,7 @@ class QuestionsController < ApplicationController
   def ensure_editable
     return if @exam.questions_editable?
 
-    redirect_to test_path(@exam), alert: "Questions can only be edited while the test is a draft."
+    redirect_to test_path(@exam), alert: t("exams.flash.questions_locked")
   end
 
   def question_params

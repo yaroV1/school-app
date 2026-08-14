@@ -24,13 +24,13 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
   test "live board page loads and frame shows assignments" do
     get live_test_path(@exam)
     assert_response :success
-    assert_match(/Live board/, response.body)
+    assert_match I18n.t("exams.live.title_prefix"), response.body
 
     get live_test_path(@exam), headers: { "Turbo-Frame" => "live_board" }
     assert_response :success
     assert_match(/In Group/, response.body)
     assert_match(/Out Group/, response.body)
-    assert_match(/Not started/, response.body)
+    assert_match I18n.t("statuses.not_started"), response.body
   end
 
   test "live board filters by class group" do

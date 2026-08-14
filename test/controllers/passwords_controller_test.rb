@@ -14,7 +14,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
 
     follow_redirect!
-    assert_notice "reset instructions sent"
+    assert_notice I18n.t("auth.passwords.reset_sent")
   end
 
   test "create for an unknown user redirects but sends no mail" do
@@ -23,7 +23,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
 
     follow_redirect!
-    assert_notice "reset instructions sent"
+    assert_notice I18n.t("auth.passwords.reset_sent")
   end
 
   test "edit" do
@@ -36,7 +36,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_password_path
 
     follow_redirect!
-    assert_notice "reset link is invalid"
+    assert_notice I18n.t("auth.passwords.invalid_link")
   end
 
   test "update" do
@@ -46,7 +46,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     end
 
     follow_redirect!
-    assert_notice "Password has been reset"
+    assert_notice I18n.t("auth.passwords.reset_success")
   end
 
   test "update with non matching passwords" do
@@ -57,12 +57,14 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     end
 
     follow_redirect!
-    assert_notice "Passwords did not match"
+    assert_notice I18n.t("auth.passwords.mismatch")
   end
 
   private
     def assert_notice(text)
-      assert_select "#notice, #alert", /#{text}/
+      assert_select "#notice, #alert" do |elements|
+        assert_includes elements.map(&:text).join, text
+      end
     end
 end
 

@@ -9,7 +9,7 @@
     <%= f.text_field :name, required: true, class: field_class %>
   </div>
   <div>
-    <%= f.label :email, "Email (optional)", class: "text-sm font-medium" %>
+    <%= f.label :email, t("students.form.email_optional"), class: "text-sm font-medium" %>
     <%= f.email_field :email, class: field_class %>
   </div>
   <%= f.submit class: btn_primary %>

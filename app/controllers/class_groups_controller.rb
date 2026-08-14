@@ -16,7 +16,7 @@ class ClassGroupsController < ApplicationController
   def create
     @class_group = Current.user.class_groups.new(class_group_params)
     if @class_group.save
-      redirect_to @class_group, notice: "Class created."
+      redirect_to @class_group, notice: t("classes.flash.created")
     else
       render :new, status: :unprocessable_entity
     end
@@ -27,7 +27,7 @@ class ClassGroupsController < ApplicationController
 
   def update
     if @class_group.update(class_group_params)
-      redirect_to @class_group, notice: "Class updated."
+      redirect_to @class_group, notice: t("classes.flash.updated")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -35,12 +35,12 @@ class ClassGroupsController < ApplicationController
 
   def destroy
     @class_group.destroy!
-    redirect_to class_groups_path, notice: "Class deleted."
+    redirect_to class_groups_path, notice: t("classes.flash.deleted")
   end
 
   def members
     @class_group.replace_members!(params[:student_ids])
-    redirect_to @class_group, notice: "Members updated."
+    redirect_to @class_group, notice: t("classes.flash.members_updated")
   end
 
   private

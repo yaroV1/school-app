@@ -5,7 +5,10 @@ export default class extends Controller {
     url: String,
     attemptId: Number,
     lockVersion: Number,
-    interval: { type: Number, default: 15000 }
+    interval: { type: Number, default: 15000 },
+    saving: { type: String, default: "Saving…" },
+    saved: { type: String, default: "Saved" },
+    failed: { type: String, default: "Save failed" }
   }
   static targets = ["status"]
 
@@ -45,7 +48,7 @@ export default class extends Controller {
     if (answers.length === 0) return
 
     const token = document.querySelector("meta[name='csrf-token']")?.content
-    this.setStatus("Saving…")
+    this.setStatus(this.savingValue)
 
     try {
       const response = await fetch(this.urlValue, {
@@ -68,18 +71,18 @@ export default class extends Controller {
         if (typeof data.lock_version === "number") {
           this.lockVersionValue = data.lock_version
         }
-        this.setStatus("Saved")
+        this.setStatus(this.savedValue)
         if (data.status === "expired") {
           window.location.reload()
         }
       } else {
-        this.setStatus(data.error || "Save failed")
+        this.setStatus(data.error || this.failedValue)
         if (data.status === "expired") {
           window.location.href = window.location.pathname.replace(/\/run$/, "/done")
         }
       }
     } catch (e) {
-      this.setStatus("Save failed")
+      this.setStatus(this.failedValue)
     }
   }
 

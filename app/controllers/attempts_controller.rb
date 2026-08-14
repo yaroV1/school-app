@@ -24,13 +24,13 @@ class AttemptsController < ApplicationController
 
     if params[:finalize].present?
       unless Scoring.ready_to_finalize?(@attempt)
-        return redirect_to attempt_path(@attempt), alert: "Score all short/open answers before finalizing."
+        return redirect_to attempt_path(@attempt), alert: t("attempts.flash.need_scores")
       end
 
       grade.finalize!
-      redirect_to attempt_path(@attempt), notice: "Grade finalized."
+      redirect_to attempt_path(@attempt), notice: t("attempts.flash.finalized")
     else
-      redirect_to attempt_path(@attempt), notice: "Scores saved."
+      redirect_to attempt_path(@attempt), notice: t("attempts.flash.saved")
     end
   end
 
