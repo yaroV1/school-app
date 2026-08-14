@@ -105,13 +105,64 @@ uk:
       title: "Редагувати клас"
     show:
       members: "Учасники"
+      students: "Учні"
+      subjects: "Предмети"
+      tests: "Тести"
+      add_student: "Додати учня"
+      add_subject: "Додати предмет"
+      new_test: "Новий тест"
+      remove_member: "Прибрати з класу"
+      remove_member_confirm: "Прибрати учня з цього класу?"
+      empty_students: "У цьому класі ще немає учнів."
+      empty_subjects: "У цьому класі ще немає предметів."
+      empty_tests: "У цьому класі ще немає тестів."
+      back: "← Усі класи"
+      back_to_class: "← Назад до класу"
       save_members: "Зберегти склад"
       delete_confirm: "Видалити цей клас?"
+    tests_count:
+      one: "%{count} тест"
+      few: "%{count} тести"
+      many: "%{count} тестів"
+      other: "%{count} тесту"
+    subjects_count:
+      one: "%{count} предмет"
+      few: "%{count} предмети"
+      many: "%{count} предметів"
+      other: "%{count} предмета"
     flash:
       created: "Клас створено."
       updated: "Клас оновлено."
       deleted: "Клас видалено."
       members_updated: "Склад класу оновлено."
+      member_removed: "Учня прибрано з класу."
+      has_tests: "Спочатку видаліть тести цього класу."
+      has_subjects: "Спочатку видаліть предмети цього класу."
+
+  subjects:
+    edit:
+      title: "Редагувати предмет"
+    show:
+      tests: "Тести"
+      new_test: "Новий тест"
+      empty_tests: "У цьому предметі ще немає тестів."
+      stats: "Успішність учнів"
+      stats_hint: "Учні спільні для всього класу. Тут — прогрес саме з цього предмета."
+      empty_students: "У класі ще немає учнів."
+      back_to_subject: "← Назад до предмета"
+      delete_confirm: "Видалити цей предмет?"
+    stats:
+      student: "Учень"
+      tests: "Тести"
+      average: "Середній бал"
+      last: "Останнє"
+      progress: "%{finished} / %{assigned}"
+      percent: "%{value}%"
+    flash:
+      created: "Предмет створено."
+      updated: "Предмет оновлено."
+      deleted: "Предмет видалено."
+      has_tests: "Спочатку видаліть тести цього предмета."
 
   exams:
     index:
@@ -224,11 +275,11 @@ uk:
       title: "Призначити: %{title}"
       back: "← Назад до тесту"
       publish_hint: "Опублікуйте тест, щоб учні могли почати. Посилання можна створити вже зараз."
-      assign_students: "Призначити учнів"
-      class_optional: "Клас (необов’язково)"
-      select_class: "Оберіть клас"
-      or_pick: "Або оберіть учнів"
+      assign_students: "Призначити учнів класу"
+      assign_class: "Призначити усім учням класу"
+      or_pick: "Або оберіть окремих учнів"
       create_links: "Створити / відновити посилання"
+      empty_class: "У класі ще немає учнів. Додайте їх на сторінці класу."
       access_links: "Посилання доступу"
       open_live: "Відкрити онлайн-табло"
       revoke_selected: "Відкликати вибрані"
@@ -340,6 +391,9 @@ uk:
       class_group:
         create: "Створити клас"
         update: "Зберегти клас"
+      subject:
+        create: "Створити предмет"
+        update: "Зберегти предмет"
       exam:
         create: "Створити тест"
         update: "Зберегти тест"
@@ -348,6 +402,7 @@ uk:
     models:
       student: "Учень"
       class_group: "Клас"
+      subject: "Предмет"
       exam: "Тест"
       question: "Питання"
     attributes:
@@ -355,6 +410,8 @@ uk:
         name: "Ім’я"
         email: "Email"
       class_group:
+        name: "Назва"
+      subject:
         name: "Назва"
       exam:
         title: "Назва"

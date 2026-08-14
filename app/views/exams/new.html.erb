@@ -1,2 +1,7 @@
-<h1 class="mb-6 text-2xl font-semibold"><%= t("exams.new.title") %></h1>
+<% content_for :title, t("exams.new.title") %>
+<div class="mb-6">
+  <%= link_to t("subjects.show.back_to_subject"), subject_path(@exam.subject), class: "text-sm text-slate-600 underline" %>
+  <h1 class="mt-2 text-2xl font-semibold"><%= t("exams.new.title") %></h1>
+  <p class="text-sm text-slate-500"><%= @exam.class_group.name %> · <%= @exam.subject.name %></p>
+</div>
 <%= render "form", exam: @exam %>

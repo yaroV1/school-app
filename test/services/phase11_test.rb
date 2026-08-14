@@ -3,7 +3,7 @@ require "test_helper"
 class Phase11Test < ActiveSupport::TestCase
   setup do
     @teacher = users(:one)
-    @exam = @teacher.exams.create!(title: "Windowed", max_attempts: 2, time_limit_sec: 120, status: :published)
+    @exam = create_exam!(@teacher, title: "Windowed", max_attempts: 2, time_limit_sec: 120, status: :published)
     @mcq = @exam.questions.create!(
       question_type: :mcq,
       prompt: "Q?",

@@ -6,7 +6,8 @@ This file is the canonical agent contract. `.cursor/rules/` should point here, n
 
 ## Naming (do not invent alternatives)
 
-- Model/table: `Exam` / `exams`. UI and routes: `/tests` (`as: :tests`).
+- Model/table: `Exam` / `exams`. UI and routes: `/tests` (`as: :tests`). An exam belongs to a `Subject`; a subject belongs to a `ClassGroup`. Create and list tests from the subject page. Students stay on the class (shared across subjects).
+- Students belong to a teacher and appear in classes via `class_memberships`. Add students from the class page; add subjects from the class page (no top-level Students/Tests nav).
 - Student-facing controllers: `Take::` (not `Student`). URLs stay `/t/:token`.
 - Question types: `mcq`, `short_text`, `open`, `ordering`, `matching`, `source`.
 - Auto-scored: MCQ, ordering (all-or-nothing), matching (partial). Teacher-scored: short_text, open, source.

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_09_185000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_15_002000) do
   create_table "answers", force: :cascade do |t|
     t.integer "attempt_id", null: false
     t.decimal "auto_score", precision: 8, scale: 2
@@ -78,10 +78,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_185000) do
     t.text "description"
     t.integer "max_attempts", default: 1, null: false
     t.integer "status", default: 0, null: false
+    t.integer "subject_id", null: false
     t.integer "teacher_id", null: false
     t.integer "time_limit_sec"
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["subject_id"], name: "index_exams_on_subject_id"
     t.index ["teacher_id"], name: "index_exams_on_teacher_id"
   end
 
@@ -128,6 +130,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_185000) do
     t.index ["teacher_id"], name: "index_students_on_teacher_id"
   end
 
+  create_table "subjects", force: :cascade do |t|
+    t.integer "class_group_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["class_group_id", "name"], name: "index_subjects_on_class_group_id_and_name", unique: true
+    t.index ["class_group_id"], name: "index_subjects_on_class_group_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email_address", null: false
@@ -144,9 +155,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_185000) do
   add_foreign_key "class_groups", "users", column: "teacher_id"
   add_foreign_key "class_memberships", "class_groups"
   add_foreign_key "class_memberships", "students"
+  add_foreign_key "exams", "subjects"
   add_foreign_key "exams", "users", column: "teacher_id"
   add_foreign_key "grades", "attempts"
   add_foreign_key "questions", "exams"
   add_foreign_key "sessions", "users"
   add_foreign_key "students", "users", column: "teacher_id"
+  add_foreign_key "subjects", "class_groups"
 end

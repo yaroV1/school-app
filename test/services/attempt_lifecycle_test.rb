@@ -3,7 +3,7 @@ require "test_helper"
 class AttemptLifecycleTest < ActiveSupport::TestCase
   setup do
     @teacher = users(:one)
-    @exam = @teacher.exams.create!(title: "Timed", max_attempts: 2, time_limit_sec: 60, status: :published)
+    @exam = create_exam!(@teacher, title: "Timed", max_attempts: 2, time_limit_sec: 60, status: :published)
     @mcq = @exam.questions.create!(
       question_type: :mcq,
       prompt: "Capital?",

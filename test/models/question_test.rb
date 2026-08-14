@@ -2,7 +2,7 @@ require "test_helper"
 
 class QuestionTest < ActiveSupport::TestCase
   setup do
-    @exam = users(:one).exams.create!(title: "Quiz", max_attempts: 1)
+    @exam = create_exam!(users(:one), title: "Quiz")
   end
 
   test "ordering requires at least three items" do

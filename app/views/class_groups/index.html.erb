@@ -10,7 +10,10 @@
       <li class="flex items-center justify-between px-4 py-3">
         <div>
           <%= link_to group.name, group, class: "font-medium hover:underline" %>
-          <span class="text-sm text-slate-500"> · <%= t("students.count", count: group.students.size) %></span>
+          <span class="text-sm text-slate-500">
+            · <%= t("students.count", count: group.students.count { |s| !s.archived? }) %>
+            · <%= t("classes.subjects_count", count: group.subjects.size) %>
+          </span>
         </div>
         <%= link_to t("common.manage"), group, class: btn_secondary %>
       </li>

@@ -1,10 +1,6 @@
 class StudentsController < ApplicationController
+  before_action :set_class_group, only: :create
   before_action :set_student, only: %i[show edit update archive unarchive]
-
-  def index
-    @students = Current.user.students.order(:name)
-    @students = @students.active unless params[:include_archived] == "1"
-  end
 
   def show
     @assignments = @student.assignments.includes(:exam, attempts: :grade).order(created_at: :desc)
@@ -13,16 +9,16 @@ class StudentsController < ApplicationController
                        .order(started_at: :desc)
   end
 
-  def new
-    @student = Current.user.students.new
-  end
-
   def create
     @student = Current.user.students.new(student_params)
     if @student.save
-      redirect_to students_path, notice: t("students.flash.created")
+      @class_group.add_student!(@student)
+      redirect_to @class_group, notice: t("students.flash.created")
     else
-      render :new, status: :unprocessable_entity
+      @students = @class_group.students.active.order(:name)
+      @subjects = Subject.where(class_group_id: @class_group.id).includes(:exams).order(:name)
+      @subject = Subject.new
+      render "class_groups/show", status: :unprocessable_entity
     end
   end
 
@@ -39,15 +35,19 @@ class StudentsController < ApplicationController
 
   def archive
     @student.archive!
-    redirect_to students_path, notice: t("students.flash.archived")
+    redirect_back_or_to class_groups_path, notice: t("students.flash.archived")
   end
 
   def unarchive
     @student.unarchive!
-    redirect_to students_path, notice: t("students.flash.restored")
+    redirect_back_or_to @student, notice: t("students.flash.restored")
   end
 
   private
+
+  def set_class_group
+    @class_group = Current.user.class_groups.find(params[:class_group_id])
+  end
 
   def set_student
     @student = Current.user.students.find(params[:id])

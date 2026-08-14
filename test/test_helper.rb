@@ -11,6 +11,16 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
+    def create_exam!(teacher, **attrs)
+      subject = attrs.delete(:subject)
+      group = attrs.delete(:class_group)
+      if subject.nil?
+        group ||= teacher.class_groups.first || teacher.class_groups.create!(name: "Class")
+        subject = group.subjects.first || group.subjects.create!(name: "Subject")
+      end
+      teacher.exams.create!({ title: "Quiz", max_attempts: 1, subject: subject }.merge(attrs))
+    end
+
     # Add more helper methods to be used by all tests here...
   end
 end

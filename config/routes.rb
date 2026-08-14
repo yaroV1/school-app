@@ -2,20 +2,26 @@ Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
 
-  resources :students, except: :destroy do
+  resources :class_groups do
+    member do
+      delete :remove_member
+    end
+    resources :students, only: %i[create]
+    resources :subjects, only: %i[create]
+  end
+
+  resources :students, except: %i[index new create destroy] do
     member do
       post :archive
       post :unarchive
     end
   end
 
-  resources :class_groups do
-    member do
-      put :members
-    end
+  resources :subjects, except: %i[index new create] do
+    resources :exams, path: "tests", only: %i[new create]
   end
 
-  resources :exams, path: "tests", as: :tests do
+  resources :exams, path: "tests", as: :tests, except: %i[index new create] do
     member do
       post :publish
       post :close

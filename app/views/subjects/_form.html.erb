@@ -1,0 +1,10 @@
+<%= form_with model: subject, class: "space-y-4 max-w-md" do |f| %>
+  <% if subject.errors.any? %>
+    <div class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"><%= subject.errors.full_messages.to_sentence %></div>
+  <% end %>
+  <div>
+    <%= f.label :name, class: "text-sm font-medium" %>
+    <%= f.text_field :name, required: true, class: field_class %>
+  </div>
+  <%= f.submit class: btn_primary %>
+<% end %>

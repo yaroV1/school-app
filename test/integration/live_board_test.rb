@@ -5,7 +5,8 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
     @teacher = users(:one)
     sign_in_as @teacher
 
-    @exam = @teacher.exams.create!(title: "Live Quiz", max_attempts: 1, status: :published)
+    @group = @teacher.class_groups.create!(name: "Group 1")
+    @exam = create_exam!(@teacher, title: "Live Quiz", status: :published, class_group: @group)
     @exam.questions.create!(
       question_type: :short_text,
       prompt: "Name?",
@@ -13,7 +14,6 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
       position: 0,
       config: {}
     )
-    @group = @teacher.class_groups.create!(name: "Group 1")
     @in_group = @teacher.students.create!(name: "In Group")
     @out_group = @teacher.students.create!(name: "Out Group")
     @group.replace_members!([ @in_group.id ])
@@ -31,13 +31,6 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
     assert_match(/In Group/, response.body)
     assert_match(/Out Group/, response.body)
     assert_match I18n.t("statuses.not_started"), response.body
-  end
-
-  test "live board filters by class group" do
-    get live_test_path(@exam, class_group_id: @group.id), headers: { "Turbo-Frame" => "live_board" }
-    assert_response :success
-    assert_match(/In Group/, response.body)
-    assert_no_match(/Out Group/, response.body)
   end
 
   test "bulk revoke revokes selected assignments" do

@@ -3,7 +3,7 @@ require "test_helper"
 class ScoringTest < ActiveSupport::TestCase
   setup do
     @teacher = users(:one)
-    @exam = @teacher.exams.create!(title: "Quiz", max_attempts: 1, status: :published)
+    @exam = create_exam!(@teacher, title: "Quiz", status: :published)
     @mcq = @exam.questions.create!(
       question_type: :mcq,
       prompt: "2+2?",

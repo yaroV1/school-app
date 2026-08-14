@@ -2,6 +2,7 @@
 <div class="mb-6">
   <%= link_to t("exams.assign.back"), test_path(@exam), class: "text-sm text-slate-600 underline" %>
   <h1 class="mt-2 text-2xl font-semibold"><%= t("exams.assign.title", title: @exam.title) %></h1>
+  <p class="text-sm text-slate-500"><%= @exam.class_group.name %> · <%= @exam.subject.name %></p>
 </div>
 
 <% unless @exam.published? %>
@@ -10,13 +11,13 @@
 
 <section class="mb-8 rounded-lg border border-slate-200 bg-white p-4">
   <h2 class="mb-3 text-lg font-medium"><%= t("exams.assign.assign_students") %></h2>
-  <%= form_with url: test_assignments_path(@exam), class: "space-y-4" do %>
-    <div>
-      <label class="text-sm font-medium"><%= t("exams.assign.class_optional") %></label>
-      <%= select_tag :class_group_id, options_from_collection_for_select(@class_groups, :id, :name), include_blank: t("exams.assign.select_class"), class: field_class %>
-    </div>
-    <div>
-      <p class="mb-2 text-sm font-medium"><%= t("exams.assign.or_pick") %></p>
+  <% if @students.any? %>
+    <%= form_with url: test_assignments_path(@exam), class: "mb-4" do %>
+      <%= hidden_field_tag :assign_class, "1" %>
+      <%= submit_tag t("exams.assign.assign_class"), class: btn_primary %>
+    <% end %>
+    <p class="mb-2 text-sm font-medium"><%= t("exams.assign.or_pick") %></p>
+    <%= form_with url: test_assignments_path(@exam), class: "space-y-4" do %>
       <ul class="max-h-48 space-y-1 overflow-y-auto rounded border border-slate-200 p-3">
         <% @students.each do |student| %>
           <li>
@@ -27,8 +28,11 @@
           </li>
         <% end %>
       </ul>
-    </div>
-    <%= submit_tag t("exams.assign.create_links"), class: btn_primary %>
+      <%= submit_tag t("exams.assign.create_links"), class: btn_secondary %>
+    <% end %>
+  <% else %>
+    <p class="text-slate-600"><%= t("exams.assign.empty_class") %></p>
+    <%= link_to t("classes.show.add_student"), class_group_path(@exam.class_group), class: "mt-2 inline-block text-sm underline" %>
   <% end %>
 </section>
 

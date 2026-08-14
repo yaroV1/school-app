@@ -1,4 +1,4 @@
-<%= form_with model: exam, url: exam.persisted? ? test_path(exam) : tests_path, class: "space-y-4 max-w-xl" do |f| %>
+<%= form_with model: exam, url: exam.persisted? ? test_path(exam) : subject_exams_path(exam.subject), class: "space-y-4 max-w-xl" do |f| %>
   <% if exam.errors.any? %>
     <div class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"><%= exam.errors.full_messages.to_sentence %></div>
   <% end %>

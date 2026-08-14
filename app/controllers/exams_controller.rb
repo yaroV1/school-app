@@ -1,20 +1,17 @@
 class ExamsController < ApplicationController
+  before_action :set_subject, only: %i[new create]
   before_action :set_exam, only: %i[show edit update destroy publish close results live]
-
-  def index
-    @exams = Current.user.exams.includes(:questions).order(updated_at: :desc)
-  end
 
   def show
     @questions = @exam.questions
   end
 
   def new
-    @exam = Current.user.exams.new(max_attempts: 1)
+    @exam = @subject.exams.new(max_attempts: 1)
   end
 
   def create
-    @exam = Current.user.exams.new(exam_params)
+    @exam = @subject.exams.new(exam_params)
     if @exam.save
       redirect_to test_path(@exam), notice: t("exams.flash.created")
     else
@@ -34,8 +31,9 @@ class ExamsController < ApplicationController
   end
 
   def destroy
+    subject = @exam.subject
     @exam.destroy!
-    redirect_to tests_path, notice: t("exams.flash.deleted")
+    redirect_to subject_path(subject), notice: t("exams.flash.deleted")
   end
 
   def publish
@@ -55,9 +53,6 @@ class ExamsController < ApplicationController
   end
 
   def live
-    @class_groups = Current.user.class_groups.order(:name)
-    @class_group = Current.user.class_groups.find_by(id: params[:class_group_id]) if params[:class_group_id].present?
-
     if turbo_frame_request?
       ExpireOverdueAttemptsJob.perform_now
       load_live_board
@@ -67,18 +62,16 @@ class ExamsController < ApplicationController
 
   private
 
+  def set_subject
+    @subject = Current.user.subjects.find(params[:subject_id])
+  end
+
   def set_exam
     @exam = Current.user.exams.find(params[:id])
   end
 
   def load_live_board
     scope = @exam.assignments.includes(:student, :attempts).joins(:student)
-    if @class_group
-      scope = scope.joins(student: :class_memberships)
-                   .where(class_memberships: { class_group_id: @class_group.id })
-                   .distinct
-    end
-
     @assignments = scope.to_a.sort_by { |a| [ a.board_sort_key, a.student.name.to_s.downcase ] }
     @counts = @assignments.group_by(&:board_status).transform_values(&:size)
     @server_time = Time.current

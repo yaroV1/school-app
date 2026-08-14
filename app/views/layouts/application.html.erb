@@ -16,8 +16,7 @@
       <header class="border-b border-slate-200 bg-white">
         <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <nav class="flex items-center gap-4 text-sm font-medium">
-            <%= link_to t("nav.tests"), tests_path, class: nav_class(tests_path) %>
-            <%= link_to t("nav.students"), students_path, class: nav_class(students_path) %>
+            <%= link_to t("app_name"), class_groups_path, class: "text-slate-900" %>
             <%= link_to t("nav.classes"), class_groups_path, class: nav_class(class_groups_path) %>
           </nav>
           <div class="flex items-center gap-3 text-sm text-slate-600">

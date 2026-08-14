@@ -8,14 +8,14 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
   test "teacher assigns links and student submits mcq short and open" do
     sign_in_as @teacher
 
-    post students_url, params: { student: { name: "Sam" } }
-    student = Student.order(:id).last
-
     post class_groups_url, params: { class_group: { name: "10-A" } }
     group = ClassGroup.order(:id).last
-    put members_class_group_url(group), params: { student_ids: [ student.id ] }
+    post class_group_students_url(group), params: { student: { name: "Sam" } }
+    student = Student.order(:id).last
 
-    post tests_url, params: { exam: { title: "Unit 1", max_attempts: 1, time_limit_sec: 300 } }
+    post class_group_subjects_url(group), params: { subject: { name: "History of Ukraine" } }
+    subject = Subject.order(:id).last
+    post subject_exams_url(subject), params: { exam: { title: "Unit 1", max_attempts: 1, time_limit_sec: 300 } }
     exam = Exam.order(:id).last
 
     post test_questions_url(exam), params: {
@@ -113,5 +113,37 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_equal 3, attempt.answers.find_by!(question: matching).auto_score.to_i
     assert_equal "Kyiv is the capital.", attempt.answers.find_by!(question: source).text_response
     assert_nil attempt.answers.find_by!(question: source).auto_score
+  end
+
+  test "class page lists students and subjects; subject page lists tests and student stats" do
+    sign_in_as @teacher
+
+    post class_groups_url, params: { class_group: { name: "9-B" } }
+    group = ClassGroup.order(:id).last
+    post class_group_students_url(group), params: { student: { name: "Ann" } }
+    post class_group_subjects_url(group), params: { subject: { name: "World History" } }
+    subject = Subject.order(:id).last
+    post subject_exams_url(subject), params: { exam: { title: "Quiz", max_attempts: 1 } }
+    exam = Exam.order(:id).last
+    assert_equal subject.id, exam.subject_id
+    assert_equal group.id, exam.class_group.id
+
+    get class_group_url(group)
+    assert_response :success
+    assert_match "Ann", response.body
+    assert_match "World History", response.body
+
+    get subject_url(subject)
+    assert_response :success
+    assert_match "Quiz", response.body
+    assert_match "Ann", response.body
+
+    delete subject_url(subject)
+    assert_redirected_to subject_url(subject)
+    assert Subject.exists?(subject.id)
+
+    delete class_group_url(group)
+    assert_redirected_to class_group_url(group)
+    assert ClassGroup.exists?(group.id)
   end
 end

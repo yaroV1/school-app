@@ -40,12 +40,18 @@ class_b = teacher.class_groups.find_or_create_by!(name: "Class 10-B")
 class_a.replace_members!(students.first(6).map(&:id))
 class_b.replace_members!(students.last(5).map(&:id))
 
+algebra_subject = class_a.subjects.find_or_create_by!(name: "Алгебра")
+biology_subject = class_a.subjects.find_or_create_by!(name: "Біологія")
+ukraine_history = class_a.subjects.find_or_create_by!(name: "Історія України")
+world_history = class_b.subjects.find_or_create_by!(name: "Всесвітня історія")
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 def seed_exam!(teacher, attrs)
   exam = teacher.exams.find_or_initialize_by(title: attrs[:title])
   exam.assign_attributes(
+    subject: attrs.fetch(:subject),
     description: attrs[:description],
     time_limit_sec: attrs[:time_limit_sec],
     max_attempts: attrs[:max_attempts] || 1,
@@ -82,6 +88,7 @@ end
 
 # 1) Published algebra quiz — assigned to Class 10-A, timed, ready to take
 algebra = seed_exam!(teacher,
+  subject: algebra_subject,
   title: "Algebra Basics",
   description: "Short check on linear equations and expressions. Calculators allowed.",
   time_limit_sec: 15 * 60,
@@ -140,6 +147,7 @@ seed_assignments!(algebra, class_a.students)
 
 # 2) Published history quiz — Class 10-B, 2 attempts, untimed
 history = seed_exam!(teacher,
+  subject: world_history,
   title: "World War II — Intro",
   description: "Open-book friendly. Use short answers where asked.",
   time_limit_sec: nil,
@@ -180,6 +188,7 @@ seed_assignments!(history, class_b.students)
 
 # 3) Draft test — not published yet (for builder UI)
 seed_exam!(teacher,
+  subject: biology_subject,
   title: "Biology Cells (draft)",
   description: "Work in progress — do not assign yet.",
   time_limit_sec: 20 * 60,
@@ -219,6 +228,7 @@ seed_exam!(teacher,
 
 # 4) Closed test with one submitted attempt (for results / grading UI)
 closed = seed_exam!(teacher,
+  subject: algebra_subject,
   title: "Quick Warm-up (closed)",
   description: "Already finished session — use for grading practice.",
   time_limit_sec: 5 * 60,
@@ -259,6 +269,7 @@ closed.close! unless closed.closed?
 
 # 5) Published chronology + matching demo
 chrono = seed_exam!(teacher,
+  subject: ukraine_history,
   title: "Chronology & matching",
   description: "Reorder events and match facts. Auto-scored.",
   time_limit_sec: 10 * 60,
@@ -302,6 +313,12 @@ chrono = seed_exam!(teacher,
 chrono.publish! unless chrono.published?
 seed_assignments!(chrono, class_a.students)
 
+teacher.class_groups.each do |group|
+  group.subjects.where(name: "Предмет").find_each do |subject|
+    subject.destroy if subject.exams.none?
+  end
+end
+
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
@@ -310,16 +327,17 @@ puts "Seeded demo data"
 puts "================"
 puts "Teacher login:  teacher@example.com / password123"
 puts "Classes:        #{teacher.class_groups.order(:name).pluck(:name).join(', ')}"
+puts "Subjects:       #{Subject.joins(:class_group).where(class_groups: { teacher_id: teacher.id }).order(:name).map { |s| "#{s.class_group.name}: #{s.name}" }.join(', ')}"
 puts "Students:       #{teacher.students.active.count}"
 puts "Tests:"
 teacher.exams.order(:title).each do |exam|
   links = exam.assignments.limit(2).map { |a| "http://localhost:3000/t/#{a.access_token}" }
-  puts "  - [#{exam.status}] #{exam.title} (#{exam.assignments.count} links)"
+  puts "  - [#{exam.status}] #{exam.subject.name} / #{exam.title} (#{exam.assignments.count} links)"
   links.each { |url| puts "      sample: #{url}" }
 end
 puts ""
 puts "Suggested path:"
-puts "  1) Sign in → Tests → Algebra Basics → Live board / Assign"
+puts "  1) Sign in → Classes → Class 10-A → Алгебра → Algebra Basics"
 puts "  2) Open a sample student link above in a private window"
 puts "  3) Grade Quick Warm-up (closed) under Results"
 puts ""

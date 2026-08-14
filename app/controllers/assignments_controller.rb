@@ -8,8 +8,7 @@ class AssignmentsController < ApplicationController
 
   def manage
     @assignments = @exam.assignments.includes(:student, :attempts).joins(:student).order("students.name")
-    @students = Current.user.students.active.order(:name)
-    @class_groups = Current.user.class_groups.order(:name)
+    @students = @exam.class_group.students.active.order(:name)
   end
 
   def create
@@ -62,11 +61,12 @@ class AssignmentsController < ApplicationController
   end
 
   def resolve_student_ids
-    ids = Array(params[:student_ids]).map(&:to_i)
-    if params[:class_group_id].present?
-      group = Current.user.class_groups.find(params[:class_group_id])
-      ids.concat(group.students.active.pluck(:id))
+    class_student_ids = @exam.class_group.students.active.pluck(:id)
+    if params[:assign_class].present?
+      class_student_ids
+    else
+      ids = Array(params[:student_ids]).map(&:to_i)
+      class_student_ids & ids
     end
-    Current.user.students.active.where(id: ids.uniq).pluck(:id)
   end
 end
