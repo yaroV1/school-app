@@ -19,32 +19,54 @@
         autosave_url_value: student_answers_path(token: @assignment.access_token),
         autosave_attempt_id_value: @attempt.id,
         autosave_lock_version_value: @attempt.lock_version,
+        autosave_saving_value: t("take.saving"),
+        autosave_saved_value: t("take.saved"),
+        autosave_failed_value: t("take.save_failed"),
         action: "countdown:ended@window->autosave#save"
       },
       class: "space-y-6" do %>
   <%= hidden_field_tag :attempt_id, @attempt.id %>
-  <p class="text-xs text-slate-500" data-autosave-target="status">Answers save automatically</p>
+  <p class="text-xs text-slate-500" data-autosave-target="status"><%= t("take.autosave") %></p>
 
   <% @questions.each_with_index do |question, index| %>
     <% answer = @answers[question.id] %>
-    <fieldset class="rounded-lg border border-slate-200 p-4">
-      <legend class="px-1 text-sm font-medium text-slate-500">Question <%= index + 1 %> · <%= pluralize(question.points, "point") %></legend>
+    <% type_styles = {
+         "mcq" => "border-sky-200 bg-sky-50/40",
+         "short_text" => "border-amber-200 bg-amber-50/40",
+         "open" => "border-violet-200 bg-violet-50/40"
+       } %>
+    <fieldset class="rounded-lg border p-4 <%= type_styles.fetch(question.question_type, "border-slate-200") %>">
+      <legend class="px-1 text-sm font-medium text-slate-500"><%= t("take.question_legend", n: index + 1) %> · <%= t("exams.points", count: question.points) %></legend>
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        <span class="inline-flex rounded-full bg-white/80 px-2 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200">
+          <%= t("question_types.#{question.question_type}") %>
+        </span>
+        <span class="text-xs text-slate-600"><%= t("take.type_hint.#{question.question_type}") %></span>
+      </div>
       <p class="mb-3 whitespace-pre-wrap font-medium"><%= question.prompt %></p>
 
       <% if question.mcq? %>
         <div class="space-y-2">
           <% question.student_facing_options.each do |opt| %>
-            <label class="flex items-start gap-2 text-sm">
+            <label class="flex items-start gap-2 rounded-md bg-white/80 px-2 py-1.5 text-sm">
               <%= radio_button_tag "answers[#{question.id}][option_id]", opt["id"], answer&.option_id == opt["id"] %>
               <span><%= opt["text"] %></span>
             </label>
           <% end %>
         </div>
+      <% elsif question.short_text? %>
+        <%= text_field_tag "answers[#{question.id}][text]", answer&.text_response,
+              maxlength: 300,
+              placeholder: t("take.placeholder.short_text"),
+              class: "#{field_class} bg-white" %>
       <% else %>
-        <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response, rows: question.open? ? 6 : 3, class: field_class %>
+        <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response,
+              rows: 8,
+              placeholder: t("take.placeholder.open"),
+              class: "#{field_class} bg-white min-h-40" %>
       <% end %>
     </fieldset>
   <% end %>
 
-  <%= submit_tag "Submit test", class: "#{btn_primary} w-full justify-center", data: { turbo_confirm: "Submit your answers? You cannot change them after submitting." } %>
+  <%= submit_tag t("take.submit"), class: "#{btn_primary} w-full justify-center", data: { turbo_confirm: t("take.submit_confirm") } %>
 <% end %>
