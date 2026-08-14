@@ -26,6 +26,47 @@
           <% selected = question.options.find { |o| o["id"] == answer.option_id } %>
           <p><%= selected ? selected["text"] : answer.option_id %></p>
           <p class="mt-1 text-slate-600"><%= t("attempts.grade.auto_score") %>: <%= answer.auto_score %></p>
+        <% elsif question.ordering? %>
+          <% if answer.order_ids.blank? %>
+            <p class="italic text-slate-400"><%= t("attempts.grade.no_answer") %></p>
+          <% else %>
+            <p class="mb-1 text-slate-500"><%= t("attempts.grade.student_order") %></p>
+            <ol class="list-decimal space-y-1 pl-5">
+              <% answer.order_ids.each do |id| %>
+                <% item = question.items.find { |entry| entry["id"] == id } %>
+                <li><%= item ? item["text"] : id %></li>
+              <% end %>
+            </ol>
+            <p class="mt-3 mb-1 text-slate-500"><%= t("attempts.grade.correct_order") %></p>
+            <ol class="list-decimal space-y-1 pl-5 text-slate-700">
+              <% question.items.each do |item| %>
+                <li><%= item["text"] %></li>
+              <% end %>
+            </ol>
+          <% end %>
+          <p class="mt-1 text-slate-600"><%= t("attempts.grade.auto_score") %>: <%= answer.auto_score %></p>
+        <% elsif question.matching? %>
+          <% if answer.pairs.values.all?(&:blank?) %>
+            <p class="italic text-slate-400"><%= t("attempts.grade.no_answer") %></p>
+          <% else %>
+            <ul class="space-y-1">
+              <% question.left_items.each do |left| %>
+                <% chosen_id = answer.pairs[left["id"]] %>
+                <% chosen = question.right_items.find { |item| item["id"] == chosen_id } %>
+                <% correct = question.right_items.find { |item| item["id"] == question.pairs[left["id"]] } %>
+                <% ok = chosen_id.to_s == question.pairs[left["id"]].to_s %>
+                <li>
+                  <%= left["text"] %> → <%= chosen ? chosen["text"] : t("common.dash") %>
+                  <% if ok %>
+                    <span class="text-emerald-700"><%= t("attempts.grade.pair_correct") %></span>
+                  <% else %>
+                    <span class="text-slate-500"><%= t("attempts.grade.pair_expected", value: correct&.fetch("text", t("common.dash"))) %></span>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          <% end %>
+          <p class="mt-1 text-slate-600"><%= t("attempts.grade.auto_score") %>: <%= answer.auto_score %></p>
         <% else %>
           <p class="whitespace-pre-wrap"><%= answer.text_response.presence || t("common.dash") %></p>
         <% end %>
@@ -35,7 +76,7 @@
       <div class="mt-3 grid gap-3 sm:grid-cols-2">
         <div>
           <label class="text-sm font-medium"><%= t("attempts.grade.teacher_score") %></label>
-          <%= number_field_tag "answers[][teacher_score]", answer&.teacher_score || (question.mcq? ? answer&.auto_score : nil), min: 0, max: question.points, step: 0.5, class: field_class %>
+          <%= number_field_tag "answers[][teacher_score]", answer&.teacher_score || (question.auto_gradable? ? answer&.auto_score : nil), min: 0, max: question.points, step: 0.01, class: field_class %>
         </div>
         <div>
           <label class="text-sm font-medium"><%= t("attempts.grade.comment") %></label>

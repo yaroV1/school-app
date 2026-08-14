@@ -51,6 +51,19 @@
                 <li><%= opt["text"] %><% if opt["is_correct"] %> <span class="text-emerald-700"><%= t("exams.show.correct") %></span><% end %></li>
               <% end %>
             </ul>
+          <% elsif question.ordering? %>
+            <ol class="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-700">
+              <% question.items.each do |item| %>
+                <li><%= item["text"] %></li>
+              <% end %>
+            </ol>
+          <% elsif question.matching? %>
+            <ul class="mt-2 space-y-1 text-sm text-slate-700">
+              <% question.left_items.each do |left| %>
+                <% right = question.right_items.find { |item| item["id"] == question.pairs[left["id"]] } %>
+                <li><%= left["text"] %> → <%= right&.fetch("text", t("common.dash")) %></li>
+              <% end %>
+            </ul>
           <% end %>
         </li>
       <% end %>
@@ -101,6 +114,29 @@
         </div>
       </div>
 
+      <div id="ordering_fields" class="hidden space-y-2">
+        <p class="text-sm font-medium"><%= t("exams.show.ordering_hint_title") %></p>
+        <% 8.times do |i| %>
+          <input type="text" name="question[items][<%= i %>][text]" placeholder="<%= t("exams.show.ordering_placeholder", n: i + 1) %>" class="<%= field_class %>">
+        <% end %>
+        <p class="text-xs text-slate-500"><%= t("exams.show.ordering_hint") %></p>
+      </div>
+
+      <div id="matching_fields" class="hidden space-y-2">
+        <p class="text-sm font-medium"><%= t("exams.show.matching_hint_title") %></p>
+        <div class="grid gap-2 sm:grid-cols-2 text-xs font-medium text-slate-500">
+          <p><%= t("exams.show.matching_left") %></p>
+          <p class="hidden sm:block"><%= t("exams.show.matching_right") %></p>
+        </div>
+        <% 5.times do |i| %>
+          <div class="grid gap-2 sm:grid-cols-2">
+            <input type="text" name="question[pairs][<%= i %>][left]" placeholder="<%= t("exams.show.matching_left_placeholder", n: i + 1) %>" class="<%= field_class %>">
+            <input type="text" name="question[pairs][<%= i %>][right]" placeholder="<%= t("exams.show.matching_right_placeholder", n: i + 1) %>" class="<%= field_class %>">
+          </div>
+        <% end %>
+        <p class="text-xs text-slate-500"><%= t("exams.show.matching_hint") %></p>
+      </div>
+
       <%= f.submit t("exams.show.submit_question"), class: btn_primary %>
     <% end %>
   </section>
@@ -110,10 +146,14 @@
       const select = document.getElementById("question_type_select");
       const mcq = document.getElementById("mcq_fields");
       const text = document.getElementById("text_fields");
+      const ordering = document.getElementById("ordering_fields");
+      const matching = document.getElementById("matching_fields");
       function sync() {
-        const isMcq = select.value === "mcq";
-        mcq.classList.toggle("hidden", !isMcq);
-        text.classList.toggle("hidden", isMcq);
+        const type = select.value;
+        mcq.classList.toggle("hidden", type !== "mcq");
+        text.classList.toggle("hidden", type !== "short_text" && type !== "open");
+        ordering.classList.toggle("hidden", type !== "ordering");
+        matching.classList.toggle("hidden", type !== "matching");
       }
       select.addEventListener("change", sync);
       sync();

@@ -99,7 +99,7 @@ class AttemptLifecycle
       raise Expired, I18n.t("take.errors.time_up") if locked.expired? || locked.past_deadline?
       raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
 
-      Scoring.score_all_mcq!(locked)
+      Scoring.score_all_auto!(locked)
 
       locked.update!(status: :submitted, submitted_at: Time.current, last_activity_at: Time.current)
       grade = locked.grade || locked.build_grade
@@ -143,15 +143,26 @@ class AttemptLifecycle
       answer = attempt.answers.find_or_initialize_by(question_id: question.id)
       answer.payload = normalize_payload(question, payload)
       answer.save!
-      Scoring.score_mcq!(answer) if question.mcq?
+      Scoring.score_auto!(answer)
     end
   end
 
   def normalize_payload(question, payload)
     payload = payload.respond_to?(:to_unsafe_h) ? payload.to_unsafe_h : payload.to_h
     payload = payload.stringify_keys
-    if question.mcq?
+    case question.question_type
+    when "mcq"
       { "option_id" => payload["option_id"].to_s.presence }
+    when "ordering"
+      order = payload["order"]
+      order = order.values if order.is_a?(Hash)
+      { "order" => Array(order).map(&:to_s).reject(&:blank?) }
+    when "matching"
+      pairs = payload["pairs"] || {}
+      pairs = pairs.to_unsafe_h if pairs.respond_to?(:to_unsafe_h)
+      {
+        "pairs" => pairs.to_h.stringify_keys.transform_values { |value| value.to_s.presence }.compact
+      }
     else
       { "text" => payload["text"].to_s }
     end

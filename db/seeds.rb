@@ -247,6 +247,51 @@ if assignment.attempts.none?
 end
 closed.close! unless closed.closed?
 
+# 5) Published chronology + matching demo
+chrono = seed_exam!(teacher,
+  title: "Chronology & matching",
+  description: "Reorder events and match facts. Auto-scored.",
+  time_limit_sec: 10 * 60,
+  max_attempts: 1,
+  available_from: 1.day.ago,
+  available_until: 14.days.from_now,
+  questions: [
+    {
+      type: :ordering,
+      prompt: "Put these events in chronological order.",
+      points: 2,
+      config: {
+        "items" => [
+          { "id" => "e1", "text" => "World War I begins" },
+          { "id" => "e2", "text" => "The Treaty of Versailles is signed" },
+          { "id" => "e3", "text" => "World War II begins in Europe" },
+          { "id" => "e4", "text" => "The United Nations is founded" }
+        ]
+      }
+    },
+    {
+      type: :matching,
+      prompt: "Match each person with the country they led.",
+      points: 3,
+      config: {
+        "left" => [
+          { "id" => "l1", "text" => "Winston Churchill" },
+          { "id" => "l2", "text" => "Franklin D. Roosevelt" },
+          { "id" => "l3", "text" => "Joseph Stalin" }
+        ],
+        "right" => [
+          { "id" => "r1", "text" => "United Kingdom" },
+          { "id" => "r2", "text" => "United States" },
+          { "id" => "r3", "text" => "Soviet Union" }
+        ],
+        "pairs" => { "l1" => "r1", "l2" => "r2", "l3" => "r3" }
+      }
+    }
+  ]
+)
+chrono.publish! unless chrono.published?
+seed_assignments!(chrono, class_a.students)
+
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------

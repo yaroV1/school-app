@@ -22,7 +22,7 @@
         autosave_saving_value: t("take.saving"),
         autosave_saved_value: t("take.saved"),
         autosave_failed_value: t("take.save_failed"),
-        action: "countdown:ended@window->autosave#save"
+        action: "countdown:ended@window->autosave#save ordering:changed->autosave#save"
       },
       class: "space-y-6" do %>
   <%= hidden_field_tag :attempt_id, @attempt.id %>
@@ -33,7 +33,9 @@
     <% type_styles = {
          "mcq" => "border-sky-200 bg-sky-50/40",
          "short_text" => "border-amber-200 bg-amber-50/40",
-         "open" => "border-violet-200 bg-violet-50/40"
+         "open" => "border-violet-200 bg-violet-50/40",
+         "ordering" => "border-emerald-200 bg-emerald-50/40",
+         "matching" => "border-rose-200 bg-rose-50/40"
        } %>
     <fieldset class="rounded-lg border p-4 <%= type_styles.fetch(question.question_type, "border-slate-200") %>">
       <legend class="px-1 text-sm font-medium text-slate-500"><%= t("take.question_legend", n: index + 1) %> · <%= t("exams.points", count: question.points) %></legend>
@@ -52,6 +54,50 @@
               <%= radio_button_tag "answers[#{question.id}][option_id]", opt["id"], answer&.option_id == opt["id"] %>
               <span><%= opt["text"] %></span>
             </label>
+          <% end %>
+        </div>
+      <% elsif question.ordering? %>
+        <div data-controller="ordering" class="space-y-2">
+          <p class="text-xs text-slate-600"><%= t("take.ordering.hint") %></p>
+          <div class="space-y-2" role="list">
+            <% question.display_items_for(answer, @attempt.id).each_with_index do |item, item_index| %>
+              <div data-ordering-target="item"
+                   data-action="click->ordering#place keydown->ordering#keydown"
+                   role="listitem"
+                   tabindex="0"
+                   aria-selected="false"
+                   class="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-2 py-2 hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 aria-selected:bg-emerald-50 aria-selected:ring-2 aria-selected:ring-emerald-500 data-[dragging]:opacity-60 data-[dragging]:shadow-lg">
+                <span data-ordering-target="position"
+                      class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-900"><%= item_index + 1 %></span>
+                <button type="button"
+                        data-ordering-handle
+                        data-action="pointerdown->ordering#startDrag"
+                        class="touch-none cursor-grab rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 active:cursor-grabbing"
+                        aria-label="<%= t("take.ordering.drag") %>">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 pointer-events-none">
+                    <path d="M7 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm8-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/>
+                  </svg>
+                </button>
+                <%= hidden_field_tag "answers[#{question.id}][order][]", item["id"], id: nil %>
+                <span class="flex-1 text-sm"><%= item["text"] %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% elsif question.matching? %>
+        <% given = answer&.pairs || {} %>
+        <% rights = question.shuffled_right_items(@attempt.id) %>
+        <div class="space-y-2">
+          <% question.student_facing_left.each do |left| %>
+            <div class="grid items-center gap-2 sm:grid-cols-2">
+              <p class="text-sm"><%= left["text"] %></p>
+              <%= select_tag "answers[#{question.id}][pairs][#{left["id"]}]",
+                    options_for_select(
+                      [ [ t("take.matching.choose"), "" ] ] + rights.map { |right| [ right["text"], right["id"] ] },
+                      given[left["id"]]
+                    ),
+                    class: "#{field_class} bg-white" %>
+            </div>
           <% end %>
         </div>
       <% elsif question.short_text? %>

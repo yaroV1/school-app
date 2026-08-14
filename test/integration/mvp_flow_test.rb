@@ -36,6 +36,30 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     post test_questions_url(exam), params: {
       question: { question_type: "open", prompt: "Essay", points: 2, rubric: "" }
     }
+    post test_questions_url(exam), params: {
+      question: {
+        question_type: "ordering",
+        prompt: "Order events",
+        points: 2,
+        items: {
+          "0" => { text: "First" },
+          "1" => { text: "Second" },
+          "2" => { text: "Third" }
+        }
+      }
+    }
+    post test_questions_url(exam), params: {
+      question: {
+        question_type: "matching",
+        prompt: "Match facts",
+        points: 3,
+        pairs: {
+          "0" => { left: "Churchill", right: "UK" },
+          "1" => { left: "Roosevelt", right: "USA" },
+          "2" => { left: "Stalin", right: "USSR" }
+        }
+      }
+    }
 
     post publish_test_url(exam)
     exam.reload
@@ -55,14 +79,16 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     attempt = assignment.attempts.last
-    mcq, short_q, open_q = exam.questions.order(:position)
+    mcq, short_q, open_q, ordering, matching = exam.questions.order(:position)
 
     put student_answers_url(token: token), params: {
       attempt_id: attempt.id,
       answers: [
         { question_id: mcq.id, payload: { option_id: mcq.correct_option_id } },
         { question_id: short_q.id, payload: { text: "blue" } },
-        { question_id: open_q.id, payload: { text: "Because..." } }
+        { question_id: open_q.id, payload: { text: "Because..." } },
+        { question_id: ordering.id, payload: { order: ordering.correct_order_ids } },
+        { question_id: matching.id, payload: { pairs: matching.pairs } }
       ]
     }, as: :json
     assert_response :success
@@ -72,5 +98,7 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert attempt.reload.submitted?
     assert_equal 1, attempt.answers.find_by!(question: mcq).auto_score.to_i
+    assert_equal 2, attempt.answers.find_by!(question: ordering).auto_score.to_i
+    assert_equal 3, attempt.answers.find_by!(question: matching).auto_score.to_i
   end
 end

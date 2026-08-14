@@ -66,4 +66,40 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     assert_equal 1, attempt.answers.find_by!(question: @mcq).auto_score.to_i
     assert attempt.grade.present?
   end
+
+  test "autosave scores ordering and matching" do
+    ordering = @exam.questions.create!(
+      question_type: :ordering,
+      prompt: "Order",
+      points: 2,
+      position: 1,
+      config: {
+        "items" => [
+          { "id" => "e1", "text" => "First" },
+          { "id" => "e2", "text" => "Second" },
+          { "id" => "e3", "text" => "Third" }
+        ]
+      }
+    )
+    matching = @exam.questions.create!(
+      question_type: :matching,
+      prompt: "Match",
+      points: 4,
+      position: 2,
+      config: {
+        "left" => [ { "id" => "l1", "text" => "A" }, { "id" => "l2", "text" => "B" } ],
+        "right" => [ { "id" => "r1", "text" => "1" }, { "id" => "r2", "text" => "2" } ],
+        "pairs" => { "l1" => "r1", "l2" => "r2" }
+      }
+    )
+
+    attempt = AttemptLifecycle.start!(@assignment)
+    AttemptLifecycle.autosave!(attempt, [
+      { "question_id" => ordering.id, "payload" => { "order" => %w[e1 e2 e3] } },
+      { "question_id" => matching.id, "payload" => { "pairs" => { "l1" => "r1", "l2" => "r9" } } }
+    ])
+
+    assert_equal 2, attempt.answers.find_by!(question: ordering).auto_score.to_i
+    assert_equal 2, attempt.answers.find_by!(question: matching).auto_score.to_i
+  end
 end

@@ -26,21 +26,30 @@ export default class extends Controller {
 
   collectAnswers() {
     const formData = new FormData(this.element)
-    const answers = []
+    const byQuestion = {}
 
     for (const [key, value] of formData.entries()) {
-      const match = key.match(/^answers\[(\d+)\]\[(.+)\]$/)
-      if (!match) continue
-      const questionId = match[1]
-      const field = match[2]
-      let entry = answers.find((a) => a.question_id === questionId)
-      if (!entry) {
-        entry = { question_id: questionId, payload: {} }
-        answers.push(entry)
+      if (!key.startsWith("answers[")) continue
+      const parts = [...key.matchAll(/\[([^\]]*)\]/g)].map((match) => match[1])
+      if (parts.length < 2) continue
+
+      const questionId = parts[0]
+      const field = parts[1]
+      byQuestion[questionId] ||= { question_id: questionId, payload: {} }
+      const payload = byQuestion[questionId].payload
+
+      if (field === "order") {
+        payload.order ||= []
+        payload.order.push(value)
+      } else if (field === "pairs") {
+        payload.pairs ||= {}
+        payload.pairs[parts[2]] = value
+      } else {
+        payload[field] = value
       }
-      entry.payload[field] = value
     }
-    return answers
+
+    return Object.values(byQuestion)
   }
 
   async save() {

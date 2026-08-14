@@ -54,29 +54,71 @@ class QuestionsController < ApplicationController
   def apply_config!(question)
     case question.question_type
     when "mcq"
-      raw = params.dig(:question, :options) || {}
-      correct_index = params.dig(:question, :correct_index).to_s
-      options = []
-      raw.each do |index, opt|
-        text = opt[:text].to_s.strip
-        next if text.blank?
-
-        options << {
-          "id" => opt[:id].presence || SecureRandom.hex(4),
-          "text" => text,
-          "is_correct" => index.to_s == correct_index
-        }
-      end
-      options.first["is_correct"] = true if options.any? && options.none? { |o| o["is_correct"] }
-      if (first_correct = options.index { |o| o["is_correct"] })
-        options.each_with_index { |o, i| o["is_correct"] = i == first_correct }
-      end
-      question.config = { "options" => options }
+      apply_mcq_config!(question)
+    when "ordering"
+      apply_ordering_config!(question)
+    when "matching"
+      apply_matching_config!(question)
     else
       question.config = {
         "rubric" => params.dig(:question, :rubric).to_s,
         "model_answer" => params.dig(:question, :model_answer).to_s
       }
     end
+  end
+
+  def apply_mcq_config!(question)
+    raw = params.dig(:question, :options) || {}
+    correct_index = params.dig(:question, :correct_index).to_s
+    options = []
+    raw.each do |index, opt|
+      text = opt[:text].to_s.strip
+      next if text.blank?
+
+      options << {
+        "id" => opt[:id].presence || SecureRandom.hex(4),
+        "text" => text,
+        "is_correct" => index.to_s == correct_index
+      }
+    end
+    options.first["is_correct"] = true if options.any? && options.none? { |o| o["is_correct"] }
+    if (first_correct = options.index { |o| o["is_correct"] })
+      options.each_with_index { |o, i| o["is_correct"] = i == first_correct }
+    end
+    question.config = { "options" => options }
+  end
+
+  def apply_ordering_config!(question)
+    items = []
+    raw = params.dig(:question, :items) || {}
+    raw.each do |_index, item|
+      text = item[:text].to_s.strip
+      next if text.blank?
+
+      items << {
+        "id" => item[:id].presence || SecureRandom.hex(4),
+        "text" => text
+      }
+    end
+    question.config = { "items" => items }
+  end
+
+  def apply_matching_config!(question)
+    left = []
+    right = []
+    pairs = {}
+    raw = params.dig(:question, :pairs) || {}
+    raw.each do |_index, row|
+      left_text = row[:left].to_s.strip
+      right_text = row[:right].to_s.strip
+      next if left_text.blank? || right_text.blank?
+
+      left_id = row[:left_id].presence || "l#{SecureRandom.hex(3)}"
+      right_id = row[:right_id].presence || "r#{SecureRandom.hex(3)}"
+      left << { "id" => left_id, "text" => left_text }
+      right << { "id" => right_id, "text" => right_text }
+      pairs[left_id] = right_id
+    end
+    question.config = { "left" => left, "right" => right, "pairs" => pairs }
   end
 end

@@ -19,4 +19,13 @@ class Answer < ApplicationRecord
   def option_id
     payload["option_id"]
   end
+
+  def order_ids
+    Array(payload["order"]).map(&:to_s)
+  end
+
+  def pairs
+    (payload["pairs"] || {}).stringify_keys
+  end
 end
+
