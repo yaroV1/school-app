@@ -39,4 +39,30 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
     assert_redirected_to manage_test_assignments_path(@exam)
     assert @exam.assignments.reload.all?(&:revoked?)
   end
+
+  test "live board expires overdue attempts of the watched test only" do
+    other_exam = create_exam!(@teacher, title: "Other Quiz", status: :published, class_group: @group)
+    watched = overdue_attempt_for(@exam)
+    untouched = overdue_attempt_for(other_exam)
+
+    get live_test_path(@exam), headers: { "Turbo-Frame" => "live_board" }
+    assert_response :success
+
+    assert watched.reload.expired?
+    assert untouched.reload.in_progress?
+  end
+
+  private
+
+  def overdue_attempt_for(exam)
+    assignment = exam.assignments.find_or_create_by!(student: @in_group)
+    started = 1.hour.ago
+    assignment.attempts.create!(
+      attempt_no: assignment.attempts.count + 1,
+      status: :in_progress,
+      started_at: started,
+      last_activity_at: started,
+      deadline_at: 1.minute.ago
+    )
+  end
 end

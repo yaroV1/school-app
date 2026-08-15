@@ -119,6 +119,29 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_nil attempt.answers.find_by!(question: source).auto_score
   end
 
+  test "closing a test does not lock a student out of the attempt in progress" do
+    exam = create_exam!(@teacher, title: "Unit 2", status: :published, time_limit_sec: 300)
+    exam.questions.create!(question_type: :short_text, prompt: "Sky?", points: 1, position: 0, config: {})
+    student = @teacher.students.create!(name: "Ira")
+    assignment = exam.assignments.create!(student: student)
+    token = assignment.access_token
+
+    post student_start_url(token: token)
+    attempt = assignment.attempts.last
+    exam.close!
+
+    get student_portal_url(token: token)
+    assert_response :success
+    assert_match I18n.t("take.resume"), response.body
+
+    post student_start_url(token: token)
+    assert_redirected_to student_run_url(token: token)
+
+    post student_submit_url(token: token), params: { attempt_id: attempt.id }
+    assert_redirected_to student_done_url(token: token)
+    assert attempt.reload.submitted?
+  end
+
   test "class page lists students and subjects; subject page lists tests and student stats" do
     sign_in_as @teacher
 

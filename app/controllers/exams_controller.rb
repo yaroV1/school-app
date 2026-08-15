@@ -54,7 +54,7 @@ class ExamsController < ApplicationController
 
   def live
     if turbo_frame_request?
-      ExpireOverdueAttemptsJob.perform_now
+      expire_overdue_attempts
       load_live_board
       render partial: "exams/live_board", layout: false
     end
@@ -68,6 +68,12 @@ class ExamsController < ApplicationController
 
   def set_exam
     @exam = Current.user.exams.find(params[:id])
+  end
+
+  # Board accuracy only needs this exam; the whole table is swept by
+  # ExpireOverdueAttemptsJob from recurring.yml.
+  def expire_overdue_attempts
+    @exam.attempts.overdue.each { |attempt| AttemptLifecycle.expire_if_needed!(attempt) }
   end
 
   def load_live_board
