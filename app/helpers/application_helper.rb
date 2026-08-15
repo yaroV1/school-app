@@ -25,6 +25,14 @@ module ApplicationHelper
     "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none"
   end
 
+  # Same shape the countdown controller writes, so the server-rendered cell and
+  # the ticking one never disagree.
+  def countdown_display(seconds)
+    return t("common.dash") if seconds.nil?
+
+    format("%d:%02d", seconds / 60, seconds % 60)
+  end
+
   def status_badge(status)
     colors = {
       "draft" => "bg-slate-100 text-slate-700",

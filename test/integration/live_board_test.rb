@@ -60,6 +60,27 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
     assert untouched.reload.in_progress?
   end
 
+  test "the countdown cell renders in the same format the ticker writes" do
+    assignment = @exam.assignments.find_by!(student: @in_group)
+    started = Time.current
+    assignment.attempts.create!(
+      attempt_no: 1,
+      status: :in_progress,
+      started_at: started,
+      last_activity_at: started,
+      deadline_at: 5.minutes.from_now
+    )
+
+    get live_test_path(@exam), headers: { "Turbo-Frame" => "live_board" }
+    assert_response :success
+
+    cell = css_select("[data-countdown-target='display']").first
+    assert cell, "an in-progress attempt with a deadline should render a countdown"
+    # countdown_controller.js writes `${m}:${ss}` — the server must not paint a
+    # different shape first, or every 4s poll repaint flashes the other format.
+    assert_match(/\A\d+:\d{2}\z/, cell.text.strip)
+  end
+
   private
 
   def overdue_attempt_for(exam)

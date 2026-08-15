@@ -41,7 +41,7 @@
                     <span data-controller="countdown"
                           data-countdown-deadline-value="<%= attempt.deadline_at.iso8601 %>"
                           data-countdown-server-time-value="<%= server_time.iso8601 %>">
-                      <span data-countdown-target="display"><%= attempt.seconds_remaining(server_time) %>с</span>
+                      <span data-countdown-target="display"><%= countdown_display(attempt.seconds_remaining(server_time)) %></span>
                     </span>
                   <% else %>
                     <%= t("common.dash") %>
