@@ -7,7 +7,7 @@ class AssignmentsController < ApplicationController
   end
 
   def manage
-    @assignments = @exam.assignments.includes(:student, :attempts).joins(:student).order("students.name")
+    @assignments = @exam.assignments.preload(:student, :attempts).joins(:student).order("students.name")
     @students = @exam.class_group.students.active.order(:name)
   end
 

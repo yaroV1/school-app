@@ -49,7 +49,7 @@ class ExamsController < ApplicationController
   end
 
   def results
-    @assignments = @exam.assignments.includes(:student, attempts: :grade).joins(:student).order("students.name")
+    @assignments = @exam.assignments.preload(:student, attempts: :grade).joins(:student).order("students.name")
   end
 
   def live
@@ -71,8 +71,8 @@ class ExamsController < ApplicationController
   end
 
   def load_live_board
-    scope = @exam.assignments.includes(:student, :attempts).joins(:student)
-    @assignments = scope.to_a.sort_by { |a| [ a.board_sort_key, a.student.name.to_s.downcase ] }
+    assignments = @exam.assignments.preload(:student, :attempts)
+    @assignments = assignments.to_a.sort_by { |a| [ a.board_sort_key, a.student.name.to_s.downcase ] }
     @counts = @assignments.group_by(&:board_status).transform_values(&:size)
     @server_time = Time.current
   end

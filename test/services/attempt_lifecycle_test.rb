@@ -58,6 +58,24 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     assert attempt.reload.expired?
   end
 
+  test "autosave loads exam questions once for a batch of answers" do
+    other = @exam.questions.create!(
+      question_type: :mcq,
+      prompt: "Q2?",
+      points: 1,
+      position: 1,
+      config: @mcq.config
+    )
+    attempt = Attempt.find(AttemptLifecycle.start!(@assignment).id)
+
+    assert_queries_match(/FROM "questions"/, count: 1) do
+      AttemptLifecycle.autosave!(attempt, [
+        { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } },
+        { "question_id" => other.id, "payload" => { "option_id" => "b" } }
+      ])
+    end
+  end
+
   test "autosave and submit scores mcq" do
     attempt = AttemptLifecycle.start!(@assignment)
     AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
