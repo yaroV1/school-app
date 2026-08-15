@@ -186,12 +186,14 @@ class AttemptLifecycle
     @exam.questions.select { |question| answered_ids.include?(question.id) }
   end
 
-  # Returns the questions it wrote, so the caller knows what to broadcast.
+  # Returns only the questions whose answer actually moved. The runner posts the
+  # whole form every few seconds, so returning everything it sent would rebroadcast
+  # every question on a timer and redraw blocks under the teacher's cursor.
   def apply_answers!(attempt, answers_payload)
     questions_by_id = @exam.questions.index_by(&:id)
     answers_by_qid = attempt.answers.index_by(&:question_id)
 
-    Array(answers_payload).map do |item|
+    Array(answers_payload).filter_map do |item|
       question_id = item[:question_id] || item["question_id"]
       payload = item[:payload] || item["payload"] || {}
       question = questions_by_id[question_id.to_i]
@@ -200,10 +202,12 @@ class AttemptLifecycle
       answer = answers_by_qid[question.id] || attempt.answers.build(question: question)
       answer.question = question
       answer.payload = normalize_payload(question, payload)
+      # A first answer counts as a change: the page swaps "no answer" for a real block.
+      rewritten = answer.new_record? || answer.payload_changed?
       answer.save!
       Scoring.score_auto!(answer)
       answers_by_qid[question.id] = answer
-      question
+      question if rewritten || answer.saved_change_to_auto_score?
     end
   end
 

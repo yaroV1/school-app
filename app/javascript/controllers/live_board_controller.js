@@ -19,7 +19,19 @@ export default class extends Controller {
     this.onFrameLoad = (event) => {
       if (event.target.id === "live_board") this.captureSubmitted()
     }
-    this.onStreamRender = () => requestAnimationFrame(() => this.announceNewSubmits())
+    // turbo:before-stream-render fires *before* the swap, and Turbo only awaits
+    // its own repaint afterwards — a requestAnimationFrame queued from this
+    // handler would run first and read the old board. Wrapping detail.render is
+    // the supported way to act once the DOM is actually updated.
+    this.onStreamRender = (event) => {
+      if (event.target.getAttribute("target") !== "live_board") return
+
+      const render = event.detail.render
+      event.detail.render = async (streamElement) => {
+        await render(streamElement)
+        this.announceNewSubmits()
+      }
+    }
     document.addEventListener("turbo:frame-load", this.onFrameLoad)
     document.addEventListener("turbo:before-stream-render", this.onStreamRender)
 

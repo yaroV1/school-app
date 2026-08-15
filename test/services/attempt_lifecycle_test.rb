@@ -195,6 +195,40 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
       "an untouched question (#{untouched.id}) must not be rebroadcast"
   end
 
+  # autosave_controller.js collectAnswers() posts the whole form, not a diff, so
+  # every question arrives on every tick whether or not the student touched it.
+  test "a repeated whole-form autosave broadcasts nothing when nothing moved" do
+    text = @exam.questions.create!(question_type: :short_text, prompt: "Q2?", points: 1, position: 1, config: {})
+    attempt = AttemptLifecycle.start!(@assignment)
+    whole_form = [
+      { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } },
+      { "question_id" => text.id, "payload" => { "text" => "hello" } }
+    ]
+
+    first = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) { AttemptLifecycle.autosave!(attempt, whole_form) }
+    assert_equal 2, first.size, "the first pass writes both answers"
+
+    repeat = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) { AttemptLifecycle.autosave!(attempt, whole_form) }
+    assert_empty repeat, "an unchanged re-post must not redraw the teacher's page"
+
+    edited = whole_form.dup
+    edited[1] = { "question_id" => text.id, "payload" => { "text" => "goodbye" } }
+    third = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) { AttemptLifecycle.autosave!(attempt, edited) }
+    assert_equal [ ActionView::RecordIdentifier.dom_id(text, :student_answer) ], third.map { |s| s["target"] }
+  end
+
+  test "changing only the auto score still broadcasts" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    wrong = [ { "question_id" => @mcq.id, "payload" => { "option_id" => "b" } } ]
+    right = [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ]
+
+    AttemptLifecycle.autosave!(attempt, wrong)
+    streams = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) { AttemptLifecycle.autosave!(attempt, right) }
+
+    assert_equal [ ActionView::RecordIdentifier.dom_id(@mcq, :student_answer) ], streams.map { |s| s["target"] }
+    assert_equal 1, attempt.answers.sole.reload.auto_score.to_i
+  end
+
   test "expiring a scope refreshes the board once rather than once per attempt" do
     attempts = 3.times.map do |i|
       assignment = @exam.assignments.create!(student: @teacher.students.create!(name: "S#{i}"))
