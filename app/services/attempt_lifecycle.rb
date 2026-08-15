@@ -118,10 +118,7 @@ class AttemptLifecycle
       Scoring.score_all_auto!(locked)
 
       locked.update!(status: :submitted, submitted_at: Time.current, last_activity_at: Time.current)
-      grade = locked.grade || locked.build_grade
-      grade.max_score = @exam.max_score
-      grade.total_score = Scoring.partial_total(locked)
-      grade.save!
+      refresh_grade!(locked)
     end
 
     attempt.reload
@@ -152,10 +149,7 @@ class AttemptLifecycle
     end
 
     locked.update!(status: :expired, last_activity_at: Time.current)
-    grade = locked.grade || locked.build_grade
-    grade.max_score = @exam.max_score
-    grade.total_score = Scoring.partial_total(locked)
-    grade.save!
+    refresh_grade!(locked)
 
     attempt.reload
     GradeLive.replace_header_and_answers(attempt, questions: answered_questions(attempt))
@@ -163,6 +157,18 @@ class AttemptLifecycle
   end
 
   private
+
+  # A teacher who has already signed off keeps their total. Submitting or
+  # expiring must not silently move a grade the teacher finalized.
+  def refresh_grade!(attempt)
+    grade = attempt.grade || attempt.build_grade
+    return grade if grade.finalized_by_teacher?
+
+    grade.max_score = @exam.max_score
+    grade.total_score = Scoring.partial_total(attempt)
+    grade.save!
+    grade
+  end
 
   # Questions the student actually answered. The rest render an unchanged
   # "no answer" block, so there is nothing to push for them.

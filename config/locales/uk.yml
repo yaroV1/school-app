@@ -318,6 +318,7 @@ uk:
       student_answer: "Відповідь учня"
       no_answer: "Немає відповіді"
       auto_score: "Автобал"
+      auto_score_hint: "Порожнє поле — зараховується автобал."
       student_order: "Порядок учня"
       correct_order: "Правильний порядок"
       pair_correct: "(правильно)"
