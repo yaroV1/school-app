@@ -25,12 +25,20 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
     get live_test_path(@exam)
     assert_response :success
     assert_match I18n.t("exams.live.title_prefix"), response.body
+    assert_select "turbo-cable-stream-source"
 
     get live_test_path(@exam), headers: { "Turbo-Frame" => "live_board" }
     assert_response :success
     assert_match(/In Group/, response.body)
     assert_match(/Out Group/, response.body)
     assert_match I18n.t("statuses.not_started"), response.body
+  end
+
+  test "revoke broadcasts live board" do
+    assignment = @exam.assignments.find_by!(student: @in_group)
+    assert_turbo_stream_broadcasts [ @exam, :live_board ] do
+      post revoke_assignment_path(assignment)
+    end
   end
 
   test "bulk revoke revokes selected assignments" do
@@ -50,6 +58,27 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
 
     assert watched.reload.expired?
     assert untouched.reload.in_progress?
+  end
+
+  test "the countdown cell renders in the same format the ticker writes" do
+    assignment = @exam.assignments.find_by!(student: @in_group)
+    started = Time.current
+    assignment.attempts.create!(
+      attempt_no: 1,
+      status: :in_progress,
+      started_at: started,
+      last_activity_at: started,
+      deadline_at: 5.minutes.from_now
+    )
+
+    get live_test_path(@exam), headers: { "Turbo-Frame" => "live_board" }
+    assert_response :success
+
+    cell = css_select("[data-countdown-target='display']").first
+    assert cell, "an in-progress attempt with a deadline should render a countdown"
+    # countdown_controller.js writes `${m}:${ss}` — the server must not paint a
+    # different shape first, or every 4s poll repaint flashes the other format.
+    assert_match(/\A\d+:\d{2}\z/, cell.text.strip)
   end
 
   private

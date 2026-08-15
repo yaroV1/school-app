@@ -8,16 +8,24 @@ class AttemptLifecycle
     new(assignment).start!
   end
 
-  def self.autosave!(attempt, answers_payload, expected_version: nil)
-    new(attempt.assignment).autosave!(attempt, answers_payload, expected_version: expected_version)
+  def self.autosave!(attempt, answers_payload)
+    new(attempt.assignment).autosave!(attempt, answers_payload)
   end
 
-  def self.submit!(attempt)
-    new(attempt.assignment).submit!(attempt)
+  def self.submit!(attempt, answers: nil)
+    new(attempt.assignment).submit!(attempt, answers: answers)
   end
 
   def self.expire_if_needed!(attempt)
     new(attempt.assignment).expire_if_needed!(attempt)
+  end
+
+  # Expires a whole scope and refreshes each affected board once. The board
+  # partial renders every assignment of the exam, so expiring N attempts one by
+  # one used to cost N full board renders.
+  def self.expire_overdue!(attempts)
+    exams = attempts.filter_map { |attempt| new(attempt.assignment).expire!(attempt) }
+    exams.uniq.each { |exam| LiveBoard.replace(exam) }
   end
 
   def initialize(assignment)
@@ -51,36 +59,39 @@ class AttemptLifecycle
     now = Time.current
     deadline = @exam.time_limit_sec.present? ? now + @exam.time_limit_sec.seconds : nil
 
-    @assignment.attempts.create!(
+    attempt = @assignment.attempts.create!(
       status: :in_progress,
       attempt_no: @assignment.attempts_used + 1,
       started_at: now,
       deadline_at: deadline,
       last_activity_at: now
     )
+    LiveBoard.replace(@exam)
+    attempt
   end
 
-  def autosave!(attempt, answers_payload, expected_version: nil)
+  def autosave!(attempt, answers_payload)
+    touched = save_answers!(attempt, answers_payload)
+    GradeLive.replace_answers(attempt, questions: touched)
+    attempt
+  end
+
+  # Writes answers without broadcasting, so a submit that carries the final
+  # answers pushes one update instead of one per answer and then another.
+  def save_answers!(attempt, answers_payload)
     expire_if_needed!(attempt)
     raise Expired, I18n.t("take.errors.time_up") if attempt.expired?
     raise NotAllowed, I18n.t("take.errors.not_in_progress") unless attempt.in_progress?
 
     retries = 0
+    touched = []
     begin
       Attempt.transaction do
         locked = Attempt.lock.find(attempt.id)
         raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
         raise Expired, I18n.t("take.errors.time_up") if locked.past_deadline?
 
-        apply_answers!(locked, answers_payload)
-
-        # If client version is stale, reload and re-apply (last-write-wins).
-        if expected_version.present? && locked.lock_version != expected_version.to_i
-          locked.reload
-          raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
-          apply_answers!(locked, answers_payload)
-        end
-
+        touched = apply_answers!(locked, answers_payload)
         locked.update!(last_activity_at: Time.current)
       end
     rescue ActiveRecord::StaleObjectError
@@ -90,9 +101,12 @@ class AttemptLifecycle
     end
 
     attempt.reload
+    touched
   end
 
-  def submit!(attempt)
+  def submit!(attempt, answers: nil)
+    save_answers!(attempt, answers) if answers.present?
+
     expire_if_needed!(attempt)
     raise Expired, I18n.t("take.errors.time_up") if attempt.expired?
     raise NotAllowed, I18n.t("take.errors.not_in_progress") unless attempt.in_progress?
@@ -105,13 +119,13 @@ class AttemptLifecycle
       Scoring.score_all_auto!(locked)
 
       locked.update!(status: :submitted, submitted_at: Time.current, last_activity_at: Time.current)
-      grade = locked.grade || locked.build_grade
-      grade.max_score = @exam.max_score
-      grade.total_score = Scoring.partial_total(locked)
-      grade.save!
+      refresh_grade!(locked)
     end
 
     attempt.reload
+    GradeLive.replace_header_and_answers(attempt, questions: answered_questions(attempt))
+    LiveBoard.replace(@exam)
+    attempt
   rescue Expired
     # Ensure expiry is persisted outside a rolled-back submit transaction.
     expire_if_needed!(attempt.reload)
@@ -119,29 +133,59 @@ class AttemptLifecycle
   end
 
   def expire_if_needed!(attempt)
-    return attempt unless attempt&.in_progress?
-    return attempt unless attempt.past_deadline?
+    LiveBoard.replace(@exam) if expire!(attempt)
+    attempt
+  end
+
+  # Returns the exam when this call is what expired the attempt, nil otherwise,
+  # so a caller sweeping many attempts can refresh the board once at the end.
+  def expire!(attempt)
+    return unless attempt&.in_progress?
+    return unless attempt.past_deadline?
 
     locked = Attempt.lock.find(attempt.id)
-    return attempt.reload unless locked.in_progress?
-    return attempt.reload unless locked.past_deadline?
+    unless locked.in_progress? && locked.past_deadline?
+      attempt.reload
+      return
+    end
 
     locked.update!(status: :expired, last_activity_at: Time.current)
-    grade = locked.grade || locked.build_grade
-    grade.max_score = @exam.max_score
-    grade.total_score = Scoring.partial_total(locked)
-    grade.save!
+    refresh_grade!(locked)
 
     attempt.reload
+    GradeLive.replace_header_and_answers(attempt, questions: answered_questions(attempt))
+    @exam
   end
 
   private
 
+  # A teacher who has already signed off keeps their total. Submitting or
+  # expiring must not silently move a grade the teacher finalized.
+  def refresh_grade!(attempt)
+    grade = attempt.grade || attempt.build_grade
+    return grade if grade.finalized_by_teacher?
+
+    grade.max_score = @exam.max_score
+    grade.total_score = Scoring.partial_total(attempt)
+    grade.save!
+    grade
+  end
+
+  # Questions the student actually answered. The rest render an unchanged
+  # "no answer" block, so there is nothing to push for them.
+  def answered_questions(attempt)
+    answered_ids = attempt.answers.map(&:question_id).to_set
+    @exam.questions.select { |question| answered_ids.include?(question.id) }
+  end
+
+  # Returns only the questions whose answer actually moved. The runner posts the
+  # whole form every few seconds, so returning everything it sent would rebroadcast
+  # every question on a timer and redraw blocks under the teacher's cursor.
   def apply_answers!(attempt, answers_payload)
     questions_by_id = @exam.questions.index_by(&:id)
     answers_by_qid = attempt.answers.index_by(&:question_id)
 
-    Array(answers_payload).each do |item|
+    Array(answers_payload).filter_map do |item|
       question_id = item[:question_id] || item["question_id"]
       payload = item[:payload] || item["payload"] || {}
       question = questions_by_id[question_id.to_i]
@@ -150,9 +194,12 @@ class AttemptLifecycle
       answer = answers_by_qid[question.id] || attempt.answers.build(question: question)
       answer.question = question
       answer.payload = normalize_payload(question, payload)
+      # A first answer counts as a change: the page swaps "no answer" for a real block.
+      rewritten = answer.new_record? || answer.payload_changed?
       answer.save!
       Scoring.score_auto!(answer)
       answers_by_qid[question.id] = answer
+      question if rewritten || answer.saved_change_to_auto_score?
     end
   end
 

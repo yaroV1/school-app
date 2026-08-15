@@ -4,7 +4,6 @@ export default class extends Controller {
   static values = {
     url: String,
     attemptId: Number,
-    lockVersion: Number,
     interval: { type: Number, default: 5000 },
     saving: { type: String, default: "Saving…" },
     saved: { type: String, default: "Saved" },
@@ -69,7 +68,6 @@ export default class extends Controller {
         },
         body: JSON.stringify({
           attempt_id: this.attemptIdValue,
-          lock_version: this.lockVersionValue,
           answers
         })
       })
@@ -77,9 +75,6 @@ export default class extends Controller {
       const data = await response.json().catch(() => ({}))
 
       if (response.ok) {
-        if (typeof data.lock_version === "number") {
-          this.lockVersionValue = data.lock_version
-        }
         this.setStatus("saved", this.savedValue)
         if (data.status === "expired") {
           window.location.reload()

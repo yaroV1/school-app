@@ -44,31 +44,17 @@ class Phase11Test < ActiveSupport::TestCase
     attempt = AttemptLifecycle.start!(@assignment)
     version = attempt.lock_version
 
-    AttemptLifecycle.autosave!(
-      attempt,
-      [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ],
-      expected_version: version
-    )
+    AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
 
     attempt.reload
     assert_operator attempt.lock_version, :>, version
     assert_equal "a", attempt.answers.find_by!(question: @mcq).option_id
   end
 
-  test "stale lock_version still saves answers last-write-wins" do
+  test "a later autosave overwrites an earlier answer, last-write-wins" do
     attempt = AttemptLifecycle.start!(@assignment)
-    AttemptLifecycle.autosave!(
-      attempt,
-      [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ],
-      expected_version: attempt.lock_version
-    )
-    stale = attempt.lock_version - 1
-
-    AttemptLifecycle.autosave!(
-      attempt.reload,
-      [ { "question_id" => @mcq.id, "payload" => { "option_id" => "b" } } ],
-      expected_version: stale
-    )
+    AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
+    AttemptLifecycle.autosave!(attempt.reload, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "b" } } ])
 
     assert_equal "b", attempt.reload.answers.find_by!(question: @mcq).option_id
   end

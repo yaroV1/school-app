@@ -1,4 +1,5 @@
 <% content_for :title, t("exams.live.title", title: @exam.title) %>
+<%= turbo_stream_from @exam, :live_board %>
 
 <div data-controller="live-board"
      data-live-board-interval-value="4000"

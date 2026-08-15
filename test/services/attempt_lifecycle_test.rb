@@ -129,4 +129,153 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     assert_equal 2, attempt.answers.find_by!(question: ordering).auto_score.to_i
     assert_equal 2, attempt.answers.find_by!(question: matching).auto_score.to_i
   end
+
+  test "start broadcasts live board" do
+    assert_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.start!(@assignment)
+    end
+  end
+
+  test "autosave broadcasts grade live but not live board" do
+    attempt = AttemptLifecycle.start!(@assignment)
+
+    assert_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
+    end
+
+    board_streams = capture_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "b" } } ])
+    end
+    assert_empty board_streams
+  end
+
+  test "submit broadcasts grade live and live board" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
+
+    assert_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.submit!(attempt)
+    end
+    assert attempt.reload.submitted?
+  end
+
+  test "submit broadcasts live board" do
+    attempt = AttemptLifecycle.start!(@assignment)
+
+    assert_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.submit!(attempt)
+    end
+  end
+
+  test "expire broadcasts grade live and live board" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    attempt.update!(deadline_at: 1.minute.ago)
+
+    assert_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.expire_if_needed!(attempt)
+    end
+    assert attempt.reload.expired?
+
+    attempt = AttemptLifecycle.start!(@assignment)
+    attempt.update!(deadline_at: 1.minute.ago)
+    assert_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.expire_if_needed!(attempt)
+    end
+  end
+
+  test "autosave broadcasts only the questions it wrote" do
+    untouched = @exam.questions.create!(question_type: :short_text, prompt: "Q2?", points: 1, position: 1, config: {})
+    attempt = AttemptLifecycle.start!(@assignment)
+
+    streams = capture_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
+    end
+
+    assert_equal [ ActionView::RecordIdentifier.dom_id(@mcq, :student_answer) ], streams.map { |s| s["target"] },
+      "an untouched question (#{untouched.id}) must not be rebroadcast"
+  end
+
+  # autosave_controller.js collectAnswers() posts the whole form, not a diff, so
+  # every question arrives on every tick whether or not the student touched it.
+  test "a repeated whole-form autosave broadcasts nothing when nothing moved" do
+    text = @exam.questions.create!(question_type: :short_text, prompt: "Q2?", points: 1, position: 1, config: {})
+    # Ordering and matching round-trip an array and a nested hash through the
+    # json column, so they are the types most likely to look dirty every pass.
+    ordering = @exam.questions.create!(question_type: :ordering, prompt: "Ord", points: 2, position: 2,
+      config: { "items" => [ { "id" => "e1", "text" => "1" }, { "id" => "e2", "text" => "2" }, { "id" => "e3", "text" => "3" } ] })
+    matching = @exam.questions.create!(question_type: :matching, prompt: "Mat", points: 2, position: 3,
+      config: { "left" => [ { "id" => "l1", "text" => "A" }, { "id" => "l2", "text" => "B" } ],
+                "right" => [ { "id" => "r1", "text" => "1" }, { "id" => "r2", "text" => "2" } ],
+                "pairs" => { "l1" => "r1", "l2" => "r2" } })
+    attempt = AttemptLifecycle.start!(@assignment)
+    whole_form = [
+      { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } },
+      { "question_id" => text.id, "payload" => { "text" => "hello" } },
+      { "question_id" => ordering.id, "payload" => { "order" => %w[e2 e1 e3] } },
+      { "question_id" => matching.id, "payload" => { "pairs" => { "l1" => "r2", "l2" => "r1" } } }
+    ]
+
+    first = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) { AttemptLifecycle.autosave!(attempt, whole_form) }
+    assert_equal 4, first.size, "the first pass writes every answer"
+
+    repeat = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) { AttemptLifecycle.autosave!(attempt, whole_form) }
+    assert_empty repeat, "an unchanged re-post must not redraw the teacher's page"
+
+    edited = whole_form.dup
+    edited[1] = { "question_id" => text.id, "payload" => { "text" => "goodbye" } }
+    third = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) { AttemptLifecycle.autosave!(attempt, edited) }
+    assert_equal [ ActionView::RecordIdentifier.dom_id(text, :student_answer) ], third.map { |s| s["target"] }
+  end
+
+  test "changing only the auto score still broadcasts" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    wrong = [ { "question_id" => @mcq.id, "payload" => { "option_id" => "b" } } ]
+    right = [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ]
+
+    AttemptLifecycle.autosave!(attempt, wrong)
+    streams = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) { AttemptLifecycle.autosave!(attempt, right) }
+
+    assert_equal [ ActionView::RecordIdentifier.dom_id(@mcq, :student_answer) ], streams.map { |s| s["target"] }
+    assert_equal 1, attempt.answers.sole.reload.auto_score.to_i
+  end
+
+  test "expiring a scope refreshes the board once rather than once per attempt" do
+    attempts = 3.times.map do |i|
+      assignment = @exam.assignments.create!(student: @teacher.students.create!(name: "S#{i}"))
+      AttemptLifecycle.start!(assignment).tap { |a| a.update!(deadline_at: 1.minute.ago) }
+    end
+
+    streams = capture_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.expire_overdue!(Attempt.where(id: attempts.map(&:id)))
+    end
+
+    assert_equal [ "live_board" ], streams.map { |s| s["target"] }
+    assert attempts.all? { |attempt| attempt.reload.expired? }, "every attempt must still expire"
+  end
+
+  test "expiring an attempt with no answers pushes the header only" do
+    @exam.questions.create!(question_type: :short_text, prompt: "Q2?", points: 1, position: 1, config: {})
+    attempt = AttemptLifecycle.start!(@assignment)
+    attempt.update!(deadline_at: 1.minute.ago)
+
+    streams = capture_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.expire_if_needed!(attempt)
+    end
+
+    assert_equal [ "attempt_live_header" ], streams.map { |s| s["target"] }
+  end
+
+  test "no-op expire does not broadcast" do
+    attempt = AttemptLifecycle.start!(@assignment)
+
+    grade_streams = capture_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.expire_if_needed!(attempt)
+    end
+    board_streams = capture_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.expire_if_needed!(attempt)
+    end
+
+    assert_empty grade_streams
+    assert_empty board_streams
+  end
 end
