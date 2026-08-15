@@ -199,14 +199,24 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
   # every question arrives on every tick whether or not the student touched it.
   test "a repeated whole-form autosave broadcasts nothing when nothing moved" do
     text = @exam.questions.create!(question_type: :short_text, prompt: "Q2?", points: 1, position: 1, config: {})
+    # Ordering and matching round-trip an array and a nested hash through the
+    # json column, so they are the types most likely to look dirty every pass.
+    ordering = @exam.questions.create!(question_type: :ordering, prompt: "Ord", points: 2, position: 2,
+      config: { "items" => [ { "id" => "e1", "text" => "1" }, { "id" => "e2", "text" => "2" }, { "id" => "e3", "text" => "3" } ] })
+    matching = @exam.questions.create!(question_type: :matching, prompt: "Mat", points: 2, position: 3,
+      config: { "left" => [ { "id" => "l1", "text" => "A" }, { "id" => "l2", "text" => "B" } ],
+                "right" => [ { "id" => "r1", "text" => "1" }, { "id" => "r2", "text" => "2" } ],
+                "pairs" => { "l1" => "r1", "l2" => "r2" } })
     attempt = AttemptLifecycle.start!(@assignment)
     whole_form = [
       { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } },
-      { "question_id" => text.id, "payload" => { "text" => "hello" } }
+      { "question_id" => text.id, "payload" => { "text" => "hello" } },
+      { "question_id" => ordering.id, "payload" => { "order" => %w[e2 e1 e3] } },
+      { "question_id" => matching.id, "payload" => { "pairs" => { "l1" => "r2", "l2" => "r1" } } }
     ]
 
     first = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) { AttemptLifecycle.autosave!(attempt, whole_form) }
-    assert_equal 2, first.size, "the first pass writes both answers"
+    assert_equal 4, first.size, "the first pass writes every answer"
 
     repeat = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) { AttemptLifecycle.autosave!(attempt, whole_form) }
     assert_empty repeat, "an unchanged re-post must not redraw the teacher's page"
@@ -215,6 +225,22 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     edited[1] = { "question_id" => text.id, "payload" => { "text" => "goodbye" } }
     third = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) { AttemptLifecycle.autosave!(attempt, edited) }
     assert_equal [ ActionView::RecordIdentifier.dom_id(text, :student_answer) ], third.map { |s| s["target"] }
+  end
+
+  # The replay re-applies the same payload, so it writes nothing and reports
+  # nothing changed. Overwriting the first pass's result with that lost the
+  # broadcast: the answer landed but the teacher's page never updated.
+  test "a stale lock_version still broadcasts what the first pass wrote" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    stale = attempt.lock_version - 1
+
+    streams = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) do
+      AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ],
+        expected_version: stale)
+    end
+
+    assert_equal [ ActionView::RecordIdentifier.dom_id(@mcq, :student_answer) ], streams.map { |s| s["target"] }
+    assert_equal "a", attempt.answers.sole.reload.option_id
   end
 
   test "changing only the auto score still broadcasts" do

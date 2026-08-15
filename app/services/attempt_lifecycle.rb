@@ -94,10 +94,13 @@ class AttemptLifecycle
         touched = apply_answers!(locked, answers_payload)
 
         # If client version is stale, reload and re-apply (last-write-wins).
+        # Union, not assignment: the replay writes nothing when the first pass
+        # already stored this payload, and overwriting would drop the questions
+        # that pass did change — the answer lands but the teacher never sees it.
         if expected_version.present? && locked.lock_version != expected_version.to_i
           locked.reload
           raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
-          touched = apply_answers!(locked, answers_payload)
+          touched |= apply_answers!(locked, answers_payload)
         end
 
         locked.update!(last_activity_at: Time.current)
