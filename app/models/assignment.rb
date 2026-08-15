@@ -35,11 +35,15 @@ class Assignment < ApplicationRecord
   end
 
   def attempts_used
-    attempts.count
+    attempts.size
   end
 
   def in_progress_attempt
-    attempts.in_progress.order(:attempt_no).last
+    if attempts.loaded?
+      attempts.select(&:in_progress?).max_by(&:attempt_no)
+    else
+      attempts.in_progress.order(:attempt_no).last
+    end
   end
 
   def latest_attempt

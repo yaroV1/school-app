@@ -31,7 +31,11 @@ class Exam < ApplicationRecord
   end
 
   def max_score
-    questions.sum(:points)
+    if questions.loaded?
+      questions.sum(&:points)
+    else
+      questions.sum(:points)
+    end
   end
 
   def within_availability_window?(now = Time.current)

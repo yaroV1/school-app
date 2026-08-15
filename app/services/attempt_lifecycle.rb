@@ -135,15 +135,21 @@ class AttemptLifecycle
   private
 
   def apply_answers!(attempt, answers_payload)
+    questions_by_id = @exam.questions.index_by(&:id)
+    answers_by_qid = attempt.answers.index_by(&:question_id)
+
     Array(answers_payload).each do |item|
       question_id = item[:question_id] || item["question_id"]
       payload = item[:payload] || item["payload"] || {}
-      question = @exam.questions.find(question_id)
+      question = questions_by_id[question_id.to_i]
+      raise ActiveRecord::RecordNotFound, "Couldn't find Question with 'id'=#{question_id}" unless question
 
-      answer = attempt.answers.find_or_initialize_by(question_id: question.id)
+      answer = answers_by_qid[question.id] || attempt.answers.build(question: question)
+      answer.question = question
       answer.payload = normalize_payload(question, payload)
       answer.save!
       Scoring.score_auto!(answer)
+      answers_by_qid[question.id] = answer
     end
   end
 
