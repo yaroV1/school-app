@@ -74,6 +74,36 @@ class GradeIntegrityTest < ActionDispatch::IntegrationTest
     assert_equal 0.5, grade.reload.total_score.to_f, "a finalized total must survive expiry"
   end
 
+  test "clearing the score field removes the override" do
+    AttemptLifecycle.autosave!(@attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
+
+    patch attempt_path(@attempt), params: {
+      answers: [ { question_id: @mcq.id, teacher_score: "0", teacher_comment: "" } ]
+    }
+    assert_equal 0, @attempt.answers.sole.reload.teacher_score.to_i, "the override should be recorded"
+
+    # Teacher changes their mind and empties the field.
+    patch attempt_path(@attempt), params: {
+      answers: [ { question_id: @mcq.id, teacher_score: "", teacher_comment: "" } ]
+    }
+
+    answer = @attempt.answers.sole.reload
+    assert_nil answer.teacher_score, "an emptied field must drop the override"
+    assert_equal 1, answer.effective_score.to_i, "the auto score applies again"
+  end
+
+  test "a zero override is kept, not treated as blank" do
+    AttemptLifecycle.autosave!(@attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
+
+    patch attempt_path(@attempt), params: {
+      answers: [ { question_id: @mcq.id, teacher_score: "0", teacher_comment: "" } ]
+    }
+
+    answer = @attempt.answers.sole.reload
+    assert_equal 0, answer.teacher_score.to_i
+    assert_equal 0, answer.effective_score.to_i, "a deliberate zero must beat the auto score of 1"
+  end
+
   test "an unfinalized grade still tracks the attempt" do
     AttemptLifecycle.autosave!(@attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
     AttemptLifecycle.submit!(@attempt)

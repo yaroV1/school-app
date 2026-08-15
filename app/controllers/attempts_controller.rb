@@ -12,7 +12,10 @@ class AttemptsController < ApplicationController
     Array(params[:answers]).each do |item|
       answer = @attempt.answers.find_or_initialize_by(question_id: item[:question_id])
       answer.payload = answer.payload.presence || {}
-      answer.teacher_score = item[:teacher_score] if item[:teacher_score].present?
+      # Key present but blank means the teacher cleared the field, which drops
+      # the override so the auto score applies again. Guarding on the value
+      # instead made a score impossible to undo once set.
+      answer.teacher_score = item[:teacher_score].presence if item.key?(:teacher_score)
       answer.teacher_comment = item[:teacher_comment] if item.key?(:teacher_comment)
       answer.save!
     end
