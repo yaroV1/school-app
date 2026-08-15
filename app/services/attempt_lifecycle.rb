@@ -20,6 +20,14 @@ class AttemptLifecycle
     new(attempt.assignment).expire_if_needed!(attempt)
   end
 
+  # Expires a whole scope and refreshes each affected board once. The board
+  # partial renders every assignment of the exam, so expiring N attempts one by
+  # one used to cost N full board renders.
+  def self.expire_overdue!(attempts)
+    exams = attempts.filter_map { |attempt| new(attempt.assignment).expire!(attempt) }
+    exams.uniq.each { |exam| LiveBoard.replace(exam) }
+  end
+
   def initialize(assignment)
     @assignment = assignment
     @exam = assignment.exam
@@ -68,19 +76,20 @@ class AttemptLifecycle
     raise NotAllowed, I18n.t("take.errors.not_in_progress") unless attempt.in_progress?
 
     retries = 0
+    touched = []
     begin
       Attempt.transaction do
         locked = Attempt.lock.find(attempt.id)
         raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
         raise Expired, I18n.t("take.errors.time_up") if locked.past_deadline?
 
-        apply_answers!(locked, answers_payload)
+        touched = apply_answers!(locked, answers_payload)
 
         # If client version is stale, reload and re-apply (last-write-wins).
         if expected_version.present? && locked.lock_version != expected_version.to_i
           locked.reload
           raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
-          apply_answers!(locked, answers_payload)
+          touched = apply_answers!(locked, answers_payload)
         end
 
         locked.update!(last_activity_at: Time.current)
@@ -92,7 +101,7 @@ class AttemptLifecycle
     end
 
     attempt.reload
-    GradeLive.replace_answers(attempt, questions: @exam.questions)
+    GradeLive.replace_answers(attempt, questions: touched)
     attempt
   end
 
@@ -116,7 +125,7 @@ class AttemptLifecycle
     end
 
     attempt.reload
-    GradeLive.replace_header_and_answers(attempt, questions: @exam.questions)
+    GradeLive.replace_header_and_answers(attempt, questions: answered_questions(attempt))
     LiveBoard.replace(@exam)
     attempt
   rescue Expired
@@ -126,12 +135,21 @@ class AttemptLifecycle
   end
 
   def expire_if_needed!(attempt)
-    return attempt unless attempt&.in_progress?
-    return attempt unless attempt.past_deadline?
+    LiveBoard.replace(@exam) if expire!(attempt)
+    attempt
+  end
+
+  # Returns the exam when this call is what expired the attempt, nil otherwise,
+  # so a caller sweeping many attempts can refresh the board once at the end.
+  def expire!(attempt)
+    return unless attempt&.in_progress?
+    return unless attempt.past_deadline?
 
     locked = Attempt.lock.find(attempt.id)
-    return attempt.reload unless locked.in_progress?
-    return attempt.reload unless locked.past_deadline?
+    unless locked.in_progress? && locked.past_deadline?
+      attempt.reload
+      return
+    end
 
     locked.update!(status: :expired, last_activity_at: Time.current)
     grade = locked.grade || locked.build_grade
@@ -140,18 +158,25 @@ class AttemptLifecycle
     grade.save!
 
     attempt.reload
-    GradeLive.replace_header_and_answers(attempt, questions: @exam.questions)
-    LiveBoard.replace(@exam)
-    attempt
+    GradeLive.replace_header_and_answers(attempt, questions: answered_questions(attempt))
+    @exam
   end
 
   private
 
+  # Questions the student actually answered. The rest render an unchanged
+  # "no answer" block, so there is nothing to push for them.
+  def answered_questions(attempt)
+    answered_ids = attempt.answers.map(&:question_id).to_set
+    @exam.questions.select { |question| answered_ids.include?(question.id) }
+  end
+
+  # Returns the questions it wrote, so the caller knows what to broadcast.
   def apply_answers!(attempt, answers_payload)
     questions_by_id = @exam.questions.index_by(&:id)
     answers_by_qid = attempt.answers.index_by(&:question_id)
 
-    Array(answers_payload).each do |item|
+    Array(answers_payload).map do |item|
       question_id = item[:question_id] || item["question_id"]
       payload = item[:payload] || item["payload"] || {}
       question = questions_by_id[question_id.to_i]
@@ -163,6 +188,7 @@ class AttemptLifecycle
       answer.save!
       Scoring.score_auto!(answer)
       answers_by_qid[question.id] = answer
+      question
     end
   end
 

@@ -2,8 +2,6 @@ class ExpireOverdueAttemptsJob < ApplicationJob
   queue_as :default
 
   def perform
-    Attempt.overdue.includes(assignment: { exam: :questions }).find_each do |attempt|
-      AttemptLifecycle.expire_if_needed!(attempt)
-    end
+    AttemptLifecycle.expire_overdue!(Attempt.overdue.includes(assignment: { exam: :questions }))
   end
 end

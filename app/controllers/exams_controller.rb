@@ -72,7 +72,7 @@ class ExamsController < ApplicationController
   # Board accuracy only needs this exam; the whole table is swept by
   # ExpireOverdueAttemptsJob from recurring.yml.
   def expire_overdue_attempts
-    @exam.attempts.overdue.each { |attempt| AttemptLifecycle.expire_if_needed!(attempt) }
+    AttemptLifecycle.expire_overdue!(@exam.attempts.overdue)
   end
 
   def exam_params

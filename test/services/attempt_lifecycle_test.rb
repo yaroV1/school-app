@@ -183,6 +183,44 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     end
   end
 
+  test "autosave broadcasts only the questions it wrote" do
+    untouched = @exam.questions.create!(question_type: :short_text, prompt: "Q2?", points: 1, position: 1, config: {})
+    attempt = AttemptLifecycle.start!(@assignment)
+
+    streams = capture_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
+    end
+
+    assert_equal [ ActionView::RecordIdentifier.dom_id(@mcq, :student_answer) ], streams.map { |s| s["target"] },
+      "an untouched question (#{untouched.id}) must not be rebroadcast"
+  end
+
+  test "expiring a scope refreshes the board once rather than once per attempt" do
+    attempts = 3.times.map do |i|
+      assignment = @exam.assignments.create!(student: @teacher.students.create!(name: "S#{i}"))
+      AttemptLifecycle.start!(assignment).tap { |a| a.update!(deadline_at: 1.minute.ago) }
+    end
+
+    streams = capture_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.expire_overdue!(Attempt.where(id: attempts.map(&:id)))
+    end
+
+    assert_equal [ "live_board" ], streams.map { |s| s["target"] }
+    assert attempts.all? { |attempt| attempt.reload.expired? }, "every attempt must still expire"
+  end
+
+  test "expiring an attempt with no answers pushes the header only" do
+    @exam.questions.create!(question_type: :short_text, prompt: "Q2?", points: 1, position: 1, config: {})
+    attempt = AttemptLifecycle.start!(@assignment)
+    attempt.update!(deadline_at: 1.minute.ago)
+
+    streams = capture_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.expire_if_needed!(attempt)
+    end
+
+    assert_equal [ "attempt_live_header" ], streams.map { |s| s["target"] }
+  end
+
   test "no-op expire does not broadcast" do
     attempt = AttemptLifecycle.start!(@assignment)
 
