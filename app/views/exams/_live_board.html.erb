@@ -1,19 +1,19 @@
 <%= turbo_frame_tag "live_board" do %>
   <%
-    submitted_ids = @assignments.filter_map { |a| a.latest_attempt&.id if a.latest_attempt&.submitted? }
+    submitted_ids = assignments.filter_map { |a| a.latest_attempt&.id if a.latest_attempt&.submitted? }
   %>
   <div id="live-board-data"
        data-submitted-ids="<%= submitted_ids.join(",") %>"
-       data-server-time="<%= @server_time.iso8601 %>">
+       data-server-time="<%= server_time.iso8601 %>">
     <div class="mb-4 flex flex-wrap gap-3 text-sm">
       <% %w[in_progress not_started submitted expired revoked].each do |status| %>
         <span class="rounded-full border border-slate-200 bg-white px-3 py-1">
-          <%= t("statuses.#{status}") %>: <strong><%= @counts[status].to_i %></strong>
+          <%= t("statuses.#{status}") %>: <strong><%= counts[status].to_i %></strong>
         </span>
       <% end %>
     </div>
 
-    <% if @assignments.any? %>
+    <% if assignments.any? %>
       <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table class="min-w-full text-sm">
           <thead class="bg-slate-50 text-left text-slate-600">
@@ -28,7 +28,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            <% @assignments.each do |assignment| %>
+            <% assignments.each do |assignment| %>
               <% attempt = assignment.latest_attempt %>
               <tr>
                 <td class="px-3 py-2 font-medium"><%= assignment.student.name %></td>
@@ -38,7 +38,11 @@
                 <td class="px-3 py-2"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : t("common.dash") %></td>
                 <td class="px-3 py-2 font-mono">
                   <% if attempt&.in_progress? && attempt.deadline_at %>
-                    <%= attempt.seconds_remaining(@server_time) %>с
+                    <span data-controller="countdown"
+                          data-countdown-deadline-value="<%= attempt.deadline_at.iso8601 %>"
+                          data-countdown-server-time-value="<%= server_time.iso8601 %>">
+                      <span data-countdown-target="display"><%= attempt.seconds_remaining(server_time) %>с</span>
+                    </span>
                   <% else %>
                     <%= t("common.dash") %>
                   <% end %>
@@ -56,7 +60,7 @@
     <% else %>
       <p class="text-slate-600">
         <%= t("exams.live.empty") %>
-        <%= link_to t("exams.live.assign_students"), manage_test_assignments_path(@exam), class: "underline", data: { turbo_frame: "_top" } %>.
+        <%= link_to t("exams.live.assign_students"), manage_test_assignments_path(exam), class: "underline", data: { turbo_frame: "_top" } %>.
       </p>
     <% end %>
   </div>

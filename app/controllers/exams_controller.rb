@@ -55,8 +55,7 @@ class ExamsController < ApplicationController
   def live
     if turbo_frame_request?
       expire_overdue_attempts
-      load_live_board
-      render partial: "exams/live_board", layout: false
+      render partial: "exams/live_board", layout: false, locals: LiveBoard.snapshot(@exam)
     end
   end
 
@@ -74,13 +73,6 @@ class ExamsController < ApplicationController
   # ExpireOverdueAttemptsJob from recurring.yml.
   def expire_overdue_attempts
     @exam.attempts.overdue.each { |attempt| AttemptLifecycle.expire_if_needed!(attempt) }
-  end
-
-  def load_live_board
-    assignments = @exam.assignments.preload(:student, :attempts)
-    @assignments = assignments.to_a.sort_by { |a| [ a.board_sort_key, a.student.name.to_s.downcase ] }
-    @counts = @assignments.group_by(&:board_status).transform_values(&:size)
-    @server_time = Time.current
   end
 
   def exam_params

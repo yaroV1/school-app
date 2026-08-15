@@ -25,12 +25,20 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
     get live_test_path(@exam)
     assert_response :success
     assert_match I18n.t("exams.live.title_prefix"), response.body
+    assert_select "turbo-cable-stream-source"
 
     get live_test_path(@exam), headers: { "Turbo-Frame" => "live_board" }
     assert_response :success
     assert_match(/In Group/, response.body)
     assert_match(/Out Group/, response.body)
     assert_match I18n.t("statuses.not_started"), response.body
+  end
+
+  test "revoke broadcasts live board" do
+    assignment = @exam.assignments.find_by!(student: @in_group)
+    assert_turbo_stream_broadcasts [ @exam, :live_board ] do
+      post revoke_assignment_path(assignment)
+    end
   end
 
   test "bulk revoke revokes selected assignments" do

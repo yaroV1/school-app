@@ -129,4 +129,71 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     assert_equal 2, attempt.answers.find_by!(question: ordering).auto_score.to_i
     assert_equal 2, attempt.answers.find_by!(question: matching).auto_score.to_i
   end
+
+  test "start broadcasts live board" do
+    assert_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.start!(@assignment)
+    end
+  end
+
+  test "autosave broadcasts grade live but not live board" do
+    attempt = AttemptLifecycle.start!(@assignment)
+
+    assert_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
+    end
+
+    board_streams = capture_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "b" } } ])
+    end
+    assert_empty board_streams
+  end
+
+  test "submit broadcasts grade live and live board" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
+
+    assert_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.submit!(attempt)
+    end
+    assert attempt.reload.submitted?
+  end
+
+  test "submit broadcasts live board" do
+    attempt = AttemptLifecycle.start!(@assignment)
+
+    assert_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.submit!(attempt)
+    end
+  end
+
+  test "expire broadcasts grade live and live board" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    attempt.update!(deadline_at: 1.minute.ago)
+
+    assert_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.expire_if_needed!(attempt)
+    end
+    assert attempt.reload.expired?
+
+    attempt = AttemptLifecycle.start!(@assignment)
+    attempt.update!(deadline_at: 1.minute.ago)
+    assert_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.expire_if_needed!(attempt)
+    end
+  end
+
+  test "no-op expire does not broadcast" do
+    attempt = AttemptLifecycle.start!(@assignment)
+
+    grade_streams = capture_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      AttemptLifecycle.expire_if_needed!(attempt)
+    end
+    board_streams = capture_turbo_stream_broadcasts [ @exam, :live_board ] do
+      AttemptLifecycle.expire_if_needed!(attempt)
+    end
+
+    assert_empty grade_streams
+    assert_empty board_streams
+  end
 end

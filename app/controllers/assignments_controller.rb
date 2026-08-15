@@ -26,6 +26,7 @@ class AssignmentsController < ApplicationController
       end
     end
 
+    LiveBoard.replace(@exam) if created.positive?
     redirect_to manage_test_assignments_path(@exam), notice: t("exams.flash.assigned", count: created)
   end
 
@@ -37,16 +38,19 @@ class AssignmentsController < ApplicationController
       assignment.revoke!
       count += 1
     end
+    LiveBoard.replace(@exam) if count.positive?
     redirect_to manage_test_assignments_path(@exam), notice: t("exams.flash.revoked_many", count: count)
   end
 
   def revoke
     @assignment.revoke!
+    LiveBoard.replace(@assignment.exam)
     redirect_to manage_test_assignments_path(@assignment.exam), notice: t("exams.flash.revoked")
   end
 
   def regenerate_token
     @assignment.regenerate_token!
+    LiveBoard.replace(@assignment.exam)
     redirect_to manage_test_assignments_path(@assignment.exam), notice: t("exams.flash.regenerated")
   end
 

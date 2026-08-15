@@ -51,13 +51,15 @@ class AttemptLifecycle
     now = Time.current
     deadline = @exam.time_limit_sec.present? ? now + @exam.time_limit_sec.seconds : nil
 
-    @assignment.attempts.create!(
+    attempt = @assignment.attempts.create!(
       status: :in_progress,
       attempt_no: @assignment.attempts_used + 1,
       started_at: now,
       deadline_at: deadline,
       last_activity_at: now
     )
+    LiveBoard.replace(@exam)
+    attempt
   end
 
   def autosave!(attempt, answers_payload, expected_version: nil)
@@ -90,6 +92,8 @@ class AttemptLifecycle
     end
 
     attempt.reload
+    GradeLive.replace_answers(attempt, questions: @exam.questions)
+    attempt
   end
 
   def submit!(attempt)
@@ -112,6 +116,9 @@ class AttemptLifecycle
     end
 
     attempt.reload
+    GradeLive.replace_header_and_answers(attempt, questions: @exam.questions)
+    LiveBoard.replace(@exam)
+    attempt
   rescue Expired
     # Ensure expiry is persisted outside a rolled-back submit transaction.
     expire_if_needed!(attempt.reload)
@@ -133,6 +140,9 @@ class AttemptLifecycle
     grade.save!
 
     attempt.reload
+    GradeLive.replace_header_and_answers(attempt, questions: @exam.questions)
+    LiveBoard.replace(@exam)
+    attempt
   end
 
   private

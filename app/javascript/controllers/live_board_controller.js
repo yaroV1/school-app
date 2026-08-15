@@ -10,13 +10,15 @@ export default class extends Controller {
 
   connect() {
     this.knownSubmitted = new Set()
+    this.ready = false
     this.timer = setInterval(() => this.refresh(), this.intervalValue)
-    // Capture baseline after first frame load
-    setTimeout(() => this.captureSubmitted(), 500)
+    this.observer = new MutationObserver(() => this.onBoardChange())
+    this.observer.observe(this.element, { childList: true, subtree: true })
   }
 
   disconnect() {
     clearInterval(this.timer)
+    this.observer?.disconnect()
   }
 
   async refresh() {
@@ -30,14 +32,22 @@ export default class extends Controller {
       const html = await response.text()
       const doc = new DOMParser().parseFromString(html, "text/html")
       const next = doc.getElementById("live_board")
-      if (next) {
-        const previous = this.currentSubmittedIds()
-        frame.replaceWith(next)
-        this.announceNewSubmits(previous)
-      }
+      if (next) frame.replaceWith(next)
     } catch (e) {
       // ignore transient network errors while polling
     }
+  }
+
+  onBoardChange() {
+    if (!document.getElementById("live-board-data")) return
+
+    if (!this.ready) {
+      this.captureSubmitted()
+      this.ready = true
+      return
+    }
+
+    this.announceNewSubmits(this.knownSubmitted)
   }
 
   captureSubmitted() {
