@@ -1,0 +1,15 @@
+<div class="mb-6">
+  <%= link_to subject.class_group.name, class_group_path(subject.class_group), class: "text-sm text-slate-600 underline" %>
+  <div class="mt-2 flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold"><%= subject.name %></h1>
+      <p class="text-sm text-slate-500"><%= subject.class_group.name %></p>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to t("common.edit"), edit_subject_path(subject), class: btn_secondary %>
+      <%= button_to t("common.delete"), subject_path(subject), method: :delete, form: { data: { turbo_confirm: t("subjects.show.delete_confirm") } }, class: btn_secondary %>
+    </div>
+  </div>
+</div>
+
+<%= render "subjects/tabs", subject: subject %>

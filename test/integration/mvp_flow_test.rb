@@ -142,7 +142,7 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert attempt.reload.submitted?
   end
 
-  test "class page lists students and subjects; subject page lists tests and student stats" do
+  test "class tabs split subjects and students; subject tabs split tests and stats" do
     sign_in_as @teacher
 
     post class_groups_url, params: { class_group: { name: "9-B" } }
@@ -157,12 +157,20 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
 
     get class_group_url(group)
     assert_response :success
-    assert_match "Ann", response.body
     assert_match "World History", response.body
+    assert_no_match(/Ann/, response.body)
+
+    get students_class_group_url(group)
+    assert_response :success
+    assert_match "Ann", response.body
 
     get subject_url(subject)
     assert_response :success
     assert_match "Quiz", response.body
+    assert_no_match(/Ann/, response.body)
+
+    get stats_subject_url(subject)
+    assert_response :success
     assert_match "Ann", response.body
 
     delete subject_url(subject)

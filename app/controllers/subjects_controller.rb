@@ -1,9 +1,18 @@
 class SubjectsController < ApplicationController
+  SORTS = %w[created_desc created_asc title].freeze
+
   before_action :set_class_group, only: :create
-  before_action :set_subject, only: %i[show edit update destroy]
+  before_action :set_subject, only: %i[show stats edit update destroy]
 
   def show
-    @exams = @subject.exams.includes(:questions).order(updated_at: :desc)
+    @sort = SORTS.include?(params[:sort]) ? params[:sort] : SORTS.first
+    @query = params[:q].to_s.strip
+    @sort_options = SORTS.map { |key| [ t("subjects.sort.#{key}"), key ] }
+    @filtered = @query.present? || @sort != SORTS.first
+    @exams = sorted_exams(filtered_exams)
+  end
+
+  def stats
     @stat_rows = @subject.student_stat_rows
   end
 
@@ -12,9 +21,7 @@ class SubjectsController < ApplicationController
     if @subject.save
       redirect_to @class_group, notice: t("subjects.flash.created")
     else
-      @students = @class_group.students.active.order(:name)
-      @subjects = Subject.where(class_group_id: @class_group.id).includes(:exams).order(:name)
-      @student = Current.user.students.new
+      @subjects = @class_group.subjects.includes(:exams).order(:name).to_a
       render "class_groups/show", status: :unprocessable_entity
     end
   end
@@ -40,6 +47,24 @@ class SubjectsController < ApplicationController
   end
 
   private
+
+  # SQLite matches ASCII case-insensitively but not Cyrillic, and LOWER() leaves
+  # Cyrillic untouched, so filtering and title sorting happen in Ruby.
+  def filtered_exams
+    exams = @subject.exams.includes(:questions).to_a
+    return exams if @query.blank?
+
+    needle = @query.downcase
+    exams.select { |exam| exam.title.downcase.include?(needle) }
+  end
+
+  def sorted_exams(exams)
+    case @sort
+    when "created_asc" then exams.sort_by(&:created_at)
+    when "title" then exams.sort_by { |exam| exam.title.downcase }
+    else exams.sort_by(&:created_at).reverse
+    end
+  end
 
   def set_class_group
     @class_group = Current.user.class_groups.find(params[:class_group_id])

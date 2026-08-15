@@ -1,0 +1,10 @@
+<nav class="mb-6 flex gap-6 border-b border-slate-200">
+  <%= link_to class_group_path(class_group), class: tab_class(class_group_path(class_group)) do %>
+    <%= t("classes.show.subjects") %>
+    <span class="text-slate-400">(<%= class_group.subjects.size %>)</span>
+  <% end %>
+  <%= link_to students_class_group_path(class_group), class: tab_class(students_class_group_path(class_group)) do %>
+    <%= t("classes.show.students") %>
+    <span class="text-slate-400">(<%= class_group.students.active.count %>)</span>
+  <% end %>
+</nav>

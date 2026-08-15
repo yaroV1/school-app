@@ -10,12 +10,10 @@ class StudentsController < ApplicationController
     @student = Current.user.students.new(student_params)
     if @student.save
       @class_group.add_student!(@student)
-      redirect_to @class_group, notice: t("students.flash.created")
+      redirect_to students_class_group_path(@class_group), notice: t("students.flash.created")
     else
       @students = @class_group.students.active.order(:name)
-      @subjects = Subject.where(class_group_id: @class_group.id).includes(:exams).order(:name)
-      @subject = Subject.new
-      render "class_groups/show", status: :unprocessable_entity
+      render "class_groups/students", status: :unprocessable_entity
     end
   end
 

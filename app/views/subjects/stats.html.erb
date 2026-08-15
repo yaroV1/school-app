@@ -1,0 +1,49 @@
+<% content_for :title, @subject.name %>
+<%= render "subjects/header", subject: @subject %>
+
+<section>
+  <h2 class="mb-1 text-lg font-medium"><%= t("subjects.show.stats") %></h2>
+  <p class="mb-3 text-sm text-slate-500"><%= t("subjects.show.stats_hint") %></p>
+
+  <% if @stat_rows.any? %>
+    <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <table class="min-w-full text-sm">
+        <thead class="bg-slate-50 text-left text-slate-600">
+          <tr>
+            <th class="px-3 py-2"><%= t("subjects.stats.student") %></th>
+            <th class="px-3 py-2"><%= t("subjects.stats.tests") %></th>
+            <th class="px-3 py-2"><%= t("subjects.stats.average") %></th>
+            <th class="px-3 py-2"><%= t("subjects.stats.last") %></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <% @stat_rows.each do |row| %>
+            <tr>
+              <td class="px-3 py-2"><%= link_to row.student.name, student_path(row.student), class: "font-medium underline" %></td>
+              <td class="px-3 py-2">
+                <% if row.assigned.positive? %>
+                  <%= t("subjects.stats.progress", finished: row.finished, assigned: row.assigned) %>
+                <% else %>
+                  <%= t("common.dash") %>
+                <% end %>
+              </td>
+              <td class="px-3 py-2">
+                <% if row.average_percent %>
+                  <%= t("subjects.stats.percent", value: row.average_percent) %>
+                <% else %>
+                  <%= t("common.dash") %>
+                <% end %>
+              </td>
+              <td class="px-3 py-2">
+                <%= row.last_activity_at ? l(row.last_activity_at, format: :short) : t("common.dash") %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-slate-600"><%= t("subjects.show.empty_students") %></p>
+    <%= link_to t("classes.show.add_student"), students_class_group_path(@subject.class_group), class: "mt-2 inline-block text-sm underline" %>
+  <% end %>
+</section>

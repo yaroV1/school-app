@@ -78,10 +78,10 @@ class NPlusOneTest < ActionDispatch::IntegrationTest
 
   test "subject stats do not query assignments per exam or attempts per assignment" do
     seed_assignments! 8, attempts: 1
-    get subject_path(@exam.subject)
+    get stats_subject_path(@exam.subject)
     assert_response :success
 
-    sql = capture_sql { get subject_path(@exam.subject) }
+    sql = capture_sql { get stats_subject_path(@exam.subject) }
     assert_no_per_record_loads sql, "assignments", "exam_id"
     assert_no_per_record_loads sql, "attempts", "assignment_id"
     assert_no_per_record_loads sql, "grades", "attempt_id"

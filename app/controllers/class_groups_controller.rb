@@ -1,15 +1,18 @@
 class ClassGroupsController < ApplicationController
-  before_action :set_class_group, only: %i[show edit update destroy remove_member]
+  before_action :set_class_group, only: %i[show students edit update destroy remove_member]
 
   def index
     @class_groups = Current.user.class_groups.includes(:students, :subjects).order(:name)
   end
 
   def show
-    @students = @class_group.students.active.order(:name)
     @subjects = @class_group.subjects.includes(:exams).order(:name).to_a
-    @student = Current.user.students.new
     @subject = Subject.new
+  end
+
+  def students
+    @students = @class_group.students.active.order(:name)
+    @student = Current.user.students.new
   end
 
   def new
@@ -47,7 +50,7 @@ class ClassGroupsController < ApplicationController
   def remove_member
     membership = @class_group.class_memberships.find_by!(student_id: params[:student_id])
     membership.destroy!
-    redirect_to @class_group, notice: t("classes.flash.member_removed")
+    redirect_to students_class_group_path(@class_group), notice: t("classes.flash.member_removed")
   end
 
   private

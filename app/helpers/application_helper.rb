@@ -4,6 +4,15 @@ module ApplicationHelper
     current_page?(path) ? "#{base} text-slate-900 underline underline-offset-4" : "#{base} text-slate-600"
   end
 
+  def tab_class(path)
+    base = "border-b-2 px-1 pb-2 text-sm font-medium"
+    if current_page?(path)
+      "#{base} border-slate-900 text-slate-900"
+    else
+      "#{base} border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800"
+    end
+  end
+
   def btn_primary
     "inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
   end

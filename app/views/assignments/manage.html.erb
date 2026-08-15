@@ -32,7 +32,7 @@
     <% end %>
   <% else %>
     <p class="text-slate-600"><%= t("exams.assign.empty_class") %></p>
-    <%= link_to t("classes.show.add_student"), class_group_path(@exam.class_group), class: "mt-2 inline-block text-sm underline" %>
+    <%= link_to t("classes.show.add_student"), students_class_group_path(@exam.class_group), class: "mt-2 inline-block text-sm underline" %>
   <% end %>
 </section>
 

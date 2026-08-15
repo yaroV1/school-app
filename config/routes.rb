@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   resources :class_groups do
     member do
       delete :remove_member
+      get :students
     end
     resources :students, only: %i[create]
     resources :subjects, only: %i[create]
@@ -18,6 +19,9 @@ Rails.application.routes.draw do
   end
 
   resources :subjects, except: %i[index new create] do
+    member do
+      get :stats
+    end
     resources :exams, path: "tests", only: %i[new create]
   end
 
