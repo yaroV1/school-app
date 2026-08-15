@@ -1,4 +1,6 @@
 class LiveBoard
+  include LiveBroadcast
+
   def self.snapshot(exam)
     new(exam).snapshot
   end
@@ -12,7 +14,7 @@ class LiveBoard
   end
 
   def snapshot
-    assignments = Assignment.where(exam_id: @exam.id).preload(:student, :attempts).to_a
+    assignments = @exam.assignments.preload(:student, :attempts).to_a
     assignments.sort_by! { |assignment| [ assignment.board_sort_key, assignment.student.name.to_s.downcase ] }
 
     {
@@ -24,12 +26,14 @@ class LiveBoard
   end
 
   def replace
-    Turbo::StreamsChannel.broadcast_replace_to(
-      @exam,
-      :live_board,
-      target: "live_board",
-      partial: "exams/live_board",
-      locals: snapshot
-    )
+    broadcast_safely do
+      Turbo::StreamsChannel.broadcast_replace_to(
+        @exam,
+        :live_board,
+        target: "live_board",
+        partial: "exams/live_board",
+        locals: snapshot
+      )
+    end
   end
 end

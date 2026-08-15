@@ -1,5 +1,6 @@
 <% content_for :title, t("attempts.grade.title") %>
-<%= turbo_stream_from @attempt, :grade_live %>
+<%# Nothing broadcasts to a finished attempt, so only subscribe while one runs. %>
+<%= turbo_stream_from @attempt, :grade_live if @attempt.in_progress? %>
 <div class="mb-6">
   <%= link_to t("attempts.grade.back"), results_test_path(@exam), class: "text-sm text-slate-600 underline" %>
   <h1 class="mt-2 text-2xl font-semibold"><%= t("attempts.grade.heading", name: @attempt.student.name) %></h1>

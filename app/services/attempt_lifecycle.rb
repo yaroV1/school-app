@@ -12,8 +12,8 @@ class AttemptLifecycle
     new(attempt.assignment).autosave!(attempt, answers_payload, expected_version: expected_version)
   end
 
-  def self.submit!(attempt)
-    new(attempt.assignment).submit!(attempt)
+  def self.submit!(attempt, answers: nil)
+    new(attempt.assignment).submit!(attempt, answers: answers)
   end
 
   def self.expire_if_needed!(attempt)
@@ -71,6 +71,14 @@ class AttemptLifecycle
   end
 
   def autosave!(attempt, answers_payload, expected_version: nil)
+    touched = save_answers!(attempt, answers_payload, expected_version: expected_version)
+    GradeLive.replace_answers(attempt, questions: touched)
+    attempt
+  end
+
+  # Writes answers without broadcasting, so a submit that carries the final
+  # answers pushes one update instead of one per answer and then another.
+  def save_answers!(attempt, answers_payload, expected_version: nil)
     expire_if_needed!(attempt)
     raise Expired, I18n.t("take.errors.time_up") if attempt.expired?
     raise NotAllowed, I18n.t("take.errors.not_in_progress") unless attempt.in_progress?
@@ -101,11 +109,12 @@ class AttemptLifecycle
     end
 
     attempt.reload
-    GradeLive.replace_answers(attempt, questions: touched)
-    attempt
+    touched
   end
 
-  def submit!(attempt)
+  def submit!(attempt, answers: nil)
+    save_answers!(attempt, answers) if answers.present?
+
     expire_if_needed!(attempt)
     raise Expired, I18n.t("take.errors.time_up") if attempt.expired?
     raise NotAllowed, I18n.t("take.errors.not_in_progress") unless attempt.in_progress?

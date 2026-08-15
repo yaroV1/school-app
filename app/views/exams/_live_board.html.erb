@@ -4,7 +4,7 @@
   %>
   <div id="live-board-data"
        data-submitted-ids="<%= submitted_ids.join(",") %>"
-       data-server-time="<%= server_time.iso8601 %>">
+       data-server-time="<%= server_time.iso8601(3) %>">
     <div class="mb-4 flex flex-wrap gap-3 text-sm">
       <% %w[in_progress not_started submitted expired revoked].each do |status| %>
         <span class="rounded-full border border-slate-200 bg-white px-3 py-1">

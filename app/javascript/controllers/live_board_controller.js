@@ -9,16 +9,28 @@ export default class extends Controller {
   }
 
   connect() {
-    this.knownSubmitted = new Set()
-    this.ready = false
+    // Baseline now, so a board restored from Turbo's page cache does not treat
+    // the next real submission as its starting point.
+    this.knownSubmitted = this.currentSubmittedIds()
+
+    // The board changes three ways: its first lazy load, a broadcast, and the
+    // polling fallback below. Each one says so explicitly, rather than watching
+    // the DOM and guessing which mutations were a submission.
+    this.onFrameLoad = (event) => {
+      if (event.target.id === "live_board") this.captureSubmitted()
+    }
+    this.onStreamRender = () => requestAnimationFrame(() => this.announceNewSubmits())
+    document.addEventListener("turbo:frame-load", this.onFrameLoad)
+    document.addEventListener("turbo:before-stream-render", this.onStreamRender)
+
     this.timer = setInterval(() => this.refresh(), this.intervalValue)
-    this.observer = new MutationObserver(() => this.onBoardChange())
-    this.observer.observe(this.element, { childList: true, subtree: true })
   }
 
   disconnect() {
     clearInterval(this.timer)
-    this.observer?.disconnect()
+    clearTimeout(this.toastTimer)
+    document.removeEventListener("turbo:frame-load", this.onFrameLoad)
+    document.removeEventListener("turbo:before-stream-render", this.onStreamRender)
   }
 
   async refresh() {
@@ -32,22 +44,23 @@ export default class extends Controller {
       const html = await response.text()
       const doc = new DOMParser().parseFromString(html, "text/html")
       const next = doc.getElementById("live_board")
-      if (next) frame.replaceWith(next)
+      if (!next || this.isStale(next)) return
+
+      frame.replaceWith(next)
+      this.announceNewSubmits()
     } catch (e) {
       // ignore transient network errors while polling
     }
   }
 
-  onBoardChange() {
-    if (!document.getElementById("live-board-data")) return
+  // A poll can start before a broadcast and land after it. Applying that older
+  // snapshot would roll the board back and re-announce the same submission.
+  isStale(next) {
+    const incoming = next.querySelector("#live-board-data")?.dataset.serverTime
+    const shown = document.getElementById("live-board-data")?.dataset.serverTime
+    if (!incoming || !shown) return false
 
-    if (!this.ready) {
-      this.captureSubmitted()
-      this.ready = true
-      return
-    }
-
-    this.announceNewSubmits(this.knownSubmitted)
+    return Date.parse(incoming) < Date.parse(shown)
   }
 
   captureSubmitted() {
@@ -57,21 +70,21 @@ export default class extends Controller {
   currentSubmittedIds() {
     const el = document.getElementById("live-board-data")
     if (!el) return new Set()
+
     const raw = el.dataset.submittedIds || ""
     return new Set(raw.split(",").filter(Boolean))
   }
 
-  announceNewSubmits(previous) {
+  announceNewSubmits() {
     const current = this.currentSubmittedIds()
     let added = 0
-    current.forEach((id) => {
-      if (!previous.has(id) && !this.knownSubmitted.has(id)) added += 1
-    })
+    current.forEach((id) => { if (!this.knownSubmitted.has(id)) added += 1 })
     this.knownSubmitted = current
     if (added === 0) return
 
     const toast = document.getElementById("live-toast")
     if (!toast) return
+
     toast.textContent = added === 1
       ? (this.toastOneValue || "New submission received")
       : (this.toastOtherValue || `${added} new submissions received`).replaceAll("__COUNT__", String(added))

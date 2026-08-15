@@ -28,11 +28,13 @@ class AttemptGradeTest < ActionDispatch::IntegrationTest
     assert_select "input[name='answers[][teacher_score]']"
   end
 
-  test "submitted attempt hides the live writing hint" do
+  test "submitted attempt hides the live writing hint and opens no subscription" do
     AttemptLifecycle.submit!(@attempt)
     get attempt_path(@attempt)
     assert_response :success
-    assert_select "turbo-cable-stream-source"
     refute_match I18n.t("attempts.grade.live_hint"), response.body
+    # Nothing broadcasts to a finished attempt, so a teacher grading a stack of
+    # them should not leave a websocket open per page.
+    assert_select "turbo-cable-stream-source", false
   end
 end

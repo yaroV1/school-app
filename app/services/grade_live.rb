@@ -1,4 +1,6 @@
 class GradeLive
+  include LiveBroadcast
+
   def self.replace_answers(attempt, questions:)
     new(attempt, questions).replace_answers
   end
@@ -18,26 +20,30 @@ class GradeLive
   def replace_answers
     return if @questions.empty?
 
-    answers = @attempt.answers.index_by(&:question_id)
-    @questions.each do |question|
-      Turbo::StreamsChannel.broadcast_replace_to(
-        @attempt,
-        :grade_live,
-        target: ActionView::RecordIdentifier.dom_id(question, :student_answer),
-        partial: "attempts/student_answer",
-        locals: { question: question, answer: answers[question.id] }
-      )
+    broadcast_safely do
+      answers = @attempt.answers.index_by(&:question_id)
+      @questions.each do |question|
+        Turbo::StreamsChannel.broadcast_replace_to(
+          @attempt,
+          :grade_live,
+          target: ActionView::RecordIdentifier.dom_id(question, :student_answer),
+          partial: "attempts/student_answer",
+          locals: { question: question, answer: answers[question.id] }
+        )
+      end
     end
   end
 
   def replace_header_and_answers
-    Turbo::StreamsChannel.broadcast_replace_to(
-      @attempt,
-      :grade_live,
-      target: "attempt_live_header",
-      partial: "attempts/live_header",
-      locals: { attempt: @attempt, exam: exam, grade: @attempt.grade }
-    )
+    broadcast_safely do
+      Turbo::StreamsChannel.broadcast_replace_to(
+        @attempt,
+        :grade_live,
+        target: "attempt_live_header",
+        partial: "attempts/live_header",
+        locals: { attempt: @attempt, exam: exam, grade: @attempt.grade }
+      )
+    end
     replace_answers
   end
 

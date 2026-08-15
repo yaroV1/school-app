@@ -2,13 +2,7 @@ module Take
   class SubmissionsController < BaseController
     def create
       attempt = @assignment.attempts.find(params.require(:attempt_id))
-      if params[:answers].present?
-        answers = params[:answers].to_unsafe_h.map do |question_id, payload|
-          { "question_id" => question_id, "payload" => payload }
-        end
-        AttemptLifecycle.autosave!(attempt, answers)
-      end
-      AttemptLifecycle.submit!(attempt)
+      AttemptLifecycle.submit!(attempt, answers: submitted_answers)
       redirect_to student_done_path(token: @assignment.access_token), notice: t("take.errors.submitted")
     rescue AttemptLifecycle::Expired
       redirect_to student_done_path(token: @assignment.access_token), alert: t("take.errors.time_up_kept")
@@ -18,6 +12,16 @@ module Take
 
     def show
       @latest = @assignment.attempts.where(status: %i[submitted expired]).order(attempt_no: :desc).first
+    end
+
+    private
+
+    def submitted_answers
+      return [] if params[:answers].blank?
+
+      params[:answers].to_unsafe_h.map do |question_id, payload|
+        { "question_id" => question_id, "payload" => payload }
+      end
     end
   end
 end
