@@ -22,6 +22,7 @@
         autosave_url_value: student_answers_path(token: @assignment.access_token),
         autosave_attempt_id_value: @attempt.id,
         autosave_lock_version_value: @attempt.lock_version,
+        autosave_interval_value: 5000,
         autosave_saving_value: t("take.saving"),
         autosave_saved_value: t("take.saved"),
         autosave_failed_value: t("take.save_failed"),
@@ -29,7 +30,16 @@
       },
       class: "space-y-6" do %>
   <%= hidden_field_tag :attempt_id, @attempt.id %>
-  <p class="text-xs text-slate-500" data-autosave-target="status"><%= t("take.autosave") %></p>
+  <div class="flex items-center gap-1.5 text-xs">
+    <svg data-autosave-target="spinner" class="hidden h-3.5 w-3.5 animate-spin text-slate-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" class="opacity-25" />
+      <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+    </svg>
+    <svg data-autosave-target="check" class="hidden h-3.5 w-3.5 text-emerald-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M3.5 8.5 6.5 11.5 12.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+    <p class="text-slate-500" data-autosave-target="status"><%= t("take.autosave") %></p>
+  </div>
 
   <% @questions.each_with_index do |question, index| %>
     <% answer = @answers[question.id] %>

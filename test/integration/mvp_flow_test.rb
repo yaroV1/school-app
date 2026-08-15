@@ -142,6 +142,22 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert attempt.reload.submitted?
   end
 
+  test "student run page autosaves every 5 seconds and shows save status icons" do
+    exam = create_exam!(@teacher, title: "Autosave", status: :published)
+    exam.questions.create!(question_type: :short_text, prompt: "Sky?", points: 1, position: 0, config: {})
+    student = @teacher.students.create!(name: "Nia")
+    assignment = exam.assignments.create!(student: student)
+
+    post student_start_url(token: assignment.access_token)
+    follow_redirect!
+    assert_response :success
+
+    assert_select "form[data-autosave-interval-value=?]", "5000"
+    assert_select "[data-autosave-target=?]", "status"
+    assert_select "[data-autosave-target=?]", "check"
+    assert_select "[data-autosave-target=?]", "spinner"
+  end
+
   test "class tabs split subjects and students; subject tabs split tests and stats" do
     sign_in_as @teacher
 

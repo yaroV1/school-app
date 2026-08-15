@@ -5,12 +5,12 @@ export default class extends Controller {
     url: String,
     attemptId: Number,
     lockVersion: Number,
-    interval: { type: Number, default: 15000 },
+    interval: { type: Number, default: 5000 },
     saving: { type: String, default: "Saving…" },
     saved: { type: String, default: "Saved" },
     failed: { type: String, default: "Save failed" }
   }
-  static targets = ["status"]
+  static targets = [ "status", "spinner", "check" ]
 
   connect() {
     this.timer = setInterval(() => this.save(), this.intervalValue)
@@ -57,7 +57,7 @@ export default class extends Controller {
     if (answers.length === 0) return
 
     const token = document.querySelector("meta[name='csrf-token']")?.content
-    this.setStatus(this.savingValue)
+    this.setStatus("saving", this.savingValue)
 
     try {
       const response = await fetch(this.urlValue, {
@@ -80,22 +80,41 @@ export default class extends Controller {
         if (typeof data.lock_version === "number") {
           this.lockVersionValue = data.lock_version
         }
-        this.setStatus(this.savedValue)
+        this.setStatus("saved", this.savedValue)
         if (data.status === "expired") {
           window.location.reload()
         }
       } else {
-        this.setStatus(data.error || this.failedValue)
+        this.setStatus("failed", data.error || this.failedValue)
         if (data.status === "expired") {
           window.location.href = window.location.pathname.replace(/\/run$/, "/done")
         }
       }
     } catch (e) {
-      this.setStatus(this.failedValue)
+      this.setStatus("failed", this.failedValue)
     }
   }
 
-  setStatus(text) {
-    if (this.hasStatusTarget) this.statusTarget.textContent = text
+  setStatus(kind, text) {
+    if (this.hasStatusTarget) {
+      this.statusTarget.textContent = text
+      this.statusTarget.classList.remove("text-slate-500", "text-emerald-700", "text-red-700")
+      const color = { saving: "text-slate-500", saved: "text-emerald-700", failed: "text-red-700" }[kind]
+      if (color) this.statusTarget.classList.add(color)
+    }
+
+    if (this.hasSpinnerTarget) {
+      this.spinnerTarget.classList.toggle("hidden", kind !== "saving")
+    }
+
+    if (this.hasCheckTarget) {
+      this.checkTarget.classList.add("hidden")
+      this.checkTarget.classList.remove("autosave-check-pop")
+      if (kind === "saved") {
+        this.checkTarget.classList.remove("hidden")
+        void this.checkTarget.offsetWidth
+        this.checkTarget.classList.add("autosave-check-pop")
+      }
+    }
   }
 }
