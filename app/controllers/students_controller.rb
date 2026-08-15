@@ -3,10 +3,7 @@ class StudentsController < ApplicationController
   before_action :set_student, only: %i[show edit update archive unarchive]
 
   def show
-    @assignments = @student.assignments.includes(:exam, attempts: :grade).order(created_at: :desc)
-    @attempts = Attempt.joins(:assignment).where(assignments: { student_id: @student.id })
-                       .includes(:grade, assignment: :exam)
-                       .order(started_at: :desc)
+    @attempts = @student.attempts.includes(:exam, :grade).order(started_at: :desc)
   end
 
   def create

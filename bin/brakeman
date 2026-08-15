@@ -2,6 +2,7 @@
 require "rubygems"
 require "bundler/setup"
 
-ARGV.unshift("--ensure-latest")
-
+# No --ensure-latest: it exits 5 without scanning whenever rubygems is ahead of
+# Gemfile.lock, which turns CI red for reasons unrelated to this code. Dependabot
+# keeps the pinned version current.
 load Gem.bin_path("brakeman", "brakeman")

@@ -43,6 +43,15 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     assert_raises(AttemptLifecycle::NotAllowed) { AttemptLifecycle.start!(@assignment) }
   end
 
+  test "closing a test still lets an in-progress attempt resume" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    @exam.close!
+
+    resumed = AttemptLifecycle.start!(@assignment)
+    assert_equal attempt.id, resumed.id
+    assert resumed.in_progress?
+  end
+
   test "max attempts enforced" do
     a1 = AttemptLifecycle.start!(@assignment)
     AttemptLifecycle.submit!(a1)

@@ -87,6 +87,30 @@ class NPlusOneTest < ActionDispatch::IntegrationTest
     assert_no_per_record_loads sql, "grades", "attempt_id"
   end
 
+  test "student history does not load the exam per attempt" do
+    student = @teacher.students.create!(name: "Historian")
+    @group.add_student!(student)
+    now = Time.current
+    3.times do |i|
+      exam = create_exam!(@teacher, title: "Quiz #{i}", status: :published, class_group: @group)
+      assignment = exam.assignments.create!(student: student)
+      assignment.attempts.create!(
+        attempt_no: 1,
+        status: :submitted,
+        started_at: now,
+        last_activity_at: now,
+        submitted_at: now
+      )
+    end
+
+    get student_path(student)
+    assert_response :success
+
+    sql = capture_sql { get student_path(student) }
+    exam_loads = sql.select { |query| query.match?(/FROM "exams"/i) }
+    assert_operator exam_loads.size, :<=, 1, exam_loads.join("\n")
+  end
+
   test "student autosave does not preload all attempts for the assignment" do
     student = @teacher.students.create!(name: "Sam")
     @group.add_student!(student)
@@ -135,6 +159,9 @@ class NPlusOneTest < ActionDispatch::IntegrationTest
 
   def capture_sql
     ActiveRecord::Base.lease_connection.materialize_transactions
+    # The query cache survives the warm-up request, and SQLCounter skips cache
+    # hits, so without this every assertion below would see zero queries.
+    ActiveRecord::Base.lease_connection.clear_query_cache
     counter = ActiveRecord::Assertions::QueryAssertions::SQLCounter.new
     ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { yield }
     counter.log

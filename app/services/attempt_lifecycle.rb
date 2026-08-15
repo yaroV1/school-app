@@ -27,12 +27,15 @@ class AttemptLifecycle
 
   def start!
     raise NotAllowed, I18n.t("take.errors.link_revoked") if @assignment.revoked?
-    raise NotAllowed, I18n.t("take.errors.test_not_open") unless @exam.published?
 
+    # Resume before the "new start" guards: closing a test or ending its window
+    # blocks new attempts only, an attempt already in progress may still finish.
     if (active = @assignment.in_progress_attempt)
       expire_if_needed!(active)
       return active.reload if active.in_progress?
     end
+
+    raise NotAllowed, I18n.t("take.errors.test_not_open") unless @exam.published?
 
     unless @exam.within_availability_window?
       case @exam.availability_status
