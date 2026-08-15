@@ -1,38 +1,18 @@
 <% content_for :title, @exam.title %>
-<div class="mb-6 flex flex-wrap items-start justify-between gap-4">
-  <div>
-    <%= link_to @exam.class_group.name, class_group_path(@exam.class_group), class: "text-sm text-slate-600 underline" %>
-    <span class="text-sm text-slate-400"> / </span>
-    <%= link_to @exam.subject.name, subject_path(@exam.subject), class: "text-sm text-slate-600 underline" %>
-    <div class="mb-2 flex items-center gap-2">
-      <h1 class="text-2xl font-semibold"><%= @exam.title %></h1>
-      <%= status_badge(@exam.status) %>
-    </div>
-    <% if @exam.description.present? %><p class="text-slate-600"><%= @exam.description %></p><% end %>
-    <p class="mt-2 text-sm text-slate-500">
-      <%= @exam.time_limit_sec ? t("exams.show.minutes_limit", minutes: @exam.time_limit_sec / 60) : t("exams.show.untimed") %>
-      · <%= t("exams.attempts_count", count: @exam.max_attempts) %>
-      <% if @exam.available_from || @exam.available_until %>
-        · <%= t("exams.show.window") %>:
-        <%= @exam.available_from ? l(@exam.available_from, format: :short) : t("common.now") %>
-        –
-        <%= @exam.available_until ? l(@exam.available_until, format: :short) : t("common.open_ended") %>
-      <% end %>
-    </p>
-  </div>
-  <div class="flex flex-wrap gap-2">
-    <%= link_to t("exams.show.edit_settings"), edit_test_path(@exam), class: btn_secondary %>
-    <% if @exam.draft? %>
-      <%= button_to t("exams.show.publish"), publish_test_path(@exam), class: btn_primary %>
-    <% elsif @exam.published? %>
-      <%= button_to t("exams.show.close"), close_test_path(@exam), class: btn_secondary %>
+<%= render "exams/header", exam: @exam %>
+
+<div class="mb-6">
+  <% if @exam.description.present? %><p class="text-slate-600"><%= @exam.description %></p><% end %>
+  <p class="mt-2 text-sm text-slate-500">
+    <%= @exam.time_limit_sec ? t("exams.show.minutes_limit", minutes: @exam.time_limit_sec / 60) : t("exams.show.untimed") %>
+    · <%= t("exams.attempts_count", count: @exam.max_attempts) %>
+    <% if @exam.available_from || @exam.available_until %>
+      · <%= t("exams.show.window") %>:
+      <%= @exam.available_from ? l(@exam.available_from, format: :short) : t("common.now") %>
+      –
+      <%= @exam.available_until ? l(@exam.available_until, format: :short) : t("common.open_ended") %>
     <% end %>
-    <% if @exam.published? || @exam.closed? %>
-      <%= link_to t("exams.show.live_board"), live_test_path(@exam), class: btn_primary %>
-      <%= link_to t("exams.show.assign"), manage_test_assignments_path(@exam), class: btn_secondary %>
-      <%= link_to t("exams.show.results"), results_test_path(@exam), class: btn_secondary %>
-    <% end %>
-  </div>
+  </p>
 </div>
 
 <section class="mb-10">

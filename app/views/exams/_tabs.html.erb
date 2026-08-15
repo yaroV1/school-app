@@ -1,0 +1,9 @@
+<nav class="mb-6 flex flex-wrap gap-6 border-b border-slate-200">
+  <%= link_to t("exams.show.overview"), test_path(exam), class: tab_class(test_path(exam)) %>
+  <%= link_to t("exams.show.edit_settings"), edit_test_path(exam), class: tab_class(edit_test_path(exam)) %>
+  <%= link_to t("exams.show.assign"), manage_test_assignments_path(exam), class: tab_class(manage_test_assignments_path(exam)) %>
+  <% if exam.published? || exam.closed? %>
+    <%= link_to t("exams.show.live_board"), live_test_path(exam), class: tab_class(live_test_path(exam)) %>
+    <%= link_to t("exams.show.results"), results_test_path(exam), class: tab_class(results_test_path(exam)) %>
+  <% end %>
+</nav>

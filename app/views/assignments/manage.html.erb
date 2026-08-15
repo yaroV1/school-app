@@ -1,9 +1,5 @@
 <% content_for :title, t("exams.assign.title", title: @exam.title) %>
-<div class="mb-6">
-  <%= link_to t("exams.assign.back"), test_path(@exam), class: "text-sm text-slate-600 underline" %>
-  <h1 class="mt-2 text-2xl font-semibold"><%= t("exams.assign.title", title: @exam.title) %></h1>
-  <p class="text-sm text-slate-500"><%= @exam.class_group.name %> · <%= @exam.subject.name %></p>
-</div>
+<%= render "exams/header", exam: @exam %>
 
 <% unless @exam.published? %>
   <p class="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800"><%= t("exams.assign.publish_hint") %></p>
@@ -37,12 +33,7 @@
 </section>
 
 <section>
-  <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-    <h2 class="text-lg font-medium"><%= t("exams.assign.access_links") %></h2>
-    <% if @exam.published? || @exam.closed? %>
-      <%= link_to t("exams.assign.open_live"), live_test_path(@exam), class: btn_primary %>
-    <% end %>
-  </div>
+  <h2 class="mb-3 text-lg font-medium"><%= t("exams.assign.access_links") %></h2>
 
   <% if @assignments.any? %>
     <%= form_with url: bulk_revoke_test_assignments_path(@exam), method: :post do %>
