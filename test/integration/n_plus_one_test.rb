@@ -87,6 +87,31 @@ class NPlusOneTest < ActionDispatch::IntegrationTest
     assert_no_per_record_loads sql, "grades", "attempt_id"
   end
 
+  test "student autosave does not preload all attempts for the assignment" do
+    student = @teacher.students.create!(name: "Sam")
+    @group.add_student!(student)
+    assignment = @exam.assignments.create!(student: student)
+    now = Time.current
+    attempt = assignment.attempts.create!(
+      attempt_no: 1,
+      status: :in_progress,
+      started_at: now,
+      last_activity_at: now
+    )
+    question = @exam.questions.first
+
+    sql = capture_sql do
+      put student_answers_url(token: assignment.access_token), params: {
+        attempt_id: attempt.id,
+        answers: [ { question_id: question.id, payload: { text: "Ada" } } ]
+      }, as: :json
+    end
+    assert_response :success
+
+    preloads = sql.select { |query| query.match?(/FROM "attempts"/i) && !query.match?(/"attempts"."id"/) }
+    assert_empty preloads, preloads.join("\n")
+  end
+
   private
 
   def seed_assignments!(count, attempts: 1)

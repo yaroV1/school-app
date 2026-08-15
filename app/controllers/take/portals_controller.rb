@@ -8,5 +8,11 @@ module Take
       @attempts_used = @assignment.attempts_used
       @availability = @exam.availability_status
     end
+
+    private
+
+    def assignment_includes
+      super + [ :attempts ]
+    end
   end
 end

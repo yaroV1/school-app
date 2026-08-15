@@ -21,5 +21,11 @@ module Take
       @questions = @exam.questions.with_attached_photo
       @answers = @attempt.answers.index_by(&:question_id)
     end
+
+    private
+
+    def assignment_includes
+      super + [ :attempts ]
+    end
   end
 end
