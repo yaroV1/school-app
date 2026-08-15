@@ -2,15 +2,10 @@ module Take
   class AnswersController < BaseController
     def upsert
       attempt = @assignment.attempts.find(params.require(:attempt_id))
-      AttemptLifecycle.autosave!(
-        attempt,
-        normalize_answers(params[:answers]),
-        expected_version: params[:lock_version]
-      )
+      AttemptLifecycle.autosave!(attempt, normalize_answers(params[:answers]))
 
       render json: {
         ok: true,
-        lock_version: attempt.lock_version,
         server_time: Time.current.iso8601,
         seconds_remaining: attempt.seconds_remaining,
         status: attempt.status

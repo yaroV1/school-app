@@ -21,7 +21,6 @@
         controller: "autosave",
         autosave_url_value: student_answers_path(token: @assignment.access_token),
         autosave_attempt_id_value: @attempt.id,
-        autosave_lock_version_value: @attempt.lock_version,
         autosave_interval_value: 5000,
         autosave_saving_value: t("take.saving"),
         autosave_saved_value: t("take.saved"),

@@ -8,8 +8,8 @@ class AttemptLifecycle
     new(assignment).start!
   end
 
-  def self.autosave!(attempt, answers_payload, expected_version: nil)
-    new(attempt.assignment).autosave!(attempt, answers_payload, expected_version: expected_version)
+  def self.autosave!(attempt, answers_payload)
+    new(attempt.assignment).autosave!(attempt, answers_payload)
   end
 
   def self.submit!(attempt, answers: nil)
@@ -70,15 +70,15 @@ class AttemptLifecycle
     attempt
   end
 
-  def autosave!(attempt, answers_payload, expected_version: nil)
-    touched = save_answers!(attempt, answers_payload, expected_version: expected_version)
+  def autosave!(attempt, answers_payload)
+    touched = save_answers!(attempt, answers_payload)
     GradeLive.replace_answers(attempt, questions: touched)
     attempt
   end
 
   # Writes answers without broadcasting, so a submit that carries the final
   # answers pushes one update instead of one per answer and then another.
-  def save_answers!(attempt, answers_payload, expected_version: nil)
+  def save_answers!(attempt, answers_payload)
     expire_if_needed!(attempt)
     raise Expired, I18n.t("take.errors.time_up") if attempt.expired?
     raise NotAllowed, I18n.t("take.errors.not_in_progress") unless attempt.in_progress?
@@ -92,17 +92,6 @@ class AttemptLifecycle
         raise Expired, I18n.t("take.errors.time_up") if locked.past_deadline?
 
         touched = apply_answers!(locked, answers_payload)
-
-        # If client version is stale, reload and re-apply (last-write-wins).
-        # Union, not assignment: the replay writes nothing when the first pass
-        # already stored this payload, and overwriting would drop the questions
-        # that pass did change — the answer lands but the teacher never sees it.
-        if expected_version.present? && locked.lock_version != expected_version.to_i
-          locked.reload
-          raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
-          touched |= apply_answers!(locked, answers_payload)
-        end
-
         locked.update!(last_activity_at: Time.current)
       end
     rescue ActiveRecord::StaleObjectError

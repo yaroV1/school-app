@@ -227,22 +227,6 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     assert_equal [ ActionView::RecordIdentifier.dom_id(text, :student_answer) ], third.map { |s| s["target"] }
   end
 
-  # The replay re-applies the same payload, so it writes nothing and reports
-  # nothing changed. Overwriting the first pass's result with that lost the
-  # broadcast: the answer landed but the teacher's page never updated.
-  test "a stale lock_version still broadcasts what the first pass wrote" do
-    attempt = AttemptLifecycle.start!(@assignment)
-    stale = attempt.lock_version - 1
-
-    streams = capture_turbo_stream_broadcasts([ attempt, :grade_live ]) do
-      AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ],
-        expected_version: stale)
-    end
-
-    assert_equal [ ActionView::RecordIdentifier.dom_id(@mcq, :student_answer) ], streams.map { |s| s["target"] }
-    assert_equal "a", attempt.answers.sole.reload.option_id
-  end
-
   test "changing only the auto score still broadcasts" do
     attempt = AttemptLifecycle.start!(@assignment)
     wrong = [ { "question_id" => @mcq.id, "payload" => { "option_id" => "b" } } ]
