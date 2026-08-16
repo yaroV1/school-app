@@ -239,7 +239,7 @@ Quality loop and commands: `docs/agent-rules.md` § Quality.
 
 One commit per task.
 
-- [ ] FR-4 — Add the structure-freeze validation to `Question`, alongside the existing `config`
+- [x] FR-4 — Add the structure-freeze validation to `Question`, alongside the existing `config`
       validations, plus its `structure_frozen` error key — done when: on a published exam a text-only
       `config` change saves, and a change to `points`, `question_type`, `position`, any entry `id`,
       `is_correct`, an array's length or order, `pairs`, `rubric`, or `model_answer` fails with the
