@@ -1,6 +1,30 @@
 require "test_helper"
 
 class QuestionTest < ActiveSupport::TestCase
+  MCQ_CONFIG = {
+    "options" => [
+      { "id" => "a", "text" => "No", "is_correct" => false },
+      { "id" => "b", "text" => "Yes", "is_correct" => true }
+    ]
+  }.freeze
+  ORDERING_CONFIG = {
+    "items" => [
+      { "id" => "e1", "text" => "First" },
+      { "id" => "e2", "text" => "Second" },
+      { "id" => "e3", "text" => "Third" }
+    ]
+  }.freeze
+  MATCHING_CONFIG = {
+    "left" => [ { "id" => "l1", "text" => "A" }, { "id" => "l2", "text" => "B" } ],
+    "right" => [ { "id" => "r1", "text" => "1" }, { "id" => "r2", "text" => "2" } ],
+    "pairs" => { "l1" => "r1", "l2" => "r2" }
+  }.freeze
+  SOURCE_CONFIG = {
+    "source" => "A short passage.",
+    "rubric" => "secret rubric",
+    "model_answer" => "secret answer"
+  }.freeze
+
   setup do
     @exam = create_exam!(users(:one), title: "Quiz")
   end
@@ -138,5 +162,168 @@ class QuestionTest < ActiveSupport::TestCase
     )
     assert_not question.valid?
     assert_includes question.errors[:photo], I18n.t("activerecord.errors.models.question.attributes.photo.invalid_type")
+  end
+
+  test "a published question accepts a wording-only change" do
+    mcq = publish(question_with(:mcq, MCQ_CONFIG))
+    reworded_options = { "options" => [
+      { "id" => "a", "text" => "Ні", "is_correct" => false },
+      { "id" => "b", "text" => "Так", "is_correct" => true }
+    ] }
+    assert mcq.update(prompt: "Оберіть правильну відповідь", config: reworded_options),
+      mcq.errors.full_messages.to_sentence
+    assert_equal %w[Ні Так], mcq.reload.config["options"].map { |option| option["text"] }
+    assert_equal "Оберіть правильну відповідь", mcq.prompt
+
+    matching = publish(question_with(:matching, MATCHING_CONFIG))
+    reworded_pairs = MATCHING_CONFIG.deep_dup
+    reworded_pairs["left"][0]["text"] = "Альфа"
+    reworded_pairs["right"][1]["text"] = "Два"
+    assert matching.update(config: reworded_pairs), matching.errors.full_messages.to_sentence
+    assert_equal "Альфа", matching.reload.config["left"][0]["text"]
+
+    source = publish(question_with(:source, SOURCE_CONFIG))
+    assert source.update(config: SOURCE_CONFIG.merge("source" => "A corrected passage.")),
+      source.errors.full_messages.to_sentence
+    assert_equal "A corrected passage.", source.reload.source_text
+  end
+
+  test "a published question tracks a config mutated in place" do
+    question = publish(question_with(:mcq, MCQ_CONFIG))
+
+    question.config["options"][0]["text"] = "Ніколи"
+    assert question.valid?, question.errors.full_messages.to_sentence
+
+    question.reload.config["options"][0]["is_correct"] = true
+    assert_structure_frozen question
+  end
+
+  test "a published question refuses a source key on a type that has none" do
+    question = publish(question_with(:mcq, MCQ_CONFIG))
+
+    question.config = MCQ_CONFIG.merge("source" => "injected")
+    assert_structure_frozen question
+  end
+
+  test "a published question with a malformed entry is refused, not raised on" do
+    malformed = { "items" => [
+      "plain string",
+      { "id" => "e2", "text" => "Second" },
+      { "id" => "e3", "text" => "Third" }
+    ] }
+    question = publish(question_with(:ordering, malformed))
+
+    question.prompt = "Reworded"
+    assert question.valid?, question.errors.full_messages.to_sentence
+
+    question.reload.config = malformed.deep_dup.tap { |config| config["items"][0] = "changed string" }
+    assert_structure_frozen question
+  end
+
+  test "a published question refuses a points, type, or position change" do
+    question = publish(question_with(:mcq, MCQ_CONFIG))
+
+    assert_not question.update(points: 5), "a points change must not persist"
+    assert_structure_frozen question
+    assert_equal 1, question.reload.points
+
+    question.question_type = :short_text
+    assert_structure_frozen question
+
+    question.reload.position = 3
+    assert_structure_frozen question
+  end
+
+  test "a published question refuses a change to entry ids, correctness, or count" do
+    question = publish(question_with(:mcq, MCQ_CONFIG))
+
+    question.config = { "options" => [
+      { "id" => "z", "text" => "No", "is_correct" => false },
+      { "id" => "b", "text" => "Yes", "is_correct" => true }
+    ] }
+    assert_structure_frozen question
+
+    question.reload.config = { "options" => [
+      { "id" => "a", "text" => "No", "is_correct" => true },
+      { "id" => "b", "text" => "Yes", "is_correct" => false }
+    ] }
+    assert_structure_frozen question
+
+    question.reload.config = { "options" => [
+      { "id" => "a", "text" => "No", "is_correct" => false },
+      { "id" => "b", "text" => "Yes", "is_correct" => true },
+      { "id" => "c", "text" => "Maybe", "is_correct" => false }
+    ] }
+    assert_structure_frozen question
+  end
+
+  test "a published question refuses a reordered list or a remapped pair" do
+    ordering = publish(question_with(:ordering, ORDERING_CONFIG))
+    ordering.config = { "items" => ORDERING_CONFIG["items"].reverse }
+    assert_structure_frozen ordering
+
+    matching = publish(question_with(:matching, MATCHING_CONFIG))
+    matching.config = MATCHING_CONFIG.merge("pairs" => { "l1" => "r2", "l2" => "r1" })
+    assert_structure_frozen matching
+  end
+
+  test "a published question refuses a rubric or model answer change" do
+    question = publish(question_with(:source, SOURCE_CONFIG))
+
+    question.config = SOURCE_CONFIG.merge("rubric" => "reworded rubric")
+    assert_structure_frozen question
+
+    question.reload.config = SOURCE_CONFIG.merge("model_answer" => "reworded answer")
+    assert_structure_frozen question
+  end
+
+  test "a draft question accepts every change a published one refuses" do
+    mcq = question_with(:mcq, MCQ_CONFIG)
+    mcq.points = 5
+    mcq.position = 3
+    mcq.config = { "options" => [
+      { "id" => "z", "text" => "No", "is_correct" => true },
+      { "id" => "b", "text" => "Yes", "is_correct" => false },
+      { "id" => "c", "text" => "Maybe", "is_correct" => false }
+    ] }
+    assert mcq.save, mcq.errors.full_messages.to_sentence
+
+    ordering = question_with(:ordering, ORDERING_CONFIG)
+    ordering.config = { "items" => ORDERING_CONFIG["items"].reverse }
+    assert ordering.save, ordering.errors.full_messages.to_sentence
+
+    matching = question_with(:matching, MATCHING_CONFIG)
+    assert matching.update(config: MATCHING_CONFIG.merge("pairs" => { "l1" => "r2", "l2" => "r1" })),
+      matching.errors.full_messages.to_sentence
+
+    source = question_with(:source, SOURCE_CONFIG)
+    reworded = SOURCE_CONFIG.merge("rubric" => "reworded rubric", "model_answer" => "reworded answer")
+    assert source.update(config: reworded), source.errors.full_messages.to_sentence
+
+    retyped = question_with(:mcq, MCQ_CONFIG)
+    assert retyped.update(question_type: :short_text), retyped.errors.full_messages.to_sentence
+  end
+
+  private
+
+  def question_with(type, config)
+    @exam.questions.create!(
+      question_type: type,
+      prompt: "Prompt",
+      points: 1,
+      position: @exam.questions.count,
+      config: config.deep_dup
+    )
+  end
+
+  def publish(question)
+    question.exam.publish!
+    question.reload
+  end
+
+  def assert_structure_frozen(question)
+    assert_not question.valid?, "expected the published question to refuse this change"
+    assert_includes question.errors[:base],
+      I18n.t("activerecord.errors.models.question.attributes.base.structure_frozen")
   end
 end

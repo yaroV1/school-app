@@ -453,6 +453,8 @@ uk:
               after_available_from: "має бути пізніше за початок доступу"
         question:
           attributes:
+            base:
+              structure_frozen: "Опубліковане питання можна виправляти лише текстово: бали, тип і структура незмінні."
             config:
               blank_options: "має містити варіанти"
               one_correct: "має мати рівно один правильний варіант"
