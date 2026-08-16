@@ -15,6 +15,20 @@ Suite green at preflight: 122 runs, 534 assertions, 0 failures.
   rolled-back retry cannot silently duplicate answers.
 - deferred: interim 409 → 500 status regression → § Deferred
 
+## FR-1 — Rescue `AttemptLifecycle::Conflict` in `Take::AnswersController#upsert`
+- commit: b1e7a5c Answer a conflicted autosave with the save_conflict message
+- reviews: rails/kiss 3 · security 0 · tests 4 — criticals/majors: test/integration/save_conflict_test.rb:45, test/integration/save_conflict_test.rb:23-31
+- fixed: replaced the vacuous `assert in_progress?` — `save_answers!` writes no status field, so it
+  held with or without the rescue — with the property actually at stake: the next autosave succeeds
+  and the answer persists. Both tests now go red when the rescue is removed. De-duplicated the
+  swap-and-restore helper: `replacing` moved to `test_helper.rb`, the local copy in
+  `attempt_lifecycle_test.rb` and the new `colliding` in the integration test both deleted. Dropped
+  the redundant `refute_equal 500` and moved the real red/green mechanism into the file comment.
+  Switched the fixture to `mcq` and named the production origin of the collision
+  (`locked.update!(last_activity_at:)`), since `answers` carries no `lock_version`.
+- deferred: none
+- scope: touched `test/test_helper.rb`, which is outside § Affected Areas — see § Deferred note below.
+
 ## Deferred
 - Registering `config.action_dispatch.rescue_responses["AttemptLifecycle::Conflict"] = :conflict`.
   Rails maps `ActiveRecord::StaleObjectError` to `:conflict`, so between this commit and FR-2 a submit
@@ -22,5 +36,20 @@ Suite green at preflight: 122 runs, 534 assertions, 0 failures.
   § Affected Areas, and FR-1/FR-2 close the gap entirely by stopping `Conflict` from reaching Rails'
   exception handling. Re-check after FR-2; if it is closed, no config entry is needed.
   (task: FR-3)
+- `test/test_helper.rb` is not in § Affected Areas but was edited in b1e7a5c to host `replacing`.
+  Hosting it there was the only way to clear a `major` (two copies of one helper) without a third
+  copy. Flagged rather than silently widened; fold the path into § Affected Areas at § Completion.
+  (task: FR-1)
 
 ## Rebuttals
+- "Collapse into `rescue AttemptLifecycle::NotAllowed, AttemptLifecycle::Conflict => e` — the bodies are
+  byte-identical" — rails/kiss — does not hold. § Affected Areas specifies "one `rescue` clause each,
+  alongside the existing `Expired` and `NotAllowed` clauses", and the two conditions are semantically
+  distinct: `NotAllowed` is a permanent state precondition, `Conflict` is transient contention the
+  client should retry. Identical bodies today are a coincidence, not a shared meaning; merging them
+  would have to be un-merged the moment either response diverges. (task: FR-1)
+- "FR-1 is left unticked, so the committed backlog shows the wrong task done" — tests — does not hold.
+  `.claude/skills/implement-prd/SKILL.md` step 9 requires the tick to follow the commit, because the
+  sha does not exist beforehand, and says both files "stay uncommitted until the next task's commit
+  sweeps them in". A one-task lag in the committed ticks is the documented design, not a slip.
+  (task: FR-1)

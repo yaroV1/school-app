@@ -178,7 +178,7 @@ One commit per task.
       `AttemptLifecycle::Conflict`, adding no retry — done when: `submit!` raises `Conflict` and never
       `StaleObjectError` when its transaction collides, and `save_answers!` still retries exactly once
       before raising — proof: `test/services/attempt_lifecycle_test.rb`
-- [ ] FR-1 — Rescue `AttemptLifecycle::Conflict` in `Take::AnswersController#upsert`, returning the
+- [x] FR-1 — Rescue `AttemptLifecycle::Conflict` in `Take::AnswersController#upsert`, returning the
       translated message as JSON alongside the existing `Expired` and `NotAllowed` clauses — done when: a
       conflicting autosave responds non-2xx with a body containing `take.errors.save_conflict`, the
       response is not a 500, and the attempt is still `in_progress` — proof:
