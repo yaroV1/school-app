@@ -183,7 +183,7 @@ One commit per task.
       conflicting autosave responds non-2xx with a body containing `take.errors.save_conflict`, the
       response is not a 500, and the attempt is still `in_progress` — proof:
       `test/integration/save_conflict_test.rb`
-- [ ] FR-2 — Rescue `AttemptLifecycle::Conflict` in `Take::SubmissionsController#create`, redirecting to
+- [x] FR-2 — Rescue `AttemptLifecycle::Conflict` in `Take::SubmissionsController#create`, redirecting to
       `student_run_path` with the alert — done when: a conflicting submit redirects to the run page with
       `take.errors.save_conflict` in the flash, the attempt is still `in_progress`, and no error page is
       rendered — proof: `test/integration/save_conflict_test.rb`

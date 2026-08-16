@@ -35,6 +35,16 @@ class SaveConflictTest < ActionDispatch::IntegrationTest
     ->(*) { raise ActiveRecord::StaleObjectError.new(Attempt.new, "update") }
   end
 
+  # partial_total sits inside submit!'s transaction, after the status write, so save_answers!
+  # (when answers are passed) commits first and only the submit transaction rolls back.
+  def conflicted_submit!(answers: nil)
+    params = { attempt_id: @attempt.id }
+    params[:answers] = answers if answers
+    replacing(Scoring, :partial_total, collide) do
+      post student_submit_url(token: @token), params: params
+    end
+  end
+
   def autosave!
     put student_answers_url(token: @token),
         params: { attempt_id: @attempt.id, answers: [ { question_id: @question.id, payload: { option_id: "b" } } ] },
@@ -42,8 +52,11 @@ class SaveConflictTest < ActionDispatch::IntegrationTest
   end
 
   test "an autosave that conflicts answers with the save_conflict message, not an escaped exception" do
-    replacing(Scoring, :score_auto!, collide) { autosave! }
+    grade_streams = capture_turbo_stream_broadcasts [ @attempt, :grade_live ] do
+      replacing(Scoring, :score_auto!, collide) { autosave! }
+    end
 
+    assert_empty grade_streams, "a conflicted autosave must not push a partial update"
     assert_response :unprocessable_entity
     assert_equal I18n.t("take.errors.save_conflict"), response.parsed_body["error"]
     assert @attempt.reload.in_progress?
@@ -110,5 +123,67 @@ class SaveConflictTest < ActionDispatch::IntegrationTest
     assert_not_nil grade, "the successful submit must write the grade the conflict rolled back"
     assert_equal 0.0, grade.total_score.to_f
     assert_equal @exam.max_score, grade.max_score
+  end
+
+  # An assert_empty over a mis-scoped capture passes trivially, so each block is paired with a
+  # successful submit through the same keys. Without that control a renamed streamable would make
+  # this test silently vacuous — which is how three earlier assertions in this PRD failed.
+  test "a conflicted submit broadcasts nothing to the teacher" do
+    board = nil
+    grade = capture_turbo_stream_broadcasts [ @attempt, :grade_live ] do
+      board = capture_turbo_stream_broadcasts [ @exam, :live_board ] do
+        conflicted_submit!
+      end
+    end
+
+    assert_empty board, "the teacher board must not move for a submit that failed"
+    assert_empty grade, "the grading page must not move for a submit that failed"
+
+    board_ok = nil
+    grade_ok = capture_turbo_stream_broadcasts [ @attempt, :grade_live ] do
+      board_ok = capture_turbo_stream_broadcasts [ @exam, :live_board ] do
+        post student_submit_url(token: @token), params: { attempt_id: @attempt.id }
+      end
+    end
+
+    refute_empty board_ok, "capture keys are stale: a real submit moves the board"
+    refute_empty grade_ok, "capture keys are stale: a real submit moves the grading page"
+  end
+
+  # Pins a known gap rather than endorsing it. save_answers! commits the answers in its own
+  # transaction and skips broadcasting, on the promise that submit! will push one update for the
+  # lot; Conflict breaks that promise, so the answers are durable but the teacher never sees them.
+  # Recorded in progress.md § Deferred. A fix has to change this test, which is the point.
+  test "a conflicted submit leaves committed answers unbroadcast" do
+    board = nil
+    grade = capture_turbo_stream_broadcasts [ @attempt, :grade_live ] do
+      board = capture_turbo_stream_broadcasts [ @exam, :live_board ] do
+        conflicted_submit!(answers: { @question.id => { option_id: "b" } })
+      end
+    end
+
+    assert_equal 1, @attempt.answers.reload.count, "save_answers! commits before submit!'s transaction"
+    assert_empty board, "no submission happened, so the board is correctly silent"
+    assert_empty grade, "known gap: the committed answer is never pushed to the teacher"
+  end
+
+  test "the autosave conflict payload carries nothing but the message" do
+    replacing(Scoring, :score_auto!, collide) { autosave! }
+
+    assert_response :unprocessable_entity
+    assert_equal %w[error], response.parsed_body.keys, "the conflict payload must carry only the message"
+    refute_includes response.body, @token, "the autosave conflict payload leaked the access token"
+  end
+
+  # The token is in the Location header by design: every /t/:token URL carries it, including the
+  # run page's own form action and autosave URL. The *body* is not, and at actionpack 8.1
+  # redirect_to sets an empty body, so this is checkable rather than unwinnable. The two
+  # assertions above the refute exist so the refute cannot pass on a submit that never conflicted.
+  test "the submit conflict response body carries no access token" do
+    conflicted_submit!
+
+    assert_redirected_to student_run_url(token: @token)
+    assert_equal I18n.t("take.errors.save_conflict"), flash[:alert]
+    refute_includes response.body, @token, "the submit conflict body leaked the access token"
   end
 end

@@ -29,6 +29,20 @@ Suite green at preflight: 122 runs, 534 assertions, 0 failures.
 - deferred: none
 - scope: touched `test/test_helper.rb`, which is outside § Affected Areas — see § Deferred note below.
 
+## FR-2 — Rescue `AttemptLifecycle::Conflict` in `Take::SubmissionsController#create`
+- commit: 17977a2 Return a conflicted submit to the run page instead of an error
+- reviews: rails/kiss 1 · security 0 · tests 4 — criticals/majors: test/integration/save_conflict_test.rb:65-76, :78-88
+- fixed: the rollback assertion was non-vacuous only by accident — it depends on `refresh_grade!`
+  reaching `partial_total` after the status write, and `refresh_grade!` short-circuits on a
+  teacher-finalized grade. Now the stub records the status at collision time and the test asserts
+  `"submitted"`, so moving the stub earlier fails instead of passing quietly (verified). Added the
+  grade assertions to the resubmit test, since `refresh_grade!` is the step that failed and the old
+  test would have passed on a submit that skipped grading. Added `follow_redirect!` — a Location
+  header does not prove the student sees a page. First test now submits with answers, covering the
+  commoner path, and asserts they survive the rollback. Reworded the controller comment: `submit!`
+  propagates `Conflict` from the answers write too, not only the status write.
+- deferred: none — this task closed the FR-3 deferral (see § Deferred)
+
 ## Deferred
 - Registering `config.action_dispatch.rescue_responses["AttemptLifecycle::Conflict"] = :conflict`.
   Rails maps `ActiveRecord::StaleObjectError` to `:conflict`, so between this commit and FR-2 a submit
@@ -36,6 +50,10 @@ Suite green at preflight: 122 runs, 534 assertions, 0 failures.
   § Affected Areas, and FR-1/FR-2 close the gap entirely by stopping `Conflict` from reaching Rails'
   exception handling. Re-check after FR-2; if it is closed, no config entry is needed.
   (task: FR-3)
+  **CLOSED at 17977a2.** `Conflict` is raised only at attempt_lifecycle.rb:100 and :128, inside
+  `save_answers!` and `submit!`. Their only callers are the two `Take::` actions that now rescue it;
+  every other call site uses `start!` / `expire_if_needed!` / `expire_overdue!`, which reach neither.
+  No `rescue_responses` entry is needed.
 - `test/test_helper.rb` is not in § Affected Areas but was edited in b1e7a5c to host `replacing`.
   Hosting it there was the only way to clear a `major` (two copies of one helper) without a third
   copy. Flagged rather than silently widened; fold the path into § Affected Areas at § Completion.
