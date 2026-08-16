@@ -5,7 +5,13 @@
 
    Semantic names only. Templates should reach for `bg-surface`, `text-ink-muted`
    or `border-line` instead of a raw `slate-*`, so a palette change happens here
-   and nowhere else. Values mirror the Tailwind slate / indigo / red ramps.
+   and nowhere else. Values mirror the Tailwind slate / indigo / red / emerald /
+   amber / sky ramps.
+
+   Every text token is at or above the 4.5:1 WCAG AA ratio on the surface it is
+   meant to sit on. `ink-subtle` is the one exception: it clears 3:1, so it is
+   for hairline separators, list markers and icon strokes only — never for text
+   a reader has to make out.
 --------------------------------------------------------------------------- */
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
@@ -21,11 +27,12 @@
   --color-line: oklch(0.929 0.013 255);
   --color-line-strong: oklch(0.869 0.022 252);
 
-  /* Text, darkest to lightest. `ink-light` is the hover for solid ink fills. */
+  /* Text, darkest to lightest. `ink-light` is the hover for solid ink fills.
+     `ink-subtle` is not a text colour — see the note above. */
   --color-ink: oklch(0.208 0.042 265);
   --color-ink-light: oklch(0.372 0.044 257);
   --color-ink-muted: oklch(0.502 0.045 257);
-  --color-ink-subtle: oklch(0.704 0.04 257);
+  --color-ink-subtle: oklch(0.64 0.043 257);
 
   /* One accent, reserved for focus, current state and links */
   --color-accent: oklch(0.511 0.262 276);
@@ -36,6 +43,21 @@
   --color-danger: oklch(0.505 0.213 27);
   --color-danger-line: oklch(0.885 0.062 18);
   --color-danger-soft: oklch(0.971 0.013 17);
+
+  /* Status hues. Same three-step shape as `danger`, so a badge and a flash can
+     be built from tokens rather than from a raw ramp. */
+  --color-success: oklch(0.508 0.118 165.612);
+  --color-success-strong: oklch(0.432 0.095 166.913);
+  --color-success-line: oklch(0.905 0.093 164.15);
+  --color-success-soft: oklch(0.979 0.021 166.113);
+
+  --color-warning: oklch(0.473 0.137 46.201);
+  --color-warning-line: oklch(0.924 0.12 95.746);
+  --color-warning-soft: oklch(0.987 0.022 95.277);
+
+  --color-info: oklch(0.5 0.134 242.749);
+  --color-info-line: oklch(0.901 0.058 230.902);
+  --color-info-soft: oklch(0.977 0.013 236.62);
 
   --radius-control: 0.5rem;
   --radius-card: 0.75rem;
@@ -110,7 +132,7 @@
   .field {
     @apply mt-1.5 block w-full rounded-control border border-line bg-surface-raised
       px-3 py-2 text-sm text-ink transition-colors
-      placeholder:text-ink-subtle hover:border-line-strong focus:border-accent;
+      placeholder:text-ink-muted hover:border-line-strong focus:border-accent;
   }
 
   .field-hint {
@@ -198,15 +220,15 @@
   }
 
   .badge-success {
-    @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+    @apply border-success-line bg-success-soft text-success;
   }
 
   .badge-warning {
-    @apply border-amber-200 bg-amber-50 text-amber-800;
+    @apply border-warning-line bg-warning-soft text-warning;
   }
 
   .badge-info {
-    @apply border-sky-200 bg-sky-50 text-sky-700;
+    @apply border-info-line bg-info-soft text-info;
   }
 
   .badge-danger {
@@ -255,8 +277,9 @@
     @apply border-accent text-ink;
   }
 
+  /* A real count, so it reads at AA rather than as decoration. */
   .tab-count {
-    @apply text-xs text-ink-subtle;
+    @apply text-xs text-ink-muted;
   }
 
   .breadcrumbs {
@@ -294,6 +317,14 @@
     @apply text-ink-muted underline decoration-line underline-offset-2 transition-colors hover:text-ink;
   }
 
+  /* The link that carries a table row's identity. Reads as content, but keeps a
+     hairline underline so it is recognisable as a link without hovering — which
+     a touch reader never gets to do. */
+  .link-quiet {
+    @apply font-medium text-ink underline decoration-line underline-offset-2
+      transition-colors hover:text-accent hover:decoration-accent-line;
+  }
+
   .link-danger {
     @apply text-sm font-medium text-danger underline decoration-danger-line underline-offset-2
       transition-colors hover:decoration-danger;
@@ -309,7 +340,7 @@
   }
 
   .flash-notice {
-    @apply border-emerald-200 bg-emerald-50 text-emerald-800;
+    @apply border-success-line bg-success-soft text-success-strong;
   }
 
   .flash-alert {
@@ -321,7 +352,7 @@
   }
 
   .flash-warning {
-    @apply border-amber-200 bg-amber-50 text-amber-800;
+    @apply border-warning-line bg-warning-soft text-warning;
   }
 
   .flash-muted {
@@ -403,7 +434,7 @@
   }
 
   .autosave-status[data-state="saved"] {
-    @apply text-emerald-700;
+    @apply text-success;
   }
 
   .autosave-status[data-state="failed"] {

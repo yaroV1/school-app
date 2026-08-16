@@ -41,7 +41,7 @@
                 <%= attempt.grade.total_score %>/<%= attempt.grade.max_score %>
               <% elsif attempt.grade %>
                 <%= attempt.grade.total_score || t("common.dash") %>/<%= attempt.grade.max_score %>
-                <span class="text-ink-subtle"><%= t("students.show.draft_score") %></span>
+                <span class="text-ink-muted"><%= t("students.show.draft_score") %></span>
               <% else %>
                 <%= t("common.dash") %>
               <% end %>

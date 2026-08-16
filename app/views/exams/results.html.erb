@@ -18,7 +18,7 @@
         <% @assignments.each do |assignment| %>
           <% attempt = assignment.latest_attempt %>
           <tr>
-            <td><%= link_to assignment.student.name, student_path(assignment.student), class: "font-medium hover:text-accent" %></td>
+            <td><%= link_to assignment.student.name, student_path(assignment.student), class: "link-quiet" %></td>
             <td>
               <% if attempt %>
                 <%= status_badge(attempt.status) %>
@@ -36,7 +36,7 @@
                   <span class="badge badge-success"><%= t("exams.results.finalized") %></span>
                 <% end %>
               <% else %>
-                <span class="text-ink-subtle"><%= t("common.dash") %></span>
+                <span class="text-ink-muted"><%= t("common.dash") %></span>
               <% end %>
             </td>
             <td class="text-right">
