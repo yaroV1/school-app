@@ -187,6 +187,6 @@ One commit per task.
       `student_run_path` with the alert — done when: a conflicting submit redirects to the run page with
       `take.errors.save_conflict` in the flash, the attempt is still `in_progress`, and no error page is
       rendered — proof: `test/integration/save_conflict_test.rb`
-- [ ] FR-4 — Assert a conflicted submit broadcasts nothing — done when: no `GradeLive` or `LiveBoard`
+- [x] FR-4 — Assert a conflicted submit broadcasts nothing — done when: no `GradeLive` or `LiveBoard`
       broadcast is emitted for an attempt whose submit raised `Conflict`, and the access token appears in
       neither conflict response body — proof: `test/integration/save_conflict_test.rb`

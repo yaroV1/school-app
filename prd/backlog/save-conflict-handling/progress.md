@@ -43,6 +43,19 @@ Suite green at preflight: 122 runs, 534 assertions, 0 failures.
   propagates `Conflict` from the answers write too, not only the status write.
 - deferred: none — this task closed the FR-3 deferral (see § Deferred)
 
+## FR-4 — Assert a conflicted submit broadcasts nothing
+- commit: e8b80f2 Assert a conflicted submit stays silent to the teacher
+- reviews: rails/kiss 4 · security 2 · tests 4 — criticals/majors: save_conflict_test.rb:132-135, :144, :141-144, :117-130
+- fixed: the submit half of the token test was vacuous — `flash[:alert]` is nil on success, so the
+  refute passed on a submit that never conflicted; it now asserts the redirect and the flash first
+  (verified: without a conflict it fails on `/done` vs `/run`). Restored the submit-body token
+  assertion after confirming actionpack 8.1 `redirect_to` sets an empty body, so the earlier
+  narrowing was wider than it needed to be. Paired every `assert_empty` with a successful submit
+  through the same keys, so stale capture keys fail loudly (verified). Split the token test in two
+  so a payload regression cannot mask a flash leak. Extracted `conflicted_submit!`. Added the
+  conflicted-autosave silence assertion.
+- deferred: committed answers are never broadcast on a conflicted submit → § Deferred
+
 ## Deferred
 - Registering `config.action_dispatch.rescue_responses["AttemptLifecycle::Conflict"] = :conflict`.
   Rails maps `ActiveRecord::StaleObjectError` to `:conflict`, so between this commit and FR-2 a submit
@@ -58,6 +71,16 @@ Suite green at preflight: 122 runs, 534 assertions, 0 failures.
   Hosting it there was the only way to clear a `major` (two copies of one helper) without a third
   copy. Flagged rather than silently widened; fold the path into § Affected Areas at § Completion.
   (task: FR-1)
+
+- **A real gap, found by review, not fixed here.** A conflicted submit that carries answers commits
+  them in `save_answers!`'s own transaction, which deliberately skips broadcasting on the promise
+  that `submit!` will push one update for the lot (`attempt_lifecycle.rb` § save_answers! comment).
+  `Conflict` breaks that promise: measured 1 answer durably committed, 0 grade_live and 0 live_board
+  broadcasts, so the teacher's grading page never learns of work the student did. Pre-existing and
+  outside this PRD, which only stops the exception escaping. Pinned by
+  `test "a conflicted submit leaves committed answers unbroadcast"` so a fix must change that test
+  deliberately. Candidate follow-up: have the `Conflict` rescue in `submit!` push
+  `GradeLive.replace_answers` for whatever `save_answers!` returned. (task: FR-4)
 
 ## Rebuttals
 - "Collapse into `rescue AttemptLifecycle::NotAllowed, AttemptLifecycle::Conflict => e` — the bodies are
