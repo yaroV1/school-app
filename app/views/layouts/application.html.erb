@@ -3,6 +3,7 @@
   <head>
     <title><%= content_for(:title) || t("app_name") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= yield :head %>
@@ -11,29 +12,29 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body class="min-h-screen bg-slate-50 text-slate-900">
+  <body class="min-h-screen bg-surface text-ink antialiased">
     <% if authenticated? %>
-      <header class="border-b border-slate-200 bg-white">
-        <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-          <nav class="flex items-center gap-4 text-sm font-medium">
-            <%= link_to t("app_name"), class_groups_path, class: "text-slate-900" %>
-            <%= link_to t("nav.classes"), class_groups_path, class: nav_class(class_groups_path) %>
-          </nav>
-          <div class="flex items-center gap-3 text-sm text-slate-600">
-            <span><%= Current.user.email_address %></span>
-            <%= button_to t("nav.sign_out"), session_path, method: :delete, class: "rounded-md border border-slate-300 px-2 py-1 hover:bg-slate-100" %>
+      <header class="app-header">
+        <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5">
+          <%= link_to class_groups_path, class: "brand" do %>
+            <span class="brand-mark" aria-hidden="true">
+              <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 5.5h5M4 10h4M4 14.5h5" />
+                <path d="m11.5 9.75 2 2 4-4.5" />
+              </svg>
+            </span>
+            <%= t("app_name") %>
+          <% end %>
+          <div class="flex items-center gap-2">
+            <span class="hidden text-sm text-ink-muted sm:inline"><%= Current.user.email_address %></span>
+            <%= button_to t("nav.sign_out"), session_path, method: :delete, class: "btn btn-ghost btn-sm" %>
           </div>
         </div>
       </header>
     <% end %>
 
-    <main class="mx-auto max-w-5xl px-4 py-8">
-      <% if notice = flash[:notice] %>
-        <p class="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700" id="notice"><%= notice %></p>
-      <% end %>
-      <% if alert = flash[:alert] %>
-        <p class="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" id="alert"><%= alert %></p>
-      <% end %>
+    <main class="mx-auto max-w-6xl px-4 py-8">
+      <%= render "shared/flash" %>
       <%= yield %>
     </main>
   </body>

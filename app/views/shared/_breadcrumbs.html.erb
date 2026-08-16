@@ -1,0 +1,11 @@
+<%# crumbs: array of [ label, path ]. A nil path marks the current page. %>
+<nav class="breadcrumbs" aria-label="<%= t("nav.breadcrumbs") %>">
+  <% crumbs.each_with_index do |(label, path), index| %>
+    <% if index.positive? %><span class="breadcrumb-sep" aria-hidden="true">/</span><% end %>
+    <% if path %>
+      <%= link_to label, path %>
+    <% else %>
+      <span class="text-ink"><%= label %></span>
+    <% end %>
+  <% end %>
+</nav>
