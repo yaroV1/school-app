@@ -61,4 +61,54 @@ class SaveConflictTest < ActionDispatch::IntegrationTest
     assert_equal 1, @attempt.answers.reload.count
     assert_equal "b", @attempt.answers.first.option_id
   end
+
+  test "a submit that conflicts returns to the run page with the save_conflict alert" do
+    attempt_id = @attempt.id
+    status_at_collision = nil
+    # partial_total, not score_auto!: refresh_grade! reaches it *after* the status write. Recording
+    # the status here rather than asserting it in a comment means a reorder — or refresh_grade!
+    # short-circuiting on a finalized grade — cannot silently make the rollback assertions vacuous.
+    # `self` is rebound to Scoring inside, so the id is captured as a local.
+    collide_after_status = lambda do |*|
+      status_at_collision = Attempt.find(attempt_id).status
+      raise ActiveRecord::StaleObjectError.new(Attempt.new, "update")
+    end
+
+    replacing(Scoring, :partial_total, collide_after_status) do
+      post student_submit_url(token: @token),
+           params: { attempt_id: @attempt.id, answers: { @question.id => { option_id: "b" } } }
+    end
+
+    assert_equal "submitted", status_at_collision, "the collision must fire after the status write"
+    assert_redirected_to student_run_url(token: @token)
+    assert_equal I18n.t("take.errors.save_conflict"), flash[:alert]
+
+    # The Location header alone does not prove the student sees a page rather than an error.
+    follow_redirect!
+    assert_response :success
+
+    assert @attempt.reload.in_progress?, "the rolled-back submit must leave the attempt submittable"
+    assert_nil @attempt.submitted_at
+    # save_answers! commits before submit!'s transaction opens, so the answers survive the rollback.
+    assert_equal "b", @attempt.answers.reload.first.option_id
+  end
+
+  test "the student can submit again after a conflicted submit" do
+    replacing(Scoring, :partial_total, collide) do
+      post student_submit_url(token: @token), params: { attempt_id: @attempt.id }
+    end
+
+    post student_submit_url(token: @token), params: { attempt_id: @attempt.id }
+
+    assert_redirected_to student_done_url(token: @token)
+    assert @attempt.reload.submitted?
+    assert @attempt.submitted_at.present?
+
+    # refresh_grade! is the step that blew up the first time; prove the retry actually redid it,
+    # rather than flipping the status and skipping the grading.
+    grade = @attempt.grade
+    assert_not_nil grade, "the successful submit must write the grade the conflict rolled back"
+    assert_equal 0.0, grade.total_score.to_f
+    assert_equal @exam.max_score, grade.max_score
+  end
 end
