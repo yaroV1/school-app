@@ -174,7 +174,7 @@ Quality loop and commands: `docs/agent-rules.md` § Quality.
 
 One commit per task.
 
-- [ ] FR-3 — Translate `ActiveRecord::StaleObjectError` raised inside `submit!`'s transaction into
+- [x] FR-3 — Translate `ActiveRecord::StaleObjectError` raised inside `submit!`'s transaction into
       `AttemptLifecycle::Conflict`, adding no retry — done when: `submit!` raises `Conflict` and never
       `StaleObjectError` when its transaction collides, and `save_answers!` still retries exactly once
       before raising — proof: `test/services/attempt_lifecycle_test.rb`

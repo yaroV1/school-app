@@ -279,16 +279,6 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     assert_empty board_streams
   end
 
-  # A real lock_version collision needs two concurrent writers, which is flaky against SQLite.
-  # Minitest 6 ships no `minitest/mock`, so swap and restore by hand.
-  def replacing(mod, name, replacement)
-    original = mod.method(name)
-    mod.define_singleton_method(name, &replacement)
-    yield
-  ensure
-    mod.define_singleton_method(name, original)
-  end
-
   test "submit raises Conflict rather than StaleObjectError when its own transaction collides" do
     attempt = AttemptLifecycle.start!(@assignment)
     calls = 0

@@ -21,6 +21,16 @@ module ActiveSupport
       teacher.exams.create!({ title: "Quiz", max_attempts: 1, subject: subject }.merge(attrs))
     end
 
+    # Swap a module method for the duration of a block. Minitest 6 ships no `minitest/mock`,
+    # so there is no Object#stub; used to raise conditions a real race would produce flakily.
+    def replacing(mod, name, replacement)
+      original = mod.method(name)
+      mod.define_singleton_method(name, &replacement)
+      yield
+    ensure
+      mod.define_singleton_method(name, original)
+    end
+
     # Add more helper methods to be used by all tests here...
   end
 end

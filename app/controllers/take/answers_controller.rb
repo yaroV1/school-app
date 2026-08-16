@@ -14,6 +14,10 @@ module Take
       render json: { error: e.message, status: "expired" }, status: :unprocessable_entity
     rescue AttemptLifecycle::NotAllowed => e
       render json: { error: e.message }, status: :unprocessable_entity
+    rescue AttemptLifecycle::Conflict => e
+      # autosave_controller.js renders data.error on any non-ok response, so the student sees
+      # this message and the next tick retries. Without the rescue it is an unhandled 500.
+      render json: { error: e.message }, status: :unprocessable_entity
     end
 
     private
