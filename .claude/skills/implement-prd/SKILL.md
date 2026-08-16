@@ -50,9 +50,10 @@ force-push, never change git config.
    `progress.md` from § progress.md if the directory has none.
 6. Report branch, baseline sha, task count, and the first unchecked task. Then start.
 
-## The loop — exactly one unchecked task at a time
+## The loop
 
-Never batch. Never open the next task before the current one is committed.
+Exactly one unchecked task at a time. Never batch. Never open the next task before the current one is
+committed.
 
 Each task line is `- [ ] FR-<n> — <task> — done when: <assertion> — proof: test/...` (format:
 `.claude/skills/prd/SKILL.md` § Implementation Tasks). `done when:` is the acceptance criterion handed
@@ -68,14 +69,12 @@ to reviewers; `proof:` is the test that must exist and pass. A task missing eith
      satisfied — write the test.
 3. **Test.** Write or extend the Minitest coverage named by `proof:`. A new guard gets a test that
    fails when the guard is removed.
-4. **Gate.** `bin/rubocop -A <files you touched>` **first** — it rewrites source, unsafe cops included —
-   then `bin/rails test`. Then `bin/brakeman --quiet --no-pager --exit-on-warn` if the task touched
-   anything under `app/`. All clean before review.
+4. **Gate.** Run `docs/agent-rules.md` § Quality steps 2-5 against the files this task touched — RuboCop
+   **before** the tests, per that section. All clean before review.
 5. **Review fan-out.** § Review fan-out. Nothing proceeds until the reviews are back.
 6. **Triage.** § Triage.
-7. **Re-gate.** Always, even when triage produced no fixes: `bin/rubocop -A <files you touched>`, then
-   `bin/rails test`, then `bin/brakeman` under the same condition as step 4. `bin/importmap audit` only
-   if a fix changed JS dependencies.
+7. **Re-gate.** Always, even when triage produced no fixes: the same `docs/agent-rules.md` § Quality steps
+   as step 4, over the files as they now stand.
 8. **Commit.** Only now, and only on a clean re-gate. One task = one commit. Stage the files this task
    touched plus the pending bookkeeping from step 9 of the previous task — never `git add -A`. A task
    that ran a migration stages the regenerated `db/schema.rb` alongside it; a migration committed
@@ -113,21 +112,16 @@ Give every reviewer the same packet:
 **a. Rails-way, KISS & clean code.** Is this idiomatic Rails 8 *for this codebase*? Is there a simpler
 construction with the same behavior? Does it add a layer `docs/agent-rules.md` § Style forbids? Does it duplicate
 an existing service — read `app/services/` before answering. Does it copy a nearby precedent, or invent
-a pattern that has none here? Then four concrete probes:
+a pattern that has none here? Then:
 
-- Can each new method be described in one sentence with no "and"?
-- Grep the diff for Cyrillic string literals outside `config/locales/`. Every new user-visible string is
-  a `uk.yml` key read through `t(...)`; a bare literal in an ERB, a controller, or a flash message is a
-  `major` finding — name the file, the line, and the key it should use.
-- Does the diff add code to an existing file and delete none? If so, say what the new path replaces, or
-  flag it.
+- Apply `docs/agent-rules.md` § Review tests — KISS, The Rails way, Clean code — as probes; report each
+  miss as a finding. A bare user-visible literal in an ERB, a controller, or a flash is a `major` — name
+  the file, the line, and the `uk.yml` key it should use.
 - Does anything in the diff appear in the PRD's § Out of Scope?
 
 **b. Security.** Read `docs/agent-rules.md` § Security and audit the diff against **every** rule in it — apply
-them, do not re-derive them and do not work from a summary. Two things that section will not tell you:
-`Take::` scoping must run through the assignment lookup, and proposing `Current.user` inside `Take::` is
-a wrong finding, not a fix. Additionally: every line the PRD's § Security answered "yes" needs a test in
-this diff or in an already-committed task. A "yes" with no test is a `critical` finding.
+them, do not re-derive them and do not work from a summary. Every line the PRD's § Security answered "yes"
+needs a test in this diff or in an already-committed task. A "yes" with no test is a `critical` finding.
 
 **c. Tests & correctness.** Does the new test actually fail without the change — state how you checked.
 Does it assert the task's `done when:`, or something weaker? Edge cases and failure paths, not only the
@@ -183,8 +177,8 @@ Every box ticked and `bin/ci` green:
    proof the PR will be red.
 5. Ask before pushing. This skill does not authorize it (§ Git authorization).
 
-`_to_refine → backlog` is a human move (`prd/README.md`). `backlog → complete` is the one stage move
-this skill performs, and only at step 1.
+Stage moves are owned by `prd/README.md`. This skill performs exactly one of them, `backlog → complete`,
+at step 1 above.
 
 ## Stop conditions
 

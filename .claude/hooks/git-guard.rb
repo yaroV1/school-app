@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# PreToolUse(Bash). Enforces the absolutes in AGENTS.md § Git by inspecting the whole
+# PreToolUse(Bash). Enforces the absolutes in docs/agent-rules.md § Git by inspecting the whole
 # command string. Permission rules are prefix-matched, so `git push origin main --force`
 # walks past a `Bash(git push --force:*)` deny. This does not.
 #
@@ -17,7 +17,7 @@ rescue StandardError
 end
 
 def block(reason)
-  warn "Blocked by .claude/hooks/git-guard.rb: #{reason}. See AGENTS.md § Git."
+  warn "Blocked by .claude/hooks/git-guard.rb: #{reason}. See docs/agent-rules.md § Git."
   exit 2
 end
 

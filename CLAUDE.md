@@ -10,13 +10,11 @@ This file adds Claude-only mechanics and nothing else.
 
 ## Skills
 
-- `/prd` — writes `prd/_to_refine/<name>/project.md`. Writes no code, commits nothing. The trigger list is
-  the skill's own description; the short version is: run it before code when the change is bigger than one
-  commit. See `docs/agent-rules.md` § When to ask vs inspect.
-- `/implement-prd` — executes a PRD already in `prd/backlog/`, one task per commit, with a review fan-out
-  before each commit. It refuses `prd/_to_refine/`. It commits under the carve-out in
-  `docs/agent-rules.md` § Git; scope and limits are in `.claude/skills/implement-prd/SKILL.md`
-  § Git authorization.
+- `/prd` — reach for it when `docs/agent-rules.md` § When to ask vs inspect says to; that clause, ending
+  "None of those: just do it", is the trigger. Contract: `.claude/skills/prd/SKILL.md`.
+- `/implement-prd` — executes a PRD already in `prd/backlog/`. Contract:
+  `.claude/skills/implement-prd/SKILL.md`; the git carve-out it runs under is `docs/agent-rules.md` § Git,
+  scoped by that skill's § Git authorization.
 
 Stage lifecycle for `prd/`: `prd/README.md`.
 

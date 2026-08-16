@@ -12,8 +12,7 @@ Everything an agent must follow is in this file. Read it before your first edit 
 
 Tool entry points add mechanics only, and point here:
 
-- `CLAUDE.md` — Claude Code: skill routing, and the `.claude/settings.json` + `.claude/hooks/git-guard.rb`
-  enforcement of § Git.
+- `CLAUDE.md` — Claude Code: skill routing, and mechanical enforcement of § Git.
 - `AGENTS.md` — the generic/Codex entry point.
 - `.cursor/rules/conventions.mdc` — Cursor frontmatter.
 
@@ -27,7 +26,8 @@ the six question types, and it names Postgres. Do not cite it as current. Do not
 
 ## Domain and naming
 
-Do not invent alternatives. Check `db/schema.rb` and `config/routes.rb` before assuming anything.
+Do not invent tables, columns, routes, or APIs. Check `db/schema.rb`, `config/routes.rb`, and existing
+code before assuming anything.
 
 - Model/table: `Exam` / `exams`. An exam belongs to a `Subject`; a subject belongs to a `ClassGroup`.
 - URLs say `/tests` everywhere (`path: "tests"` on both exam route blocks), but only the top-level block
@@ -52,10 +52,14 @@ Do not invent alternatives. Check `db/schema.rb` and `config/routes.rb` before a
   `QuestionSanitizer`, `TokenGenerator`, `LiveBoard`, `GradeLive` — plus `LiveBroadcast`, which is **not** a
   service but a mixin. Read `app/services/` and reuse before adding another. Do not add layers "for SOLID."
 - **Turbo naming.** Stream name is `[record, :channel]` — `turbo_stream_from @exam, :live_board` must pair
-  with `broadcast_replace_to(@exam, :live_board, …)`. Broadcast the same partial the page renders inline,
-  with the same locals, into a target the partial itself defines: `dom_id(record)` / `dom_id(record, :prefix)`,
-  or for a page singleton a literal snake_case id equal to the partial name (`live_board`,
-  `attempt_live_header`). A mismatched name fails silently — no error, no failing test, the page just stops
+  with `broadcast_replace_to(@exam, :live_board, …)`. Broadcast the same partial the page renders, with the
+  same locals — rendered inline (`attempts/show.html.erb` renders `attempts/live_header`) or through a lazy
+  frame's `src` (`exams/live.html.erb` frames `live_board`, which `ExamsController#live` renders on the frame
+  request). The target is whatever id the partial's own root element declares — never an id you derive from
+  the partial's name: `dom_id(record, :prefix)` for a per-record block
+  (`attempts/_student_answer.html.erb`), a fixed literal id for a page singleton (`live_board` in
+  `exams/_live_board.html.erb`, `attempt_live_header` in `attempts/_live_header.html.erb`). Open the partial
+  and read line 1. A mismatched name fails silently — no error, no failing test, the page just stops
   updating. Assert the target in a test.
 - **Comments.** This codebase comments the non-obvious decision, not the code. A comment says why this shape
   was chosen or what breaks without it (see `live_broadcast.rb`, `attempt_lifecycle.rb`'s `rescue Expired`,
@@ -127,9 +131,11 @@ retry, so these are invariants, not preferences.
   writing. Guards checked before the lock are advisory. `save_answers!` and `submit!` wrap this in
   `Attempt.transaction`; `expire!` does not, because a sweep also calls it. The locked row never escapes —
   return and broadcast the caller's own `attempt`, reloaded.
-- **Conflicts.** On `ActiveRecord::StaleObjectError`, retry the transaction **once**, then raise
-  `AttemptLifecycle::Conflict`. Never let a stale-object error reach a student as a 500, and never retry
-  more than once.
+- **Conflicts.** `save_answers!` rescues `ActiveRecord::StaleObjectError`, retries the transaction **once**,
+  then raises `AttemptLifecycle::Conflict`. Never retry more than once. Know the current gap before you rely
+  on this: `submit!` and `expire!` take the same lock with no such rescue, and no controller rescues
+  `Conflict`, so a lost optimistic-lock race still reaches a student as a 500. Closing that is a behavior
+  change needing its own tests — do not review a diff as though the guarantee already holds.
 - **Rollback and expiry.** If a transaction rolls back because the attempt expired, re-run
   `expire_if_needed!` on a reloaded attempt **outside** the transaction before re-raising. State that dies
   with the rollback must be written again, or the attempt stays `in_progress` past its deadline.
@@ -148,9 +154,10 @@ After changing behavior, in this order:
 
 1. Add or update Minitest coverage in the file that already owns the behavior (see § Where things are).
 2. `bin/rubocop -A <files you touched>` **first** — it rewrites source, unsafe cops included, so running it
-   after the tests invalidates them. Only files you touched.
+   after the tests invalidates them. Only files you touched: repo-wide lint is deferred to `bin/ci`, which
+   runs `bin/rubocop` unscoped.
 3. `bin/rails test`
-4. `bin/brakeman --quiet --no-pager --exit-on-warn` when the diff touches `app/`.
+4. `bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error` when the diff touches `app/`.
 5. `bin/bundler-audit` when the diff touches `Gemfile` or `Gemfile.lock`.
 6. `bin/importmap audit` only when JS dependencies change. There is no JS style linter.
 
@@ -174,10 +181,16 @@ behavior has no automated coverage anywhere; cover it with an integration test.
   commit), and the `prd/backlog → prd/complete` `git mv`. Nothing else: no push, no `--amend`, no new
   branch, no PR. Scope and limits: `.claude/skills/implement-prd/SKILL.md` § Git authorization.
 - Never `--no-verify`, never force-push, never change git config.
-- In Claude Code these absolutes are also enforced mechanically, by `.claude/settings.json` (ask/deny) and
-  the PreToolUse hook `.claude/hooks/git-guard.rb`. A blocked command means you hit a rule in this section,
-  not a tooling bug. Other tools have no such backstop — the rules bind you either way.
-- `.gitignore` negates `/AGENTS.md` because some global gitignores exclude it.
+- Never `git add -A`, `git add --all`, or `git add .` — stage the files you touched, by name.
+- Never run a command that throws away uncommitted work: `git stash`, `git clean`, `git reset --hard`,
+  `git restore`, `git checkout --`. The tree is the user's, not scratch space.
+- Remote is personal GitHub (`https://github.com/yaroV1/school-app`). Never push through a work GitHub
+  account, and do not add a second remote.
+- In Claude Code these absolutes are also enforced mechanically (see `CLAUDE.md`). A blocked command means
+  you hit a rule in this section, not a tooling bug. Other tools have no such backstop — the rules bind you
+  either way.
+- `.gitignore` negates `/AGENTS.md` because some global gitignores exclude it. If it ever goes untracked,
+  `git add -f AGENTS.md`.
 
 ## Where things are
 
@@ -215,15 +228,14 @@ precedent here needs a stated reason. New behavior maps onto the nouns in § Dom
 `db/schema.rb`, or it is probably the wrong shape.
 
 **Clean code.** Describe each new method in one sentence with no "and". Names come from the domain
-vocabulary in § Domain and naming. No user-visible string literals in `.rb` or `.erb` — grep the diff for
-Cyrillic. If the diff adds code to an existing file and deletes none, name the code the new path replaces,
+vocabulary in § Domain and naming; a reader who knows the domain should not need the body to guess what a
+name means. No user-visible string literals in `.rb` or `.erb` — grep the diff for Cyrillic. If the diff adds code to an existing file and deletes none, name the code the new path replaces,
 or state in one line why the old path still has callers. Additive-only change is how a codebase grows a
 second way to do one thing.
 
-**Security.** For any diff on a student-facing path, name the reader or the line that stops the answer key
-from reaching the response. For any teacher-facing query, name the ownership scope. If the diff adds a
-param, name the `permit` list it lands in — or, on the two documented `to_unsafe_h` paths, the re-shaping
-step that replaces one. If it adds an export, a log line, a fixture, or a broadcast, state whether an
+**Security.** Re-read § Security against the diff and name the evidence for each rule it touches — the
+reader that strips the key, the ownership scope, the `permit` list. If it adds an export, a log line, a
+fixture, or a broadcast, state whether an
 `access_token` can reach it and name the assertion that proves it cannot. "The UI never links to it" is not
 an answer — `/t/:token` is public.
 
@@ -234,4 +246,4 @@ an answer — `/t/:token` is public.
 - If the choice is hard to reverse — schema, auth, scoring rules, new question type behavior — or it adds a
   route or a controller action, spans a teacher-facing and a student-facing path, or needs more than one
   commit to keep the suite green: do not ask-then-build. Run `/prd`. Asking resolves ambiguity; `/prd`
-  handles scope and irreversibility.
+  handles scope and irreversibility. None of those: just do it.

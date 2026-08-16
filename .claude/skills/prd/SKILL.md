@@ -140,10 +140,9 @@ Mandatory. Answer every line in writing. `N/A — <why>` is a valid answer; a mi
 The rules are in `docs/agent-rules.md` § Security — state compliance, do not restate them.
 
 - **Student-facing output** — does this render or serialize question data to a student? If yes: name each
-  field sent, as an allowlist, and the `Question` student-facing reader that strips the key
-  (`student_facing_options`, `display_items_for`, `shuffled_right_items`, `student_facing_left`,
-  `source_text`). Those readers are the live boundary — `QuestionSanitizer` has no application callers, so
-  a PRD that only hardens it changes nothing a student sees.
+  field sent, as an allowlist, and the `Question` student-facing reader that strips the key. The readers,
+  and why hardening `QuestionSanitizer` alone changes nothing a student sees:
+  `docs/agent-rules.md` § Never leak answer keys.
 - **Teacher data** — does this read or write teacher-owned records? If yes: name the exact scope —
   `Current.user.<assoc>.find`, or the ownership join.
 - **Unauthenticated `Take::`** — does this add or change a `Take::` action? If yes: name the
@@ -208,10 +207,10 @@ Name real files. One line each: what it proves.
 
 Quality loop and commands: `docs/agent-rules.md` § Quality.
 
-## Implementation Tasks — one commit per task
+## Implementation Tasks
 
-This section is the contract handed to `/implement-prd`. Everything above is context; this is what
-gets executed.
+One commit per task. This section is the contract handed to `/implement-prd`. Everything above is
+context; this is what gets executed.
 
 One flat ordered list. **The order is dependency order, not priority order.** Every task is mandatory —
 `/implement-prd` does not finish with an unticked box. Genuinely optional work goes in § Out of Scope or
