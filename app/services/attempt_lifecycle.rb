@@ -105,7 +105,7 @@ class AttemptLifecycle
   end
 
   def submit!(attempt, answers: nil)
-    save_answers!(attempt, answers) if answers.present?
+    touched = answers.present? ? save_answers!(attempt, answers) : []
 
     expire_if_needed!(attempt)
     raise Expired, I18n.t("take.errors.time_up") if attempt.expired?
@@ -125,6 +125,10 @@ class AttemptLifecycle
     rescue ActiveRecord::StaleObjectError
       # Deliberately no retry: save_answers! owns the retry policy, and a collision anywhere in
       # this transaction means something else already moved this attempt.
+      # The rollback cancels the submission, not the answers: save_answers! committed those in its
+      # own transaction and skipped their broadcast on the promise that this method would push them.
+      # Only the answers, never the board — no status changed.
+      GradeLive.replace_answers(attempt.reload, questions: touched)
       raise Conflict, I18n.t("take.errors.save_conflict")
     end
 
@@ -161,6 +165,15 @@ class AttemptLifecycle
     attempt.reload
     GradeLive.replace_header_and_answers(attempt, questions: answered_questions(attempt))
     @exam
+  rescue ActiveRecord::StaleObjectError
+    # This read is not wrapped in a transaction — a sweep calls it too — so another writer can land
+    # between it and the write. Losing that race means the row already moved: whoever won wrote the
+    # status and broadcast it, so there is nothing here to expire and nothing to push. Report "not
+    # me" rather than raising, because this runs inside a student's save and submit, outside their
+    # Conflict rescue, where a raise is a 409 error page mid-exam. A row that is still overdue is
+    # picked up by the next ExpireOverdueAttemptsJob sweep.
+    attempt.reload
+    nil
   end
 
   private
