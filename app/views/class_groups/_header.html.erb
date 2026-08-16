@@ -1,10 +1,13 @@
 <div class="mb-6">
-  <%= link_to t("classes.show.back"), class_groups_path, class: "text-sm text-slate-600 underline" %>
-  <div class="mt-2 flex items-start justify-between gap-4">
-    <h1 class="text-2xl font-semibold"><%= class_group.name %></h1>
-    <div class="flex gap-2">
+  <%= render "shared/breadcrumbs", crumbs: [
+        [ t("classes.index.title"), class_groups_path ],
+        [ class_group.name, nil ]
+      ] %>
+  <div class="mt-3 flex flex-wrap items-start justify-between gap-3">
+    <h1 class="page-title"><%= class_group.name %></h1>
+    <div class="flex flex-wrap gap-2">
       <%= link_to t("common.edit"), edit_class_group_path(class_group), class: btn_secondary %>
-      <%= button_to t("common.delete"), class_group_path(class_group), method: :delete, form: { data: { turbo_confirm: t("classes.show.delete_confirm") } }, class: btn_secondary %>
+      <%= button_to t("common.delete"), class_group_path(class_group), method: :delete, form: { data: { turbo_confirm: t("classes.show.delete_confirm") } }, class: btn_danger %>
     </div>
   </div>
 </div>
