@@ -22,8 +22,9 @@ allowed, starting one is not.
 
 Stage lifecycle for `prd/`: `prd/README.md`.
 
-## Enforcement
+## Git guard
 
-`.claude/settings.json` (ask/deny) and the PreToolUse hook `.claude/hooks/git-guard.rb` mechanically
-enforce `docs/agent-rules.md` § Git. A blocked git command means you hit a rule in that section, not a
-tooling bug. Read the rule rather than working around the block.
+`.claude/settings.json` (ask/deny) and the PreToolUse hook `.claude/hooks/git-guard.rb` block common
+forbidden forms from `docs/agent-rules.md` § Git. The hook is best-effort, not a shell parser; the written
+rules remain authoritative. A blocked git command means you hit a rule in that section, not a tooling bug.
+Read the rule rather than working around the block.

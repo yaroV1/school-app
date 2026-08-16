@@ -1,13 +1,12 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# PreToolUse(Bash). Enforces the absolutes in docs/agent-rules.md § Git. Permission rules are
-# prefix-matched, so `git push origin main --force` walks past a `Bash(git push --force:*)` deny.
-# This does not.
+# PreToolUse(Bash). Best-effort guard for common forbidden commands in docs/agent-rules.md § Git.
+# Permission rules are prefix-matched, so this also catches common flag positions and short clusters
+# that those rules miss. It is intentionally not a shell parser; the written rules remain authoritative.
 #
-# Quoted text is stripped before anything is matched, and every rule is keyed on the git subcommand
-# and its flags — never on a path or a commit message. Matching the raw command string instead blocks
-# `git add config/locales/uk.yml` and `git commit -m "...clean..."`.
+# Quoted text is stripped before matching to avoid treating a path or commit message as a command flag.
+# This trades complete shell parsing for fewer false positives.
 #
 # Exit 2 blocks the tool call and shows stderr to the agent. Fails open only if stdin
 # is not parseable JSON.

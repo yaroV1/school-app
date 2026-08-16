@@ -10,6 +10,6 @@ naming, style, security, the attempt-lifecycle invariants, quality, git, and whe
 This file adds nothing of its own. If it and `docs/agent-rules.md` ever disagree, `docs/agent-rules.md`
 wins — and the disagreement is a bug in this file.
 
-`/prd` and `/implement-prd` are Claude Code skills and do not exist here. Nothing in the rules asks you to
-start one anyway — they run only when the developer invokes them. The git absolutes in that file have no
-mechanical backstop outside Claude Code; they bind you anyway.
+This repo does not expose the Claude-native `/prd` and `/implement-prd` workflows as Codex skills. Do not
+reconstruct them by hand; they run only where available and when the developer invokes them. Codex has no
+project git guard for the absolutes in that file; they bind you anyway.

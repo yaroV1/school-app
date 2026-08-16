@@ -45,7 +45,7 @@ force-push, never change git config.
    bookkeeping — report them and continue; the next commit sweeps them in. Any other dirty tracked
    file: stop and ask. Do not stash, do not commit it.
 2. `git branch --show-current` and `git rev-parse --short HEAD` — report both. All work stays on that
-   branch; that sha is the run's **baseline**. Reviewers need it.
+   branch; that sha is the run's **baseline** for the completion report.
 3. `bin/rails test` — green **before** the first edit. Red: stop (§ Stop conditions). A pre-existing
    failure must never be blamed on this PRD.
 4. Read `project.md`. No `## Implementation Tasks` list → stop and ask. Do not invent tasks.
@@ -108,8 +108,8 @@ Give every reviewer the same packet:
 - the task line verbatim from `project.md`, including its `done when:` and `proof:`;
 - § Security of `project.md`, verbatim — lens (a) works from it;
 - § Out of Scope and § Affected Areas of `project.md`, verbatim;
-- the run's baseline sha, and the instruction to run `git diff <baseline-sha>` and
-  `git status --porcelain` themselves. Never hand over a bare file list in place of a diff;
+- the instruction to run `git diff HEAD` and `git status --porcelain` themselves. Earlier tasks are already
+  committed, so `HEAD` isolates the current task. Never hand over a bare file list in place of a diff;
 - an instruction to read `docs/agent-rules.md` first — in particular § Review tests, § Security, and
   § Attempt lifecycle;
 - the return contract below.

@@ -12,14 +12,15 @@ Everything an agent must follow is in this file. Read it before your first edit 
 
 Tool entry points add mechanics only, and point here:
 
-- `CLAUDE.md` — Claude Code: skill routing, and mechanical enforcement of § Git.
+- `CLAUDE.md` — Claude Code: skill routing, permissions, and the best-effort git guard.
 - `AGENTS.md` — the generic/Codex entry point.
 - `.cursor/rules/conventions.mdc` — Cursor frontmatter.
 
-The PRD workflow is **Claude Code only**: `/prd` and `/implement-prd` are skills there and nowhere else
-(`.claude/skills/prd/SKILL.md`, `.claude/skills/implement-prd/SKILL.md`, `prd/README.md` — stage lifecycle,
-sole owner). Both run only when the developer invokes them — see § When to ask vs inspect. In Cursor or
-Codex they do not exist; do not improvise the flow by hand.
+The PRD workflow is **Claude Code-native**: `/prd` and `/implement-prd` live in
+`.claude/skills/prd/SKILL.md` and `.claude/skills/implement-prd/SKILL.md`; `prd/README.md` owns the stage
+lifecycle. Cursor may discover those skills through its Claude compatibility path. In either tool they run
+only when the developer invokes them — see § When to ask vs inspect. This repo does not expose them as
+Codex skills; do not improvise the flow by hand.
 
 **A new rule goes in this file.** If it must live anywhere else, this file names it here.
 
@@ -94,8 +95,8 @@ sub-hash of it through; the readers do this with `slice("id", "text")`.
 - MCQ: option `id` + `text`. Never `is_correct`.
 - Ordering: items shuffled with the **attempt** as seed — `question.display_items_for(answer, @attempt.id)`.
   `Question#stable_seed` keeps the order stable per (question, seed) so a reload does not reshuffle under the
-  student. Never rely on the sanitizer's default seed: it falls back to `question.id`, which gives every
-  student in the class the same order and defeats the point.
+  student. Always pass `@attempt.id` explicitly; the student-facing readers have no default seed, and using
+  `question.id` instead would give every student in the class the same order and defeat the point.
 - Matching: left items and shuffled right items. Never `config["pairs"]`. A student **response** may use
   `payload["pairs"]` / `payload["order"]` — that is not the key.
 - Source: `source_text` and the prompt, nothing else from `config` — `rubric` and `model_answer` live in the
@@ -140,7 +141,7 @@ retry, so these are invariants, not preferences.
   Two gaps stay open on purpose, each pinned by a test in `test/integration/save_conflict_test.rb`:
   `expire!` takes the same lock with no rescue, and a conflicted submit that carried answers leaves them
   committed but unbroadcast, so the teacher's grading page never learns of work the student did. Closing
-  either is a behavior change needing its own PRD, not a drive-by fix.
+  either is a separate behavior change with its own tests, not a drive-by fix.
 - **Rollback and expiry.** If a transaction rolls back because the attempt expired, re-run
   `expire_if_needed!` on a reloaded attempt **outside** the transaction before re-raising. State that dies
   with the rollback must be written again, or the attempt stays `in_progress` past its deadline.
@@ -192,9 +193,10 @@ the first system test, not before.
   `git restore`, `git checkout --`. The tree is the user's, not scratch space.
 - Remote is personal GitHub (`https://github.com/yaroV1/school-app`). Never push through a work GitHub
   account, and do not add a second remote.
-- In Claude Code these absolutes are also enforced mechanically (see `CLAUDE.md`). A blocked command means
-  you hit a rule in this section, not a tooling bug. Cursor and Codex have no such backstop — the rules
-  bind you either way, and there nothing catches the mistake before it lands.
+- In Claude Code, permissions and a best-effort hook block common forbidden forms (see `CLAUDE.md`); they
+  are not a complete shell parser. A blocked command means you hit a rule in this section, not a tooling
+  bug. Cursor and Codex have no project git guard — the rules bind you either way, and nothing there catches
+  the mistake before it lands.
 
 ## Where things are
 
