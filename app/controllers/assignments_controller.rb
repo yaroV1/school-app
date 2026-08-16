@@ -44,14 +44,12 @@ class AssignmentsController < ApplicationController
 
   def revoke
     @assignment.revoke!
-    LiveBoard.replace(@assignment.exam)
-    redirect_to manage_test_assignments_path(@assignment.exam), notice: t("exams.flash.revoked")
+    respond_with_assignment_row(t("exams.flash.revoked"))
   end
 
   def regenerate_token
     @assignment.regenerate_token!
-    LiveBoard.replace(@assignment.exam)
-    redirect_to manage_test_assignments_path(@assignment.exam), notice: t("exams.flash.regenerated")
+    respond_with_assignment_row(t("exams.flash.regenerated"))
   end
 
   private
@@ -62,6 +60,22 @@ class AssignmentsController < ApplicationController
 
   def set_assignment
     @assignment = Assignment.joins(:exam).where(exams: { teacher_id: Current.user.id }).find(params[:id])
+  end
+
+  def respond_with_assignment_row(notice)
+    LiveBoard.replace(@assignment.exam)
+    respond_to do |format|
+      format.turbo_stream { render_assignment_row }
+      format.html { redirect_to manage_test_assignments_path(@assignment.exam), notice: notice }
+    end
+  end
+
+  def render_assignment_row
+    render turbo_stream: turbo_stream.replace(
+      @assignment,
+      partial: "assignments/row",
+      locals: { assignment: @assignment, exam: @assignment.exam }
+    )
   end
 
   def resolve_student_ids

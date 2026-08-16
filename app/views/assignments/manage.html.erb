@@ -36,54 +36,28 @@
   <h2 class="mb-3 text-lg font-medium"><%= t("exams.assign.access_links") %></h2>
 
   <% if @assignments.any? %>
-    <%= form_with url: bulk_revoke_test_assignments_path(@exam), method: :post do %>
-      <div class="mb-3 flex flex-wrap gap-2">
-        <%= submit_tag t("exams.assign.revoke_selected"), class: btn_secondary, data: { turbo_confirm: t("exams.assign.revoke_confirm") } %>
-      </div>
-      <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-        <table class="min-w-full text-sm">
-          <thead class="bg-slate-50 text-left text-slate-600">
-            <tr>
-              <th class="px-3 py-2"></th>
-              <th class="px-3 py-2"><%= t("exams.assign.student") %></th>
-              <th class="px-3 py-2"><%= t("exams.assign.link") %></th>
-              <th class="px-3 py-2"><%= t("exams.assign.status") %></th>
-              <th class="px-3 py-2"><%= t("exams.assign.attempts") %></th>
-              <th class="px-3 py-2"></th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <% @assignments.each do |assignment| %>
-              <% url = student_portal_url(token: assignment.access_token) %>
-              <tr>
-                <td class="px-3 py-2">
-                  <% unless assignment.revoked? %>
-                    <%= check_box_tag "assignment_ids[]", assignment.id %>
-                  <% end %>
-                </td>
-                <td class="px-3 py-2 font-medium"><%= assignment.student.name %></td>
-                <td class="px-3 py-2">
-                  <div class="flex items-center gap-2">
-                    <code class="max-w-xs truncate text-xs"><%= url %></code>
-                    <button type="button" data-controller="clipboard" data-clipboard-text-value="<%= url %>" data-clipboard-copied-value="<%= t("common.copied") %>" data-action="clipboard#copy" class="<%= btn_secondary %>"><%= t("common.copy") %></button>
-                  </div>
-                </td>
-                <td class="px-3 py-2"><%= assignment.revoked? ? t("statuses.revoked") : t("statuses.active") %></td>
-                <td class="px-3 py-2"><%= assignment.attempts_used %>/<%= @exam.max_attempts %></td>
-                <td class="px-3 py-2 text-right">
-                  <div class="flex justify-end gap-2">
-                    <% unless assignment.revoked? %>
-                      <%= button_to t("exams.assign.revoke"), revoke_assignment_path(assignment), class: btn_secondary %>
-                    <% end %>
-                    <%= button_to t("exams.assign.regenerate"), regenerate_token_assignment_path(assignment), class: btn_secondary %>
-                  </div>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+    <%= form_with url: bulk_revoke_test_assignments_path(@exam), method: :post, id: "bulk-revoke", class: "mb-3" do %>
+      <%= submit_tag t("exams.assign.revoke_selected"), class: btn_secondary, data: { turbo_confirm: t("exams.assign.revoke_confirm") } %>
     <% end %>
+    <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <table class="min-w-full text-sm">
+        <thead class="bg-slate-50 text-left text-slate-600">
+          <tr>
+            <th class="px-3 py-2"></th>
+            <th class="px-3 py-2"><%= t("exams.assign.student") %></th>
+            <th class="px-3 py-2"><%= t("exams.assign.link") %></th>
+            <th class="px-3 py-2"><%= t("exams.assign.status") %></th>
+            <th class="px-3 py-2"><%= t("exams.assign.attempts") %></th>
+            <th class="px-3 py-2"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <% @assignments.each do |assignment| %>
+            <%= render "assignments/row", assignment: assignment, exam: @exam %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% else %>
     <p class="text-slate-600"><%= t("exams.assign.empty") %></p>
   <% end %>
