@@ -1,25 +1,25 @@
 <% url = student_portal_url(token: assignment.access_token) %>
 <tr id="<%= dom_id(assignment) %>">
-  <td class="px-3 py-2">
+  <td>
     <% unless assignment.revoked? %>
-      <%= check_box_tag "assignment_ids[]", assignment.id, false, form: "bulk-revoke" %>
+      <%= check_box_tag "assignment_ids[]", assignment.id, false, form: "bulk-revoke", class: "size-4 accent-accent" %>
     <% end %>
   </td>
-  <td class="px-3 py-2 font-medium"><%= assignment.student.name %></td>
-  <td class="px-3 py-2">
+  <td class="font-medium"><%= assignment.student.name %></td>
+  <td>
     <div class="flex items-center gap-2">
-      <code class="max-w-xs truncate text-xs"><%= url %></code>
-      <button type="button" data-controller="clipboard" data-clipboard-text-value="<%= url %>" data-clipboard-copied-value="<%= t("common.copied") %>" data-action="clipboard#copy" class="<%= btn_secondary %>"><%= t("common.copy") %></button>
+      <code class="max-w-xs truncate rounded bg-surface-sunken px-1.5 py-0.5 text-xs text-ink-muted"><%= url %></code>
+      <button type="button" data-controller="clipboard" data-clipboard-text-value="<%= url %>" data-clipboard-copied-value="<%= t("common.copied") %>" data-action="clipboard#copy" class="<%= btn_secondary %> btn-sm"><%= t("common.copy") %></button>
     </div>
   </td>
-  <td class="px-3 py-2"><%= assignment.revoked? ? t("statuses.revoked") : t("statuses.active") %></td>
-  <td class="px-3 py-2"><%= assignment.attempts_used %>/<%= exam.max_attempts %></td>
-  <td class="px-3 py-2 text-right">
-    <div class="flex justify-end gap-2">
+  <td><% if assignment.revoked? %><span class="badge badge-danger"><%= t("statuses.revoked") %></span><% else %><span class="badge badge-success"><%= t("statuses.active") %></span><% end %></td>
+  <td class="num"><%= assignment.attempts_used %>/<%= exam.max_attempts %></td>
+  <td class="text-right">
+    <div class="flex flex-wrap justify-end gap-2">
       <% unless assignment.revoked? %>
-        <%= button_to t("exams.assign.revoke"), revoke_assignment_path(assignment), class: btn_secondary %>
+        <%= button_to t("exams.assign.revoke"), revoke_assignment_path(assignment), class: "#{btn_danger} btn-sm" %>
       <% end %>
-      <%= button_to t("exams.assign.regenerate"), regenerate_token_assignment_path(assignment), class: btn_secondary %>
+      <%= button_to t("exams.assign.regenerate"), regenerate_token_assignment_path(assignment), class: "#{btn_secondary} btn-sm" %>
     </div>
   </td>
 </tr>

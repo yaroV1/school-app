@@ -5,51 +5,53 @@
   <div id="live-board-data"
        data-submitted-ids="<%= submitted_ids.join(",") %>"
        data-server-time="<%= server_time.iso8601(3) %>">
-    <div class="mb-4 flex flex-wrap gap-3 text-sm">
+    <div class="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
       <% %w[in_progress not_started submitted expired revoked].each do |status| %>
-        <span class="rounded-full border border-slate-200 bg-white px-3 py-1">
-          <%= t("statuses.#{status}") %>: <strong><%= counts[status].to_i %></strong>
-        </span>
+        <div class="card px-3 py-2">
+          <p class="text-xs text-ink-muted"><%= t("statuses.#{status}") %></p>
+          <p class="num mt-0.5 text-lg font-semibold text-ink"><%= counts[status].to_i %></p>
+        </div>
       <% end %>
     </div>
 
     <% if assignments.any? %>
-      <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-        <table class="min-w-full text-sm">
-          <thead class="bg-slate-50 text-left text-slate-600">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
             <tr>
-              <th class="px-3 py-2"><%= t("exams.assign.student") %></th>
-              <th class="px-3 py-2"><%= t("exams.assign.status") %></th>
-              <th class="px-3 py-2"><%= t("attempts.history.started") %></th>
-              <th class="px-3 py-2"><%= t("exams.live.last_activity") %></th>
-              <th class="px-3 py-2"><%= t("exams.results.submitted") %></th>
-              <th class="px-3 py-2"><%= t("exams.live.time_left") %></th>
-              <th class="px-3 py-2"></th>
+              <th><%= t("exams.assign.student") %></th>
+              <th><%= t("exams.assign.status") %></th>
+              <th><%= t("attempts.history.started") %></th>
+              <th><%= t("exams.live.last_activity") %></th>
+              <th><%= t("exams.results.submitted") %></th>
+              <th><%= t("exams.live.time_left") %></th>
+              <th></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100">
+          <tbody>
             <% assignments.each do |assignment| %>
               <% attempt = assignment.latest_attempt %>
               <tr>
-                <td class="px-3 py-2 font-medium"><%= assignment.student.name %></td>
-                <td class="px-3 py-2"><%= status_badge(assignment.board_status) %></td>
-                <td class="px-3 py-2"><%= attempt ? l(attempt.started_at, format: :short) : t("common.dash") %></td>
-                <td class="px-3 py-2"><%= attempt ? l(attempt.last_activity_at, format: :short) : t("common.dash") %></td>
-                <td class="px-3 py-2"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : t("common.dash") %></td>
-                <td class="px-3 py-2 font-mono">
+                <td class="font-medium"><%= assignment.student.name %></td>
+                <td><%= status_badge(assignment.board_status) %></td>
+                <td class="text-ink-muted"><%= attempt ? l(attempt.started_at, format: :short) : t("common.dash") %></td>
+                <td class="text-ink-muted"><%= attempt ? l(attempt.last_activity_at, format: :short) : t("common.dash") %></td>
+                <td class="text-ink-muted"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : t("common.dash") %></td>
+                <td class="num">
                   <% if attempt&.in_progress? && attempt.deadline_at %>
-                    <span data-controller="countdown"
+                    <span class="countdown-cell"
+                          data-controller="countdown"
                           data-countdown-deadline-value="<%= attempt.deadline_at.iso8601 %>"
                           data-countdown-server-time-value="<%= server_time.iso8601 %>">
                       <span data-countdown-target="display"><%= countdown_display(attempt.seconds_remaining(server_time)) %></span>
                     </span>
                   <% else %>
-                    <%= t("common.dash") %>
+                    <span class="text-ink-subtle"><%= t("common.dash") %></span>
                   <% end %>
                 </td>
-                <td class="px-3 py-2 text-right">
+                <td class="text-right">
                   <% if attempt && (attempt.submitted? || attempt.expired?) %>
-                    <%= link_to t("exams.results.grade"), attempt_path(attempt), class: "underline", data: { turbo_frame: "_top" } %>
+                    <%= link_to t("exams.results.grade"), attempt_path(attempt), class: "link", data: { turbo_frame: "_top" } %>
                   <% end %>
                 </td>
               </tr>
@@ -58,9 +60,9 @@
         </table>
       </div>
     <% else %>
-      <p class="text-slate-600">
+      <p class="empty-state">
         <%= t("exams.live.empty") %>
-        <%= link_to t("exams.live.assign_students"), manage_test_assignments_path(exam), class: "underline", data: { turbo_frame: "_top" } %>.
+        <%= link_to t("exams.live.assign_students"), manage_test_assignments_path(exam), class: "link", data: { turbo_frame: "_top" } %>
       </p>
     <% end %>
   </div>

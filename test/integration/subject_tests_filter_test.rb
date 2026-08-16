@@ -68,6 +68,6 @@ class SubjectTestsFilterTest < ActionDispatch::IntegrationTest
   private
 
   def listed_titles
-    css_select("section ul li > div > a").map(&:text).map(&:strip)
+    css_select("section ul li a.list-row-title").map(&:text).map(&:strip)
   end
 end

@@ -1,3 +1,10 @@
 <% content_for :title, t("students.edit.title") %>
-<h1 class="mb-6 text-2xl font-semibold"><%= t("students.edit.title") %></h1>
+<div class="mb-6">
+  <%= render "shared/breadcrumbs", crumbs: [
+        [ t("classes.index.title"), class_groups_path ],
+        [ @student.name, student_path(@student) ],
+        [ t("students.edit.title"), nil ]
+      ] %>
+  <h1 class="page-title mt-3"><%= t("students.edit.title") %></h1>
+</div>
 <%= render "form", student: @student %>
