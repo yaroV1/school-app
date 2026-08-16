@@ -21,7 +21,7 @@
         <tbody>
           <% @stat_rows.each do |row| %>
             <tr>
-              <td><%= link_to row.student.name, student_path(row.student), class: "font-medium hover:text-accent" %></td>
+              <td><%= link_to row.student.name, student_path(row.student), class: "link-quiet" %></td>
               <td class="num">
                 <% if row.assigned.positive? %>
                   <%= t("subjects.stats.progress", finished: row.finished, assigned: row.assigned) %>
