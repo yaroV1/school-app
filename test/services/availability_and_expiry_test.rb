@@ -1,6 +1,6 @@
 require "test_helper"
 
-class Phase11Test < ActiveSupport::TestCase
+class AvailabilityAndExpiryTest < ActiveSupport::TestCase
   setup do
     @teacher = users(:one)
     @exam = create_exam!(@teacher, title: "Windowed", max_attempts: 2, time_limit_sec: 120, status: :published)
