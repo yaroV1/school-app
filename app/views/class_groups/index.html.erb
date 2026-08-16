@@ -1,24 +1,25 @@
 <% content_for :title, t("classes.index.title") %>
-<div class="mb-6 flex items-center justify-between gap-4">
-  <h1 class="text-2xl font-semibold"><%= t("classes.index.title") %></h1>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="page-title"><%= t("classes.index.title") %></h1>
   <%= link_to t("classes.index.new"), new_class_group_path, class: btn_primary %>
 </div>
 
 <% if @class_groups.any? %>
-  <ul class="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
+  <ul class="list">
     <% @class_groups.each do |group| %>
-      <li class="flex items-center justify-between px-4 py-3">
+      <li class="list-row">
         <div>
-          <%= link_to group.name, group, class: "font-medium hover:underline" %>
-          <span class="text-sm text-slate-500">
-            · <%= t("students.count", count: group.students.count { |s| !s.archived? }) %>
-            · <%= t("classes.subjects_count", count: group.subjects.size) %>
-          </span>
+          <%= link_to group.name, group, class: "list-row-title" %>
+          <div class="list-row-meta">
+            <span><%= t("students.count", count: group.students.count { |s| !s.archived? }) %></span>
+            <span aria-hidden="true">·</span>
+            <span><%= t("classes.subjects_count", count: group.subjects.size) %></span>
+          </div>
         </div>
-        <%= link_to t("common.manage"), group, class: btn_secondary %>
+        <%= link_to t("common.manage"), group, class: "#{btn_secondary} btn-sm" %>
       </li>
     <% end %>
   </ul>
 <% else %>
-  <p class="text-slate-600"><%= t("classes.index.empty") %></p>
+  <p class="empty-state"><%= t("classes.index.empty") %></p>
 <% end %>

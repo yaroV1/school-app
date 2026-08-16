@@ -1,9 +1,7 @@
-<%= form_with model: class_group, class: "space-y-4 max-w-md" do |f| %>
-  <% if class_group.errors.any? %>
-    <div class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"><%= class_group.errors.full_messages.to_sentence %></div>
-  <% end %>
-  <div>
-    <%= f.label :name, class: "text-sm font-medium" %>
+<%= form_with model: class_group, class: "card card-pad max-w-md space-y-4" do |f| %>
+  <%= render "shared/form_errors", record: class_group %>
+  <div class="fieldset">
+    <%= f.label :name, class: "field-label" %>
     <%= f.text_field :name, required: true, class: field_class %>
   </div>
   <%= f.submit class: btn_primary %>

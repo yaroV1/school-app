@@ -1,38 +1,38 @@
 <% content_for :title, @class_group.name %>
 <%= render "class_groups/header", class_group: @class_group %>
 
-<section>
+<section class="space-y-4">
   <% if @students.any? %>
-    <ul class="mb-4 max-h-96 divide-y divide-slate-200 overflow-y-auto rounded-lg border border-slate-200 bg-white">
+    <ul class="list max-h-96 overflow-y-auto">
       <% @students.each do |student| %>
-        <li class="flex items-center justify-between gap-3 px-4 py-3">
+        <li class="list-row">
           <div>
-            <%= link_to student.name, student_path(student), class: "font-medium hover:underline" %>
-            <% if student.email.present? %><span class="text-sm text-slate-500"> · <%= student.email %></span><% end %>
+            <%= link_to student.name, student_path(student), class: "list-row-title" %>
+            <% if student.email.present? %>
+              <div class="list-row-meta"><span><%= student.email %></span></div>
+            <% end %>
           </div>
-          <div class="flex gap-2">
-            <%= link_to t("common.edit"), edit_student_path(student), class: btn_secondary %>
-            <%= button_to t("classes.show.remove_member"), remove_member_class_group_path(@class_group, student_id: student.id), method: :delete, form: { data: { turbo_confirm: t("classes.show.remove_member_confirm") } }, class: "text-sm text-red-600 underline" %>
+          <div class="flex flex-wrap items-center gap-2">
+            <%= link_to t("common.edit"), edit_student_path(student), class: "#{btn_secondary} btn-sm" %>
+            <%= button_to t("classes.show.remove_member"), remove_member_class_group_path(@class_group, student_id: student.id), method: :delete, form: { data: { turbo_confirm: t("classes.show.remove_member_confirm") } }, class: "#{btn_danger} btn-sm" %>
           </div>
         </li>
       <% end %>
     </ul>
   <% else %>
-    <p class="mb-4 text-slate-600"><%= t("classes.show.empty_students") %></p>
+    <p class="empty-state"><%= t("classes.show.empty_students") %></p>
   <% end %>
 
-  <div class="rounded-lg border border-slate-200 bg-white p-4">
-    <h3 class="mb-3 text-sm font-medium"><%= t("classes.show.add_student") %></h3>
+  <div class="card card-pad">
+    <h2 class="card-title mb-3"><%= t("classes.show.add_student") %></h2>
     <%= form_with model: @student, url: class_group_students_path(@class_group), class: "grid gap-3 sm:grid-cols-2" do |f| %>
-      <% if @student.errors.any? %>
-        <div class="sm:col-span-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"><%= @student.errors.full_messages.to_sentence %></div>
-      <% end %>
+      <%= render "shared/form_errors", record: @student, span: "sm:col-span-2" %>
       <div>
-        <%= f.label :name, class: "text-sm font-medium" %>
+        <%= f.label :name, class: "field-label" %>
         <%= f.text_field :name, required: true, class: field_class %>
       </div>
       <div>
-        <%= f.label :email, t("students.form.email_optional"), class: "text-sm font-medium" %>
+        <%= f.label :email, t("students.form.email_optional"), class: "field-label" %>
         <%= f.email_field :email, class: field_class %>
       </div>
       <div class="sm:col-span-2">

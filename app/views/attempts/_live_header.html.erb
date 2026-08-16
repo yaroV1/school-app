@@ -1,12 +1,22 @@
-<div id="attempt_live_header">
-  <p class="text-slate-600"><%= exam.title %> · <%= t("attempts.grade.attempt", n: attempt.attempt_no) %> · <%= status_badge(attempt.status) %></p>
+<div id="attempt_live_header" class="mt-2 space-y-1.5">
+  <p class="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+    <span class="text-ink"><%= exam.title %></span>
+    <span class="text-ink-subtle" aria-hidden="true">·</span>
+    <span><%= t("attempts.grade.attempt", n: attempt.attempt_no) %></span>
+    <%= status_badge(attempt.status) %>
+  </p>
   <% if attempt.in_progress? %>
-    <p class="mt-1 text-sm text-slate-500"><%= t("attempts.grade.live_hint") %></p>
+    <p class="text-sm text-ink-muted"><%= t("attempts.grade.live_hint") %></p>
   <% end %>
   <% if grade %>
-    <p class="mt-1 text-sm text-slate-500">
-      <%= t("attempts.grade.current") %>: <%= grade.total_score || t("common.dash") %>/<%= grade.max_score %>
-      <%= grade.finalized_by_teacher? ? "· #{t("attempts.grade.finalized")}" : "· #{t("attempts.grade.not_finalized")}" %>
+    <p class="text-sm text-ink-muted">
+      <%= t("attempts.grade.current") %>:
+      <span class="num font-medium text-ink"><%= grade.total_score || t("common.dash") %>/<%= grade.max_score %></span>
+      <% if grade.finalized_by_teacher? %>
+        <span class="badge badge-success"><%= t("attempts.grade.finalized") %></span>
+      <% else %>
+        <span class="badge badge-neutral"><%= t("attempts.grade.not_finalized") %></span>
+      <% end %>
     </p>
   <% end %>
 </div>

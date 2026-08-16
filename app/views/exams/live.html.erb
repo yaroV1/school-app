@@ -8,11 +8,12 @@
      data-live-board-toast-other-value="<%= t("exams.live.toast_other", count: "__COUNT__") %>">
   <%= render "exams/header", exam: @exam %>
 
-  <p class="mb-3 text-sm text-slate-500"><%= t("exams.live.hint") %></p>
+  <p class="mb-4 text-sm text-ink-muted"><%= t("exams.live.hint") %></p>
 
-  <p id="live-toast" class="mb-3 hidden rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800"></p>
+  <%# The controller writes textContent here, so keep it text-only. %>
+  <p id="live-toast" class="flash flash-notice hidden" role="status"></p>
 
   <%= turbo_frame_tag "live_board", src: live_test_path(@exam) do %>
-    <p class="text-slate-500"><%= t("exams.live.loading") %></p>
+    <p class="text-sm text-ink-muted"><%= t("exams.live.loading") %></p>
   <% end %>
 </div>

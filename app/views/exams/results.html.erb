@@ -2,42 +2,45 @@
 <%= render "exams/header", exam: @exam %>
 
 <% if @assignments.any? %>
-  <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-    <table class="min-w-full text-sm">
-      <thead class="bg-slate-50 text-left text-slate-600">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
         <tr>
-          <th class="px-3 py-2"><%= t("exams.assign.student") %></th>
-          <th class="px-3 py-2"><%= t("exams.results.latest_status") %></th>
-          <th class="px-3 py-2"><%= t("attempts.history.started") %></th>
-          <th class="px-3 py-2"><%= t("exams.results.submitted") %></th>
-          <th class="px-3 py-2"><%= t("exams.results.score") %></th>
-          <th class="px-3 py-2"></th>
+          <th><%= t("exams.assign.student") %></th>
+          <th><%= t("exams.results.latest_status") %></th>
+          <th><%= t("attempts.history.started") %></th>
+          <th><%= t("exams.results.submitted") %></th>
+          <th><%= t("exams.results.score") %></th>
+          <th></th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-slate-100">
+      <tbody>
         <% @assignments.each do |assignment| %>
           <% attempt = assignment.latest_attempt %>
           <tr>
-            <td class="px-3 py-2"><%= link_to assignment.student.name, student_path(assignment.student), class: "underline" %></td>
-            <td class="px-3 py-2">
+            <td><%= link_to assignment.student.name, student_path(assignment.student), class: "font-medium hover:text-accent" %></td>
+            <td>
               <% if attempt %>
-                <%= status_badge(attempt.status) %> (№<%= attempt.attempt_no %>)
+                <%= status_badge(attempt.status) %>
+                <span class="num text-xs text-ink-muted">№<%= attempt.attempt_no %></span>
               <% else %>
-                <span class="text-slate-500"><%= t("statuses.not_started") %></span>
+                <span class="badge badge-neutral"><%= t("statuses.not_started") %></span>
               <% end %>
             </td>
-            <td class="px-3 py-2"><%= attempt ? l(attempt.started_at, format: :short) : t("common.dash") %></td>
-            <td class="px-3 py-2"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : t("common.dash") %></td>
-            <td class="px-3 py-2">
+            <td class="text-ink-muted"><%= attempt ? l(attempt.started_at, format: :short) : t("common.dash") %></td>
+            <td class="text-ink-muted"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : t("common.dash") %></td>
+            <td class="num">
               <% if attempt&.grade %>
                 <%= attempt.grade.total_score || t("common.dash") %>/<%= attempt.grade.max_score %>
-                <%= "· #{t("exams.results.finalized")}" if attempt.grade.finalized_by_teacher? %>
+                <% if attempt.grade.finalized_by_teacher? %>
+                  <span class="badge badge-success"><%= t("exams.results.finalized") %></span>
+                <% end %>
               <% else %>
-                <%= t("common.dash") %>
+                <span class="text-ink-subtle"><%= t("common.dash") %></span>
               <% end %>
             </td>
-            <td class="px-3 py-2 text-right">
-              <% if attempt %><%= link_to t("exams.results.grade"), attempt_path(attempt), class: "underline" %><% end %>
+            <td class="text-right">
+              <% if attempt %><%= link_to t("exams.results.grade"), attempt_path(attempt), class: "link" %><% end %>
             </td>
           </tr>
         <% end %>
@@ -45,5 +48,5 @@
     </table>
   </div>
 <% else %>
-  <p class="text-slate-600"><%= t("exams.results.empty") %></p>
+  <p class="empty-state"><%= t("exams.results.empty") %></p>
 <% end %>

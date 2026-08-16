@@ -1,17 +1,16 @@
-<div class="mx-auto md:w-2/3 w-full">
-  <% if alert = flash[:alert] %>
-    <p class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg inline-block" id="alert"><%= alert %></p>
-  <% end %>
+<% content_for :title, t("auth.passwords.forgot_title") %>
+<div class="mx-auto w-full max-w-sm">
+  <h1 class="page-title mb-6 text-center"><%= t("auth.passwords.forgot_title") %></h1>
 
-  <h1 class="font-bold text-4xl"><%= t("auth.passwords.forgot_title") %></h1>
-
-  <%= form_with url: passwords_path, class: "contents" do |form| %>
-    <div class="my-5">
-      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: t("auth.passwords.email_placeholder"), value: params[:email_address], class: "block shadow-sm rounded-md border border-gray-400 focus:outline-solid focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
+  <%= form_with url: passwords_path, class: "card card-pad space-y-4" do |form| %>
+    <div class="fieldset">
+      <%= form.label :email_address, t("auth.email"), class: "field-label" %>
+      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: t("auth.passwords.email_placeholder"), value: params[:email_address], class: field_class %>
     </div>
 
-    <div class="inline">
-      <%= form.submit t("auth.passwords.send_instructions"), class: "w-full sm:w-auto text-center rounded-lg px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
-    </div>
+    <%= form.submit t("auth.passwords.send_instructions"), class: "#{btn_primary} w-full" %>
+    <p class="text-center">
+      <%= link_to t("auth.sign_in"), new_session_path, class: "link text-sm" %>
+    </p>
   <% end %>
 </div>
