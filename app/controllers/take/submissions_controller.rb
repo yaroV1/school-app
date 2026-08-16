@@ -8,6 +8,11 @@ module Take
       redirect_to student_done_path(token: @assignment.access_token), alert: t("take.errors.time_up_kept")
     rescue AttemptLifecycle::NotAllowed => e
       redirect_to student_run_path(token: @assignment.access_token), alert: e.message
+    rescue AttemptLifecycle::Conflict => e
+      # Both Conflict paths — the answers write and the status write — roll back, so the attempt
+      # is still in progress and the student can press submit again. Without this the exception
+      # escapes the request.
+      redirect_to student_run_path(token: @assignment.access_token), alert: e.message
     end
 
     def show

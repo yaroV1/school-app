@@ -1,10 +1,12 @@
 ---
-description: Load AGENTS.md as the canonical project contract
+description: Load docs/agent-rules.md as the project's single source of agent rules
 alwaysApply: true
 ---
 
 # Cursor
 
-`AGENTS.md` at the repo root is canonical. Follow it for naming, style, security, quality, git, and when to ask.
+`docs/agent-rules.md` is the single source of truth for domain naming, style, security, the
+attempt-lifecycle invariants, quality, git, and when to ask. Read it before your first edit in a session.
 
-Do not restate those rules here. If this file and `AGENTS.md` disagree, `AGENTS.md` wins.
+Do not restate those rules here. If this file and `docs/agent-rules.md` disagree, `docs/agent-rules.md`
+wins.

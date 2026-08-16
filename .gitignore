@@ -37,6 +37,9 @@
 # This contract must stay trackable: git add -f AGENTS.md
 !/AGENTS.md
 
+# Personal Claude Code overrides. .claude/settings.json is shared and tracked.
+/.claude/settings.local.json
+
 
 /app/assets/builds/*
 !/app/assets/builds/.keep

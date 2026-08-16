@@ -90,27 +90,26 @@ class QuestionTest < ActiveSupport::TestCase
     )
 
     seed = 42
-    ordering_payload = QuestionSanitizer.for_student(ordering, seed: seed)
-    matching_payload = QuestionSanitizer.for_student(matching, seed: seed)
-    source_payload = QuestionSanitizer.for_student(source)
-    mcq_payload = QuestionSanitizer.for_student(mcq)
 
-    assert_equal ordering.shuffled_items(seed).map { |item| item["id"] },
-                 ordering_payload[:items].map { |item| item["id"] }
-    assert_equal %w[e1 e2 e3].sort, ordering_payload[:items].map { |item| item["id"] }.sort
-    ordering_payload[:items].each { |item| assert_equal %w[id text], item.keys.sort }
+    # Ordering: every item reaches the student, shuffled, carrying nothing but id and text.
+    ordering_items = ordering.shuffled_items(seed)
+    assert_equal %w[e1 e2 e3].sort, ordering_items.map { |item| item["id"] }.sort
+    ordering_items.each { |item| assert_equal %w[id text], item.keys.sort }
 
-    refute matching_payload.key?(:pairs)
-    assert_equal matching.student_facing_left, matching_payload[:left]
-    assert_equal matching.shuffled_right_items(seed).map { |item| item["id"] },
-                 matching_payload[:right].map { |item| item["id"] }
+    # Matching: left as stored, right shuffled, the pairs answer key never in either.
+    assert_equal %w[l1 l2], matching.student_facing_left.map { |item| item["id"] }
+    assert_equal %w[r1 r2].sort, matching.shuffled_right_items(seed).map { |item| item["id"] }.sort
+    (matching.student_facing_left + matching.shuffled_right_items(seed)).each do |item|
+      assert_equal %w[id text], item.keys.sort
+    end
 
-    assert_equal "A short passage.", source_payload[:source]
-    assert_equal "Summarize", source_payload[:prompt]
-    refute_includes source_payload.values, "secret rubric"
+    # Source: the passage is student-visible, the rubric shares its config hash and is not.
+    assert_equal "A short passage.", source.source_text
+    assert_equal "secret rubric", source.rubric, "fixture must keep a rubric for this to prove anything"
 
-    assert_equal %w[a b], mcq_payload[:options].map { |opt| opt["id"] }
-    mcq_payload[:options].each { |opt| refute opt.key?("is_correct") }
+    # MCQ: options without the correct flag.
+    assert_equal %w[a b], mcq.student_facing_options.map { |opt| opt["id"] }
+    mcq.student_facing_options.each { |opt| assert_equal %w[id text], opt.keys.sort }
   end
 
   test "photo is optional" do

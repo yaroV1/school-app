@@ -1,5 +1,23 @@
 # Technical Implementation Plan — Tests Platform (MVP first)
 
+> **HISTORICAL — frozen, not current. Do not implement from this document.**
+>
+> This is the MVP plan as approved *before* implementation. The app has since diverged from it in ways
+> that matter: `subjects` did not exist (every exam now belongs to one); the student namespace shipped as
+> `Take::`, not `Student::`; there are six question types, not three (`ordering`, `matching`, `source`
+> were added); the model is `Exam`/`exams`, not `Test`/`tests`; the database is SQLite, not the Postgres
+> named throughout §§ 14-17; the service layer has changed shape (read `app/services/`, not § 7's list —
+> `QuestionSanitizer` was deleted as dead code and `LiveBroadcast` is a mixin, not a service); and the
+> "last-write-wins on stale
+> version" policy in § 11 was reversed by commit `e4f5e54` — the code now retries once and raises
+> `AttemptLifecycle::Conflict`.
+>
+> Current reality lives in `db/schema.rb`, `config/routes.rb`, and `docs/agent-rules.md`. Where any of
+> them disagrees with this file, they win.
+>
+> Kept for the phase 1.2 / 2 extension hooks, which are still the plan of record for AI draft grading.
+> Do not edit unless asked (`docs/agent-rules.md` § This contract).
+
 Product contract: approved Tests Platform PRD (MVP → 1.1 → 1.2 → 2). This document locks stack, data model, routes/UI approach, and build order for **MVP**, with extension hooks for phases **1.1**, **1.2**, and **2**.
 
 ---

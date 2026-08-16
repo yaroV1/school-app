@@ -278,4 +278,40 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     assert_empty grade_streams
     assert_empty board_streams
   end
+
+  test "submit raises Conflict rather than StaleObjectError when its own transaction collides" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    calls = 0
+    # refresh_grade! reaches this *after* the status write, so the rollback assertions below
+    # test a status that was actually set rather than one never written.
+    collide = ->(_attempt) { calls += 1; raise ActiveRecord::StaleObjectError.new(Attempt.new, "update") }
+
+    error = assert_raises(AttemptLifecycle::Conflict) do
+      replacing(Scoring, :partial_total, collide) do
+        AttemptLifecycle.submit!(attempt)
+      end
+    end
+
+    assert_equal I18n.t("take.errors.save_conflict"), error.message
+    assert_equal 1, calls, "submit must not retry; save_answers! owns the retry policy"
+    assert attempt.reload.in_progress?, "the rolled-back submit must revert the submitted status"
+    assert_nil attempt.submitted_at
+  end
+
+  test "save_answers retries exactly once before raising Conflict" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    calls = 0
+    collide = ->(_answer) { calls += 1; raise ActiveRecord::StaleObjectError.new(Attempt.new, "update") }
+
+    error = assert_raises(AttemptLifecycle::Conflict) do
+      replacing(Scoring, :score_auto!, collide) do
+        AttemptLifecycle.autosave!(attempt, [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
+      end
+    end
+
+    assert_equal I18n.t("take.errors.save_conflict"), error.message
+    assert_equal 2, calls, "expected the first attempt plus exactly one retry"
+    assert attempt.reload.in_progress?
+    assert_equal 0, attempt.answers.reload.count, "a rolled-back retry must not leave answers behind"
+  end
 end
