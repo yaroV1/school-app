@@ -8,9 +8,9 @@ description: Execute a refined PRD from prd/backlog/ one task at a time — impl
 Execute `prd/backlog/<name>/project.md`: one task, one review round, one commit — repeated until the
 task list is empty.
 
-`AGENTS.md` is the canonical contract for naming, style, security, quality, and git. This skill does not
-restate those rules; it sequences the work and says when each check runs. If this file and `AGENTS.md`
-disagree, `AGENTS.md` wins.
+`docs/agent-rules.md` is the canonical contract for naming, style, security, quality, and git. This skill does not
+restate those rules; it sequences the work and says when each check runs. If this file and `docs/agent-rules.md`
+disagree, `docs/agent-rules.md` wins.
 
 ## Invocation
 
@@ -23,7 +23,7 @@ disagree, `AGENTS.md` wins.
 
 ## Git authorization
 
-`AGENTS.md` § Git carves this skill out. That authorization is narrow:
+`docs/agent-rules.md` § Git carves this skill out. That authorization is narrow:
 
 - Authorized, for the duration of this run, on the current branch: `git add` of files this run touched,
   `git commit` — one per completed task plus the final completion commit — and `git mv` within `prd/` at
@@ -31,7 +31,8 @@ disagree, `AGENTS.md` wins.
 - Not authorized: everything else. Not `git push`, not `--amend`, not a new branch, not a PR. Each needs
   its own request from the user.
 
-Everything else in `AGENTS.md` § Git stands, including the absolutes in its second bullet.
+Everything else in `docs/agent-rules.md` § Git stands, including its absolutes: never `--no-verify`, never
+force-push, never change git config.
 
 ## Preflight — once per run
 
@@ -59,7 +60,7 @@ to reviewers; `proof:` is the test that must exist and pass. A task missing eith
 
 1. **Restate.** One or two lines: the task, its `done when:`, its `proof:`.
 2. **Implement.** The smallest change that satisfies it. Nothing from a later task, nothing the PRD
-   lists under § Out of Scope. Naming, style, and security come from `AGENTS.md`.
+   lists under § Out of Scope. Naming, style, and security come from `docs/agent-rules.md`.
    - Already satisfied by the codebase — from an earlier task or from code that predates the PRD? Do
      not fabricate a diff and do not make an empty commit. Run the task's `proof:`. If it passes, tick
      the box, record `already satisfied — <the code that satisfies it>` in `progress.md`, and let the
@@ -105,12 +106,12 @@ Give every reviewer the same packet:
 - § Out of Scope and § Affected Areas of `project.md`, verbatim — lens (a) works from them;
 - the run's baseline sha, and the instruction to run `git diff <baseline-sha>` and
   `git status --porcelain` themselves. Never hand over a bare file list in place of a diff;
-- an instruction to read `AGENTS.md` and `CLAUDE.md` § Working principles first — both at the repo
-  root, `AGENTS.md` canonical;
+- an instruction to read `docs/agent-rules.md` first — in particular § Review tests, § Security, and
+  § Attempt lifecycle;
 - the return contract below.
 
 **a. Rails-way, KISS & clean code.** Is this idiomatic Rails 8 *for this codebase*? Is there a simpler
-construction with the same behavior? Does it add a layer `AGENTS.md` § Style forbids? Does it duplicate
+construction with the same behavior? Does it add a layer `docs/agent-rules.md` § Style forbids? Does it duplicate
 an existing service — read `app/services/` before answering. Does it copy a nearby precedent, or invent
 a pattern that has none here? Then four concrete probes:
 
@@ -122,7 +123,7 @@ a pattern that has none here? Then four concrete probes:
   flag it.
 - Does anything in the diff appear in the PRD's § Out of Scope?
 
-**b. Security.** Read `AGENTS.md` § Security and audit the diff against **every** rule in it — apply
+**b. Security.** Read `docs/agent-rules.md` § Security and audit the diff against **every** rule in it — apply
 them, do not re-derive them and do not work from a summary. Two things that section will not tell you:
 `Take::` scoping must run through the assignment lookup, and proposing `Current.user` inside `Take::` is
 a wrong finding, not a fix. Additionally: every line the PRD's § Security answered "yes" needs a test in
@@ -168,7 +169,7 @@ Per task: § The loop steps 4 and 7. Nothing heavier.
 `bin/ci` runs **once per PRD**: after the last task's commit and before the completion commit. Run it
 earlier only when a task touches the `Gemfile`, an initializer, `db/seeds.rb`, or importmap pins.
 
-What `bin/ci` covers, and how it differs from `.github/workflows/ci.yml`: `AGENTS.md` § Quality.
+What `bin/ci` covers, and how it differs from `.github/workflows/ci.yml`: `docs/agent-rules.md` § Quality.
 
 ## Completion
 
@@ -177,8 +178,9 @@ Every box ticked and `bin/ci` green:
 1. `mkdir -p prd/complete && git mv prd/backlog/<name> prd/complete/<name>`.
 2. Final `progress.md` entry: date, tasks completed, deferred items still open.
 3. One commit for the move plus the outstanding bookkeeping.
-4. Report: `git log --oneline <baseline-sha>..HEAD`, what was deferred, and that system tests did not
-   run locally, so a green `bin/ci` is not a promise of a green PR.
+4. Report: `git log --oneline <baseline-sha>..HEAD`, and what was deferred. Note that Brakeman runs
+   stricter locally than on GitHub (`docs/agent-rules.md` § Quality), so a red local Brakeman is not
+   proof the PR will be red.
 5. Ask before pushing. This skill does not authorize it (§ Git authorization).
 
 `_to_refine → backlog` is a human move (`prd/README.md`). `backlog → complete` is the one stage move
@@ -190,7 +192,7 @@ Halt and ask the human. Do not improvise around any of these:
 
 - The suite was already red at preflight, or a tracked file was dirty at preflight.
 - The PRD needs a schema change it does not describe, or its migration disagrees with `db/schema.rb`.
-- A task turns on a decision `AGENTS.md` § When to ask vs inspect flags as ask-first.
+- A task turns on a decision `docs/agent-rules.md` § When to ask vs inspect flags as ask-first.
 - A task line is missing its `done when:` or its `proof:`.
 - A reviewer raises a security finding that cannot be resolved inside the task's scope.
 - You believe a `critical` or `major` finding is wrong.

@@ -12,5 +12,5 @@
 `/implement-prd` works a `backlog/` entry, ticks its Implementation Tasks, keeps `progress.md`, and moves
 the directory to `complete/` when every box is ticked.
 
-Contracts: `.claude/skills/prd/SKILL.md`, `.claude/skills/implement-prd/SKILL.md`, and `AGENTS.md`
+Contracts: `.claude/skills/prd/SKILL.md`, `.claude/skills/implement-prd/SKILL.md`, and `docs/agent-rules.md`
 (canonical).

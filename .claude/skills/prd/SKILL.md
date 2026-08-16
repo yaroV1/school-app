@@ -8,23 +8,23 @@ description: Write a product requirements document for a school-app feature befo
 Turn a feature request into `prd/_to_refine/<kebab-name>/project.md`: a spec whose task list
 `/implement-prd` can execute one commit at a time.
 
-`AGENTS.md` is the canonical contract for naming, style, security, quality, and git. This skill
+`docs/agent-rules.md` is the canonical contract for naming, style, security, quality, and git. This skill
 does not restate those rules. Where a section below asks a question, answer it *against*
-`AGENTS.md` — state how the feature complies, do not copy the rule in. If this file and
-`AGENTS.md` disagree, `AGENTS.md` wins.
+`docs/agent-rules.md` — state how the feature complies, do not copy the rule in. If this file and
+`docs/agent-rules.md` disagree, `docs/agent-rules.md` wins.
 
 ## Invocation
 
 - `/prd <feature description>` — enough to start. Research, then write.
 - `/prd` — no description. Ask first, then research, then write.
 
-Ask vs inspect: `AGENTS.md` § When to ask vs inspect. Applied here — the question comes *before* the
+Ask vs inspect: `docs/agent-rules.md` § When to ask vs inspect. Applied here — the question comes *before* the
 PRD exists, not while it is being written.
 
 ## Procedure
 
 1. **Gather.** Description supplied and unambiguous: go to step 2. No description, or the request turns
-   on something `AGENTS.md` § When to ask flags as ask-first: ask up to three questions covering scope,
+   on something `docs/agent-rules.md` § When to ask vs inspect flags as ask-first: ask up to three questions covering scope,
    the teacher-side and student-side story, and what is explicitly out — then continue.
 2. **Research.** Read before writing. At minimum: `db/schema.rb`, `config/routes.rb`, the controllers
    and views you would touch, `app/services/`, `config/locales/uk.yml`, and the test file covering the
@@ -49,16 +49,8 @@ PRD exists, not while it is being written.
 
 ## Lifecycle
 
-```
-prd/_to_refine/<kebab-name>/   project.md                  new, not yet reviewed
-prd/backlog/<kebab-name>/      project.md + progress.md    refined, ready to build
-prd/complete/<kebab-name>/     project.md + progress.md    shipped
-```
-
-Stage moves are human-only, with one exception that is not yours: `/implement-prd` performs
-`backlog → complete` at the end of a run. `/prd` writes into `_to_refine/` and moves nothing.
-
-`progress.md` belongs to `/implement-prd`. Do not create it here.
+`prd/README.md` owns the three stages. `/prd` writes into `prd/_to_refine/` and moves nothing.
+`progress.md` belongs to `/implement-prd` — do not create it here.
 
 ## KISS gate
 
@@ -69,7 +61,7 @@ one-line `why` where it is listed.
 A `why` must name the specific existing thing you considered instead — the column, the service, the
 Stimulus controller, the gem already in `Gemfile.lock` — and the concrete reason it does not fit. A
 `why` that only restates the feature ("needed to store the tolerance") fails the gate: cut the thing,
-or reuse the alternative. See `AGENTS.md` § Style.
+or reuse the alternative. See `docs/agent-rules.md` § Style.
 
 ---
 
@@ -105,7 +97,7 @@ is neither listed here nor the task's proof file.
 - Models: `app/models/...`
 - Controllers: `app/controllers/...`
 - Views: `app/views/...`
-- Services: reuse first — see `AGENTS.md` § Style and `app/services/`. A new service needs a `why`.
+- Services: reuse first — see `docs/agent-rules.md` § Style and `app/services/`. A new service needs a `why`.
 - Jobs: `app/jobs/...` (Solid Queue).
 - Tests: `test/...`
 
@@ -124,7 +116,7 @@ backfill-safe.
 |---|---|---|---|---|
 
 Helper names follow the `/tests` ↔ `Exam` split — `test_path`, not `exam_path`. Verify every helper
-against `config/routes.rb`. Naming rules: `AGENTS.md` § Naming. Auth column: authenticated teacher, or
+against `config/routes.rb`. Naming rules: `docs/agent-rules.md` § Domain and naming. Auth column: authenticated teacher, or
 unauthenticated `Take::`.
 
 This app is server-rendered. A new route is normally a **controller action + ERB view + Turbo
@@ -145,10 +137,13 @@ Stream target** — not a JSON endpoint. If the PRD proposes JSON, justify it he
 ## Security
 
 Mandatory. Answer every line in writing. `N/A — <why>` is a valid answer; a missing line is not.
-The rules are in `AGENTS.md` § Security — state compliance, do not restate them.
+The rules are in `docs/agent-rules.md` § Security — state compliance, do not restate them.
 
-- **Student-facing output** — does this render or serialize question data to a student? If yes:
-  which fields, and how `QuestionSanitizer` keeps the answer key out of them.
+- **Student-facing output** — does this render or serialize question data to a student? If yes: name each
+  field sent, as an allowlist, and the `Question` student-facing reader that strips the key
+  (`student_facing_options`, `display_items_for`, `shuffled_right_items`, `student_facing_left`,
+  `source_text`). Those readers are the live boundary — `QuestionSanitizer` has no application callers, so
+  a PRD that only hardens it changes nothing a student sees.
 - **Teacher data** — does this read or write teacher-owned records? If yes: name the exact scope —
   `Current.user.<assoc>.find`, or the ownership join.
 - **Unauthenticated `Take::`** — does this add or change a `Take::` action? If yes: name the
@@ -164,7 +159,7 @@ Every "yes" above becomes a test — see § Testing Strategy.
 
 ## Localization
 
-Localization rules: `AGENTS.md` § Style. List every new key and its Ukrainian text.
+Localization rules: `docs/agent-rules.md` § Style. List every new key and its Ukrainian text.
 
 | Key | Ukrainian text |
 |---|---|
@@ -211,7 +206,7 @@ Name real files. One line each: what it proves.
 - Security tests are not optional: each "yes" in § Security needs a test that fails when the
   guard is removed.
 
-Quality loop and commands: `AGENTS.md` § Quality.
+Quality loop and commands: `docs/agent-rules.md` § Quality.
 
 ## Implementation Tasks — one commit per task
 
@@ -302,7 +297,7 @@ question editor lives there, not in `app/views/questions/`), `app/views/take/run
 
 Two things that PRD must get right:
 
-**Open Questions (blocking)** — adding to the `question_type` set touches `AGENTS.md` § Naming,
+**Open Questions (blocking)** — adding to the `question_type` set touches `docs/agent-rules.md` § Domain and naming,
 which enumerates the six existing types. The contract file has to be updated by the user, not
 silently diverged from. Resolve before this leaves `_to_refine/`.
 
@@ -314,8 +309,9 @@ there is no migration, and each task leaves the suite green.
       proof: `test/models/question_test.rb`
 - [ ] FR-2 — Score `numeric` in `Scoring` with tolerance, all-or-nothing — done when: a response inside
       the tolerance scores full and one outside scores zero — proof: `test/services/scoring_test.rb`
-- [ ] FR-3 — Return prompt only for `numeric` from `QuestionSanitizer` — done when: the student payload
-      carries the prompt and no expected value or tolerance — proof: `test/models/question_test.rb`
+- [ ] FR-3 — Render prompt only for `numeric` in `app/views/take/runs/show.html.erb`, and mirror it in
+      `QuestionSanitizer` — done when: the student page and the sanitizer payload both carry the prompt
+      and neither carries the expected value or tolerance — proof: `test/models/question_test.rb`
 - [ ] FR-4 — Teacher editor input in `app/views/exams/show.html.erb`, plus `uk.yml` keys — done when:
       selecting `numeric` renders the tolerance input and `POST test_questions_path` persists it —
       proof: `test/integration/exam_tabs_test.rb`, extended
