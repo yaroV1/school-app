@@ -15,7 +15,7 @@ This file is the canonical agent contract. `.cursor/rules/` should point here, n
 ## Style
 
 - Follow Rails layout and copy nearby code. Prefer simple, explicit changes.
-- Extract a service for nontrivial domain or security logic (existing: `Scoring`, `AttemptLifecycle`, `QuestionSanitizer`, `TokenGenerator`). Do not add layers “for SOLID.”
+- Extract a service for nontrivial domain or security logic (existing: `Scoring`, `AttemptLifecycle`, `QuestionSanitizer`, `TokenGenerator`, `LiveBoard`, `LiveBroadcast`, `GradeLive`). Read `app/services/` and reuse before adding an eighth. Do not add layers “for SOLID.”
 - New UI strings go in `config/locales/uk.yml`. Default locale is `uk`.
 - Do not invent tables, columns, routes, or APIs. Check `db/schema.rb`, `config/routes.rb`, and existing code first.
 - Check `Gemfile.lock` (and the gem version in use) before assuming third-party APIs.
@@ -52,6 +52,7 @@ After changing behavior:
 ## Git
 
 - Never `git commit` or `git push` unless the user explicitly asks in that message.
+- Exception, and the only one: invoking `/implement-prd` **is** that explicit request, for commits only, for that run. Scope and limits: `.claude/skills/implement-prd/SKILL.md` § Git authorization. It never authorizes a push.
 - Never `--no-verify`, force-push, or change git config.
 - Remote is personal GitHub (`github.com-personal:yaroV1/school-app.git`). Do not use a work GitHub account.
 - Some global gitignores exclude `/AGENTS.md`. Track it with `git add -f AGENTS.md`.
