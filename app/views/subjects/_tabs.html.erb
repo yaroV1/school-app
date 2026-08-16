@@ -1,4 +1,4 @@
-<nav class="mb-6 flex gap-6 border-b border-slate-200">
-  <%= link_to t("subjects.show.tests"), subject_path(subject), class: tab_class(subject_path(subject)) %>
-  <%= link_to t("subjects.show.stats"), stats_subject_path(subject), class: tab_class(stats_subject_path(subject)) %>
+<nav class="tab-bar" aria-label="<%= t("subjects.show.tabs_label") %>">
+  <%= tab_link_to t("subjects.show.tests"), subject_path(subject) %>
+  <%= tab_link_to t("subjects.show.stats"), stats_subject_path(subject) %>
 </nav>
