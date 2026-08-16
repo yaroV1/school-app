@@ -111,15 +111,21 @@ class AttemptLifecycle
     raise Expired, I18n.t("take.errors.time_up") if attempt.expired?
     raise NotAllowed, I18n.t("take.errors.not_in_progress") unless attempt.in_progress?
 
-    Attempt.transaction do
-      locked = Attempt.lock.find(attempt.id)
-      raise Expired, I18n.t("take.errors.time_up") if locked.expired? || locked.past_deadline?
-      raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
+    begin
+      Attempt.transaction do
+        locked = Attempt.lock.find(attempt.id)
+        raise Expired, I18n.t("take.errors.time_up") if locked.expired? || locked.past_deadline?
+        raise NotAllowed, I18n.t("take.errors.not_in_progress") unless locked.in_progress?
 
-      Scoring.score_all_auto!(locked)
+        Scoring.score_all_auto!(locked)
 
-      locked.update!(status: :submitted, submitted_at: Time.current, last_activity_at: Time.current)
-      refresh_grade!(locked)
+        locked.update!(status: :submitted, submitted_at: Time.current, last_activity_at: Time.current)
+        refresh_grade!(locked)
+      end
+    rescue ActiveRecord::StaleObjectError
+      # Deliberately no retry: save_answers! owns the retry policy, and a collision anywhere in
+      # this transaction means something else already moved this attempt.
+      raise Conflict, I18n.t("take.errors.save_conflict")
     end
 
     attempt.reload
