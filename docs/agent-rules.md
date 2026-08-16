@@ -138,10 +138,14 @@ retry, so these are invariants, not preferences.
   then raises `AttemptLifecycle::Conflict`. Never retry more than once. `submit!` translates the same error
   into `Conflict` with **no** retry — `save_answers!` owns the retry policy. Both `Take::` write actions
   rescue `Conflict` and answer the student with `take.errors.save_conflict`; it is handled, not a 500.
-  Two gaps stay open on purpose, each pinned by a test in `test/integration/save_conflict_test.rb`:
-  `expire!` takes the same lock with no rescue, and a conflicted submit that carried answers leaves them
-  committed but unbroadcast, so the teacher's grading page never learns of work the student did. Closing
-  either is a separate behavior change with its own tests, not a drive-by fix.
+  `expire!` rescues the same error but answers it differently: its read is **not** in a transaction, so a
+  collision means another writer already moved the row and won — it reloads and returns `nil` ("not this
+  call") instead of raising. It runs inside a student's save and submit, ahead of their `Conflict` rescue,
+  where raising is a 409 mid-exam; a row still overdue waits for the next `ExpireOverdueAttemptsJob` sweep.
+  A conflicted `submit!` that carried answers **still broadcasts them** — `save_answers!` committed them in
+  its own transaction and skipped the push on the promise that `submit!` would make it, and the rollback
+  cancels the submission, not the student's work. Answers only: no status changed, so the board stays put.
+  All three are pinned in `test/integration/save_conflict_test.rb` and `test/services/attempt_lifecycle_test.rb`.
 - **Rollback and expiry.** If a transaction rolls back because the attempt expired, re-run
   `expire_if_needed!` on a reloaded attempt **outside** the transaction before re-raising. State that dies
   with the rollback must be written again, or the attempt stays `in_progress` past its deadline.

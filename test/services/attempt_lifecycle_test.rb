@@ -298,6 +298,54 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     assert_nil attempt.submitted_at
   end
 
+  # save_answers! commits in its own transaction and skips the broadcast because submit! promises to
+  # push one update for the lot. The rollback cancels the submission, not the answers, so the promise
+  # has to be kept on the way out — an untimed attempt never expires and gets no later broadcast.
+  test "a conflicted submit pushes the answers save_answers! already committed" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    untouched = @exam.questions.create!(question_type: :short_text, prompt: "Q2?", points: 1, position: 1, config: {})
+    collide = ->(_attempt) { raise ActiveRecord::StaleObjectError.new(Attempt.new, "update") }
+
+    streams = capture_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      assert_raises(AttemptLifecycle::Conflict) do
+        replacing(Scoring, :partial_total, collide) do
+          AttemptLifecycle.submit!(attempt, answers: [ { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } } ])
+        end
+      end
+    end
+
+    assert_equal [ ActionView::RecordIdentifier.dom_id(@mcq, :student_answer) ], streams.map { |s| s["target"] },
+      "only the answers that moved go out; the header rolled back and question #{untouched.id} never moved"
+    assert attempt.reload.in_progress?
+  end
+
+  # expire! reads under the lock outside a transaction — a sweep calls it too — so another writer can
+  # commit in between. Handing back a copy read before that write reproduces the race deterministically.
+  test "an expire that loses the lock_version race reports no expiry instead of raising" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    attempt.update!(deadline_at: 1.minute.ago)
+    stale = Attempt.find(attempt.id)
+    Attempt.find(attempt.id).update!(last_activity_at: Time.current)
+
+    stale_relation = Object.new
+    stale_relation.define_singleton_method(:find) { |_id| stale }
+    result = :unset
+
+    streams = capture_turbo_stream_broadcasts [ attempt, :grade_live ] do
+      replacing(Attempt, :lock, ->(*) { stale_relation }) do
+        result = AttemptLifecycle.new(@assignment).expire!(attempt)
+      end
+    end
+
+    assert_nil result, "the caller must not be told this call expired the attempt"
+    assert_empty streams, "whoever won the race owns the broadcast"
+    assert attempt.reload.in_progress?, "the losing write must not land"
+
+    # The property the rescue buys: a lost race is transient, and the next sweep still expires it.
+    AttemptLifecycle.expire_if_needed!(attempt)
+    assert attempt.reload.expired?
+  end
+
   test "save_answers retries exactly once before raising Conflict" do
     attempt = AttemptLifecycle.start!(@assignment)
     calls = 0

@@ -150,11 +150,11 @@ class SaveConflictTest < ActionDispatch::IntegrationTest
     refute_empty grade_ok, "capture keys are stale: a real submit moves the grading page"
   end
 
-  # Pins a known gap rather than endorsing it. save_answers! commits the answers in its own
+  # Was the pin on a known gap; now pins its closure. save_answers! commits the answers in its own
   # transaction and skips broadcasting, on the promise that submit! will push one update for the
-  # lot; Conflict breaks that promise, so the answers are durable but the teacher never sees them.
-  # Recorded in progress.md § Deferred. A fix has to change this test, which is the point.
-  test "a conflicted submit leaves committed answers unbroadcast" do
+  # lot. Conflict used to break that promise, leaving the answers durable but invisible to a teacher
+  # watching live — with no later broadcast to correct it on an untimed exam, which never expires.
+  test "a conflicted submit still pushes the answers it committed" do
     board = nil
     grade = capture_turbo_stream_broadcasts [ @attempt, :grade_live ] do
       board = capture_turbo_stream_broadcasts [ @exam, :live_board ] do
@@ -164,7 +164,61 @@ class SaveConflictTest < ActionDispatch::IntegrationTest
 
     assert_equal 1, @attempt.answers.reload.count, "save_answers! commits before submit!'s transaction"
     assert_empty board, "no submission happened, so the board is correctly silent"
-    assert_empty grade, "known gap: the committed answer is never pushed to the teacher"
+    assert_equal 1, grade.size, "the committed answer must reach the teacher"
+    assert_equal ActionView::RecordIdentifier.dom_id(@question, :student_answer), grade.sole["target"],
+                 "a mismatched target updates nothing and fails no other assertion"
+    assert_includes grade.sole.to_s, "Kyiv", "the pushed block must carry the answer that was saved"
+  end
+
+  # The header belongs to the submission, which rolled back: pushing it would show the teacher a
+  # submitted attempt the student can still edit.
+  test "a conflicted submit pushes no header, only answers" do
+    grade = capture_turbo_stream_broadcasts [ @attempt, :grade_live ] do
+      conflicted_submit!(answers: { @question.id => { option_id: "b" } })
+    end
+
+    refute_includes grade.map { |stream| stream["target"] }, "attempt_live_header"
+  end
+
+  # The answers write and the status write both raise Conflict. Only the second one has committed
+  # answers behind it; the first rolls its own back and must stay silent.
+  test "a submit whose answer write conflicts broadcasts nothing" do
+    grade = capture_turbo_stream_broadcasts [ @attempt, :grade_live ] do
+      replacing(Scoring, :score_auto!, collide) do
+        post student_submit_url(token: @token),
+             params: { attempt_id: @attempt.id, answers: { @question.id => { option_id: "b" } } }
+      end
+    end
+
+    assert_equal 0, @attempt.answers.reload.count, "the conflicted answer write must roll back"
+    assert_empty grade, "nothing was committed, so there is nothing to push"
+  end
+
+  # expire_if_needed! runs at the top of save_answers!, *outside* its rescue, and expire! reads under
+  # the lock with no transaction around it. A writer landing in that window used to raise
+  # StaleObjectError straight through the action — which Rails maps to 409, so the body is not JSON
+  # and autosave_controller.js shows the generic failure instead of sending the student to /done.
+  test "an autosave whose expiry loses the lock_version race still answers the student" do
+    @attempt.update!(deadline_at: 1.minute.ago)
+    stale = Attempt.find(@attempt.id)
+    Attempt.find(@attempt.id).update!(last_activity_at: Time.current)
+
+    stale_relation = Object.new
+    stale_relation.define_singleton_method(:find) { |_id| stale }
+    # Only the first read is stale: the losing writer is expire!, and the transaction that follows
+    # reads the row again for real.
+    original_lock = Attempt.method(:lock)
+    reads = 0
+    first_read_is_stale = lambda do |*args|
+      reads += 1
+      reads == 1 ? stale_relation : original_lock.call(*args)
+    end
+
+    replacing(Attempt, :lock, first_read_is_stale) { autosave! }
+
+    assert_response :unprocessable_entity
+    assert_equal I18n.t("take.errors.time_up"), response.parsed_body["error"]
+    assert_equal "expired", response.parsed_body["status"], "the runner needs this to send the student to /done"
   end
 
   test "the autosave conflict payload carries nothing but the message" do

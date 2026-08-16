@@ -81,6 +81,11 @@ Suite green at preflight: 122 runs, 534 assertions, 0 failures.
   `test "a conflicted submit leaves committed answers unbroadcast"` so a fix must change that test
   deliberately. Candidate follow-up: have the `Conflict` rescue in `submit!` push
   `GradeLive.replace_answers` for whatever `save_answers!` returned. (task: FR-4)
+  **CLOSED.** Fixed as proposed: `submit!` keeps `save_answers!`'s `touched` and pushes
+  `GradeLive.replace_answers` from the `Conflict` rescue, answers only. The pin became
+  `test "a conflicted submit still pushes the answers it committed"`. Closed alongside the sibling gap
+  in `expire!`, which raised `StaleObjectError` through a student's request; it now reloads and reports
+  no expiry. Both invariants restated in `docs/agent-rules.md` § Conflicts.
 
 ## Rebuttals
 - "Collapse into `rescue AttemptLifecycle::NotAllowed, AttemptLifecycle::Conflict => e` — the bodies are
