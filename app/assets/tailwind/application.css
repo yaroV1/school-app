@@ -320,6 +320,14 @@
     @apply border-accent-line bg-accent-soft text-accent-strong;
   }
 
+  .flash-warning {
+    @apply border-amber-200 bg-amber-50 text-amber-800;
+  }
+
+  .flash-muted {
+    @apply border-line bg-surface-sunken text-ink-muted;
+  }
+
   /* ------------------------- taking a test (Take::) --------------------- */
   .qcard {
     @apply rounded-card border border-line border-l-[3px] border-l-line-strong
@@ -386,6 +394,12 @@
 
   .countdown-cell[data-urgency="urgent"] {
     @apply font-semibold text-danger;
+  }
+
+  /* Colour lives here rather than on the element, so the state rules below are
+     not outranked by a utility class in the template. */
+  .autosave-status {
+    @apply text-ink-muted transition-colors;
   }
 
   .autosave-status[data-state="saved"] {
