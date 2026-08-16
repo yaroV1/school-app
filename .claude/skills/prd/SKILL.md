@@ -1,6 +1,6 @@
 ---
 name: prd
-description: Write a product requirements document for a school-app feature before any code is written. Use when the user says /prd, asks for a PRD, spec, feature plan, or scoping doc; or when a change would touch db/schema.rb, add a route or controller action, change a question type or scoring rule, touch both a teacher-facing and a student-facing path, or need more than one commit to keep the suite green. Not for a change that fits in one commit, and not for executing a PRD that already exists — that is /implement-prd. Produces prd/_to_refine/<kebab-name>/project.md whose Implementation Tasks are the contract handed to /implement-prd.
+description: Write a product requirements document for a school-app feature before any code is written. Use ONLY when the developer explicitly asks for one — /prd, or a request for a PRD, spec, feature plan, or scoping doc in their own words. Never invoke it because a change looks large or risky, touches db/schema.rb, auth, or scoring, or would need more than one commit; in those cases say so and let the developer decide. Not for executing a PRD that already exists — that is /implement-prd. Produces prd/_to_refine/<kebab-name>/project.md whose Implementation Tasks are the contract handed to /implement-prd.
 ---
 
 # PRD
@@ -18,6 +18,10 @@ does not restate those rules. Where a section below asks a question, answer it *
 - `/prd <feature description>` — enough to start. Research, then write.
 - `/prd` — no description. Ask first, then research, then write.
 
+Both forms are developer-initiated, and they are the only way in. Nothing auto-starts a PRD: not the size
+of a change, not a schema touch, not `docs/agent-rules.md` § When to ask vs inspect. That section tells you
+to ask; the answer is the developer's.
+
 Ask vs inspect: `docs/agent-rules.md` § When to ask vs inspect. Applied here — the question comes *before* the
 PRD exists, not while it is being written.
 
@@ -33,9 +37,11 @@ PRD exists, not while it is being written.
 3. **Name.** Kebab-case, derived from the feature: `export-class-results`, `numeric-question-type`.
 4. **Create** `prd/_to_refine/<kebab-name>/`. If that name already exists in any of the three
    stages, stop and ask — do not overwrite a PRD.
-5. **Write** `project.md` from the template below, in order. A section with nothing in it is omitted —
-   except § Security and § Out of Scope, which always appear even when the answer is `N/A — <why>`.
-   Do not write code in the PRD beyond a signature or a route line. It is a spec, not a patch.
+5. **Write** `project.md` from the template below, in order. Five headings are mandatory: § Overview,
+   § Requirements, § Security, § Out of Scope, § Implementation Tasks. Every other heading is omitted
+   unless the feature has something real to put under it — an empty table or a row of `N/A` is noise, and
+   a three-task PRD should read as about a page. Do not write code in the PRD beyond a signature or a
+   route line. It is a spec, not a patch.
 6. **Self-check.** Confirm and state each, before reporting. Any "no" is fixed, not noted.
    - a. Every path named in the PRD exists on disk, or is marked new.
    - b. Every new table, column, service, model, controller, gem, or Stimulus controller carries a
@@ -66,6 +72,9 @@ or reuse the alternative. See `docs/agent-rules.md` § Style.
 ---
 
 ## project.md template
+
+Mandatory: § Overview, § Requirements, § Security, § Out of Scope, § Implementation Tasks. Drop any other
+heading you have nothing real to say under.
 
 ````markdown
 # <Feature Name>

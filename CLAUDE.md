@@ -10,8 +10,12 @@ This file adds Claude-only mechanics and nothing else.
 
 ## Skills
 
-- `/prd` — reach for it when `docs/agent-rules.md` § When to ask vs inspect says to; that clause, ending
-  "None of those: just do it", is the trigger. Contract: `.claude/skills/prd/SKILL.md`.
+Both run **only when the developer invokes them** — the slash command, or asking for it in their own words.
+Never start either on your own initiative, however large or risky the change looks. When
+`docs/agent-rules.md` § When to ask vs inspect says to stop and ask, ask; naming a PRD as an option is
+allowed, starting one is not.
+
+- `/prd` — writes a spec into `prd/_to_refine/`. Contract: `.claude/skills/prd/SKILL.md`.
 - `/implement-prd` — executes a PRD already in `prd/backlog/`. Contract:
   `.claude/skills/implement-prd/SKILL.md`; the git carve-out it runs under is `docs/agent-rules.md` § Git,
   scoped by that skill's § Git authorization.

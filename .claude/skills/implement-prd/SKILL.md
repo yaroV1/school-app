@@ -1,6 +1,6 @@
 ---
 name: implement-prd
-description: Execute a refined PRD from prd/backlog/ one task at a time — implement, test, review by parallel subagents, fix, then commit. Use when the user says /implement-prd, asks to build, ship, implement, continue, or resume a PRD or a named feature that already has a PRD, or asks for the next task in one. Not for one-off changes that need no PRD; § Invocation refuses PRDs still in prd/_to_refine/.
+description: Execute a refined PRD from prd/backlog/ one task at a time — implement, test, review by parallel subagents, fix, then commit. Use ONLY when the developer explicitly asks — /implement-prd, or asking in their own words to execute, continue, or resume a PRD that already exists in prd/backlog/. A request to build, ship, or implement a feature is not on its own an invocation: do that work directly unless the developer names the PRD flow. § Invocation refuses PRDs still in prd/_to_refine/.
 ---
 
 # Implement PRD
@@ -17,6 +17,9 @@ disagree, `docs/agent-rules.md` wins.
 - `/implement-prd <feature-name>` — a directory under `prd/backlog/`.
 - `/implement-prd` — list `prd/backlog/*/` and ask which one. Do not guess. If the directory is absent
   or holds nothing but `.keep`, say the backlog is empty and stop. Do not create an entry.
+Both forms are developer-initiated, and they are the only way in. A backlog entry sitting in `prd/backlog/`
+is not an instruction to start it, and neither is a request to build the feature it describes.
+
 - `prd/_to_refine/<name>/` is refused. Unrefined by definition: blocking Open Questions may still be
   open and the task list is not a contract yet. Tell the user to refine it and move it to
   `prd/backlog/`. Do not move it yourself.
@@ -70,7 +73,8 @@ to reviewers; `proof:` is the test that must exist and pass. A task missing eith
 3. **Test.** Write or extend the Minitest coverage named by `proof:`. A new guard gets a test that
    fails when the guard is removed.
 4. **Gate.** Run `docs/agent-rules.md` § Quality steps 2-5 against the files this task touched — RuboCop
-   **before** the tests, per that section. All clean before review.
+   **before** the tests, per that section. Then answer § Review tests' KISS, Rails way, and Clean code
+   against your own diff, one line each, and fix what fails. All clean before review.
 5. **Review fan-out.** § Review fan-out. Nothing proceeds until the reviews are back.
 6. **Triage.** § Triage.
 7. **Re-gate.** Always, even when triage produced no fixes: the same `docs/agent-rules.md` § Quality steps
@@ -91,39 +95,30 @@ to reviewers; `proof:` is the test that must exist and pass. A task missing eith
 
 ## Review fan-out
 
-Spawn three subagents with the Task tool, **all in a single message**, so they run in parallel. One lens
-each. They report; you fix. Reviewers do not edit files.
+Spawn two subagents with the Task tool, **both in a single message**, so they run in parallel. One lens
+each. They report; you fix. Reviewers do not edit files. KISS, Rails way, and clean code are not lenses
+here — you answered those yourself at step 4.
 
 Before spawning, run `git add -N <every path this task created>`. `git diff` does not show untracked
 files and nothing is staged yet, so without this a new test, service, view, controller, or migration is
-invisible to all three reviewers.
+invisible to both reviewers.
 
 Give every reviewer the same packet:
 
 - the task line verbatim from `project.md`, including its `done when:` and `proof:`;
-- § Security of `project.md`, verbatim — lens (b) works from it;
-- § Out of Scope and § Affected Areas of `project.md`, verbatim — lens (a) works from them;
+- § Security of `project.md`, verbatim — lens (a) works from it;
+- § Out of Scope and § Affected Areas of `project.md`, verbatim;
 - the run's baseline sha, and the instruction to run `git diff <baseline-sha>` and
   `git status --porcelain` themselves. Never hand over a bare file list in place of a diff;
 - an instruction to read `docs/agent-rules.md` first — in particular § Review tests, § Security, and
   § Attempt lifecycle;
 - the return contract below.
 
-**a. Rails-way, KISS & clean code.** Is this idiomatic Rails 8 *for this codebase*? Is there a simpler
-construction with the same behavior? Does it add a layer `docs/agent-rules.md` § Style forbids? Does it duplicate
-an existing service — read `app/services/` before answering. Does it copy a nearby precedent, or invent
-a pattern that has none here? Then:
-
-- Apply `docs/agent-rules.md` § Review tests — KISS, The Rails way, Clean code — as probes; report each
-  miss as a finding. A bare user-visible literal in an ERB, a controller, or a flash is a `major` — name
-  the file, the line, and the `uk.yml` key it should use.
-- Does anything in the diff appear in the PRD's § Out of Scope?
-
-**b. Security.** Read `docs/agent-rules.md` § Security and audit the diff against **every** rule in it — apply
+**a. Security.** Read `docs/agent-rules.md` § Security and audit the diff against **every** rule in it — apply
 them, do not re-derive them and do not work from a summary. Every line the PRD's § Security answered "yes"
 needs a test in this diff or in an already-committed task. A "yes" with no test is a `critical` finding.
 
-**c. Tests & correctness.** Does the new test actually fail without the change — state how you checked.
+**b. Tests & correctness.** Does the new test actually fail without the change — state how you checked.
 Does it assert the task's `done when:`, or something weaker? Edge cases and failure paths, not only the
 happy path. N+1s: `test/integration/n_plus_one_test.rb` is the precedent. Anything touching
 `AttemptLifecycle`: transaction boundaries, double submit, expiry races.
@@ -142,18 +137,17 @@ Return contract — hand it to each reviewer verbatim:
 - **critical / major** — fix before the commit. No exceptions, no deferral.
 - **minor** — fix it if the fix lands inside files this task already touched and needs no new test;
   otherwise record it under `## Deferred` in `progress.md` with a one-line reason.
-- **wrong, and `minor`** — write a rebuttal under `## Rebuttals` in `progress.md`: the lens, the
-  finding, why it does not hold. Then proceed. Never drop one silently.
+- **wrong, and `minor`** — one line in the task's `progress.md` entry saying why it does not hold. Then
+  proceed. Never drop one silently.
 - **wrong, and `critical` or `major`** — you may not clear it yourself. Either fix it, or stop and ask
-  the human (§ Stop conditions), quoting the finding and your rebuttal. A rebuttal of a `critical` or
-  `major` must cite the `file:line` or the passing test that proves the finding false; without that
-  citation the finding stands and you fix it.
+  the human (§ Stop conditions), quoting the finding and citing the `file:line` or the passing test that
+  proves it false. Without that citation the finding stands and you fix it.
 - A security finding you cannot resolve without widening the task's scope is a stop condition, not a
   minor.
 
 One review round per task. Triage fixes are not re-reviewed — except that if a fix for a `critical` or
-`major` changes a student-facing path or an ownership scope, re-run lens (b) alone before the re-gate.
-Never re-run the full fan-out on the same task. If that single re-review returns a further `critical` or
+`major` changes a student-facing path or an ownership scope, re-run lens (a) alone before the re-gate.
+Never re-run both lenses on the same task. If that single re-review returns a further `critical` or
 `major`, stop and ask.
 
 ## Gate escalation
@@ -190,7 +184,7 @@ Halt and ask the human. Do not improvise around any of these:
 - A task line is missing its `done when:` or its `proof:`.
 - A reviewer raises a security finding that cannot be resolved inside the task's scope.
 - You believe a `critical` or `major` finding is wrong.
-- A lens (b) re-review returns a further `critical` or `major` on the same task.
+- A lens (a) re-review returns a further `critical` or `major` on the same task.
 - The same gate fails twice in a row. Paste the failure; do not keep patching blind.
 - The diff touches a path that is neither listed in § Affected Areas of `project.md` nor the task's
   `proof:` file. Name the stray path.
@@ -206,17 +200,15 @@ Append-only, newest entry last.
 ```markdown
 ## <task line, verbatim>
 - commit: <short sha> <subject>
-- reviews: rails/kiss <n> · security <n> · tests <n> — criticals/majors: <file:line>, ...
+- reviews: security <n> · tests <n> — criticals/majors: <file:line>, ...
 - fixed: <what the reviews changed>
+- rebutted: <finding> — <why it does not hold>   (or omit)
 - deferred: <item> → § Deferred   (or: none)
 ```
 
-Two standing sections at the end of the file:
+One standing section at the end of the file:
 
 ```markdown
 ## Deferred
 - <finding> — <one-line reason> (task: <task text>)
-
-## Rebuttals
-- <finding> — <lens> — <why it does not hold> (task: <task text>)
 ```
