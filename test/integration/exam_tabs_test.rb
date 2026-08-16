@@ -27,7 +27,7 @@ class ExamTabsTest < ActionDispatch::IntegrationTest
     get test_path(@exam)
     assert_response :success
     assert_select "nav a[href=?]", live_test_path(@exam) do |links|
-      assert_no_match(/border-slate-900/, links.first["class"])
+      assert_nil links.first["aria-current"]
     end
   end
 
@@ -75,7 +75,7 @@ class ExamTabsTest < ActionDispatch::IntegrationTest
   private
 
   def active_tabs
-    css_select("nav a").select { |a| a["class"].to_s.include?("border-slate-900") }.map { |a| a.text.strip }
+    css_select("nav a[aria-current='page']").map { |a| a.text.strip }
   end
 
   def t(key)
