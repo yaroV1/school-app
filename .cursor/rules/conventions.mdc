@@ -5,8 +5,12 @@ alwaysApply: true
 
 # Cursor
 
-`docs/agent-rules.md` is the single source of truth for domain naming, style, security, the
-attempt-lifecycle invariants, quality, git, and when to ask. Read it before your first edit in a session.
+Read @docs/agent-rules.md before your first edit in this repo. It is the single source of truth for domain
+naming, style, security, the attempt-lifecycle invariants, quality, git, and when to ask.
 
 Do not restate those rules here. If this file and `docs/agent-rules.md` disagree, `docs/agent-rules.md`
 wins.
+
+`/prd` and `/implement-prd` are Claude Code-native skills. Cursor may discover them from `.claude/skills`
+for compatibility, but they run only when the developer invokes them. The git absolutes in that file have
+no project guard here; they bind you anyway.

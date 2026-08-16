@@ -1,9 +1,12 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# PreToolUse(Bash). Enforces the absolutes in docs/agent-rules.md § Git by inspecting the whole
-# command string. Permission rules are prefix-matched, so `git push origin main --force`
-# walks past a `Bash(git push --force:*)` deny. This does not.
+# PreToolUse(Bash). Best-effort guard for common forbidden commands in docs/agent-rules.md § Git.
+# Permission rules are prefix-matched, so this also catches common flag positions and short clusters
+# that those rules miss. It is intentionally not a shell parser; the written rules remain authoritative.
+#
+# Quoted text is stripped before matching to avoid treating a path or commit message as a command flag.
+# This trades complete shell parsing for fewer false positives.
 #
 # Exit 2 blocks the tool call and shows stderr to the agent. Fails open only if stdin
 # is not parseable JSON.
@@ -21,21 +24,57 @@ def block(reason)
   exit 2
 end
 
-FORCE  = /(--force\b|--force-with-lease\b|(?<![\w-])-f\b)/
-NOVER  = /(--no-verify\b|(?<![\w-])-n\b)/
-ADDALL = /(--all\b|(?<![\w-])-A\b|\sadd\s+\.(\s|$))/
+# `-nm` means `-n -m`, so a short flag has to be looked for inside a cluster too.
+def short?(flags, char)
+  flags.any? { |flag| /\A-[a-zA-Z]+\z/.match?(flag) && flag.include?(char) }
+end
 
-command.split(/;|&&|\|\||\n/).each do |segment|
-  next unless /(^|\s|\/)git\s/.match?(segment)
+# git's own options that take a separate value, so the value is not read as the subcommand.
+VALUED = %w[-C -c --git-dir --work-tree --namespace --exec-path].freeze
+READ_ONLY_CONFIG = %w[--get --get-all --get-regexp --list -l].freeze
 
-  block("force-push")            if /\bpush\b/.match?(segment) && FORCE.match?(segment)
-  block("push --no-verify")      if /\bpush\b/.match?(segment) && /--no-verify\b/.match?(segment)
-  block("commit --no-verify")    if /\bcommit\b/.match?(segment) && NOVER.match?(segment)
-  block("commit --amend")        if /\bcommit\b/.match?(segment) && /--amend\b/.match?(segment)
-  block("git config change")     if /\bconfig\b/.match?(segment) && !/--(get|list)\b/.match?(segment)
-  block("git add -A / --all / .") if /\badd\b/.match?(segment) && ADDALL.match?(segment)
-  block("discards uncommitted work") if /\b(stash|clean)\b/.match?(segment)
-  block("git reset --hard")      if /\breset\b/.match?(segment) && /--hard\b/.match?(segment)
+command.gsub(/'[^']*'/, " ").gsub(/"(?:\\.|[^"\\])*"/, " ").split(/;|&&|\|\||\n/).each do |segment|
+  tokens = segment.split
+  start = tokens.index { |token| token == "git" || token.end_with?("/git") }
+  next unless start
+
+  rest = tokens[(start + 1)..] || []
+  sub = nil
+  args = []
+  skip = false
+  rest.each_with_index do |token, i|
+    if skip
+      skip = false
+    elsif token.start_with?("-")
+      skip = VALUED.include?(token)
+    else
+      sub = token
+      args = rest[(i + 1)..] || []
+      break
+    end
+  end
+  next unless sub
+
+  flags = args.select { |token| token.start_with?("-") }
+
+  case sub
+  when "stash", "clean", "restore"
+    block("git #{sub} discards uncommitted work")
+  when "checkout"
+    block("git checkout discards uncommitted work") if args.include?("--") || args.include?(".")
+  when "push"
+    block("force-push") if flags.any? { |flag| flag.start_with?("--force") } || short?(flags, "f")
+    block("push --no-verify") if flags.include?("--no-verify")
+  when "commit"
+    block("commit --no-verify") if flags.include?("--no-verify") || short?(flags, "n")
+    block("commit --amend") if flags.include?("--amend")
+  when "config"
+    block("git config change") if (flags & READ_ONLY_CONFIG).empty?
+  when "add"
+    block("git add -A / --all / .") if flags.include?("--all") || short?(flags, "A") || args.include?(".")
+  when "reset"
+    block("git reset --hard") if flags.include?("--hard")
+  end
 end
 
 exit 0

@@ -12,15 +12,15 @@ Everything an agent must follow is in this file. Read it before your first edit 
 
 Tool entry points add mechanics only, and point here:
 
-- `CLAUDE.md` — Claude Code: skill routing, and mechanical enforcement of § Git.
+- `CLAUDE.md` — Claude Code: skill routing, permissions, and the best-effort git guard.
 - `AGENTS.md` — the generic/Codex entry point.
 - `.cursor/rules/conventions.mdc` — Cursor frontmatter.
 
-Workflow contracts, invoked rather than read: `.claude/skills/prd/SKILL.md`,
-`.claude/skills/implement-prd/SKILL.md`, `prd/README.md` (PRD stage lifecycle — sole owner).
-
-Historical, not current: `docs/TECHNICAL_PLAN.md`. It predates subjects, the `Take::` namespace, three of
-the six question types, and it names Postgres. Do not cite it as current. Do not edit it unless asked.
+The PRD workflow is **Claude Code-native**: `/prd` and `/implement-prd` live in
+`.claude/skills/prd/SKILL.md` and `.claude/skills/implement-prd/SKILL.md`; `prd/README.md` owns the stage
+lifecycle. Cursor may discover those skills through its Claude compatibility path. In either tool they run
+only when the developer invokes them — see § When to ask vs inspect. This repo does not expose them as
+Codex skills; do not improvise the flow by hand.
 
 **A new rule goes in this file.** If it must live anywhere else, this file names it here.
 
@@ -95,8 +95,8 @@ sub-hash of it through; the readers do this with `slice("id", "text")`.
 - MCQ: option `id` + `text`. Never `is_correct`.
 - Ordering: items shuffled with the **attempt** as seed — `question.display_items_for(answer, @attempt.id)`.
   `Question#stable_seed` keeps the order stable per (question, seed) so a reload does not reshuffle under the
-  student. Never rely on the sanitizer's default seed: it falls back to `question.id`, which gives every
-  student in the class the same order and defeats the point.
+  student. Always pass `@attempt.id` explicitly; the student-facing readers have no default seed, and using
+  `question.id` instead would give every student in the class the same order and defeat the point.
 - Matching: left items and shuffled right items. Never `config["pairs"]`. A student **response** may use
   `payload["pairs"]` / `payload["order"]` — that is not the key.
 - Source: `source_text` and the prompt, nothing else from `config` — `rubric` and `model_answer` live in the
@@ -135,10 +135,13 @@ retry, so these are invariants, not preferences.
   `Attempt.transaction`; `expire!` does not, because a sweep also calls it. The locked row never escapes —
   return and broadcast the caller's own `attempt`, reloaded.
 - **Conflicts.** `save_answers!` rescues `ActiveRecord::StaleObjectError`, retries the transaction **once**,
-  then raises `AttemptLifecycle::Conflict`. Never retry more than once. Know the current gap before you rely
-  on this: `submit!` and `expire!` take the same lock with no such rescue, and no controller rescues
-  `Conflict`, so a lost optimistic-lock race still reaches a student as a 500. Closing that is a behavior
-  change needing its own tests — do not review a diff as though the guarantee already holds.
+  then raises `AttemptLifecycle::Conflict`. Never retry more than once. `submit!` translates the same error
+  into `Conflict` with **no** retry — `save_answers!` owns the retry policy. Both `Take::` write actions
+  rescue `Conflict` and answer the student with `take.errors.save_conflict`; it is handled, not a 500.
+  Two gaps stay open on purpose, each pinned by a test in `test/integration/save_conflict_test.rb`:
+  `expire!` takes the same lock with no rescue, and a conflicted submit that carried answers leaves them
+  committed but unbroadcast, so the teacher's grading page never learns of work the student did. Closing
+  either is a separate behavior change with its own tests, not a drive-by fix.
 - **Rollback and expiry.** If a transaction rolls back because the attempt expired, re-run
   `expire_if_needed!` on a reloaded attempt **outside** the transaction before re-raising. State that dies
   with the rollback must be written again, or the attempt stays `in_progress` past its deadline.
@@ -167,19 +170,15 @@ After changing behavior, in this order:
 No coverage %. Never report a check as passing without running it.
 
 `bin/ci` runs the whole thing locally (`config/ci.rb`), but it is **not** read-only: its first step is
-`bin/setup --skip-server`, which touches the dev database. It is also not identical to
-`.github/workflows/ci.yml` — it adds a Setup step and a seed replant, and it runs Brakeman *stricter* than
-CI (`--exit-on-warn --exit-on-error` locally vs a bare `bin/brakeman --no-pager` on GitHub), so a red
-Brakeman step locally is not proof the PR will be red.
+`bin/setup --skip-server`, which touches the dev database. On top of `.github/workflows/ci.yml` it adds
+that Setup step and a seed replant; every check the two share runs with the same flags. It also greps
+`app/` for Cyrillic, which is how "no user-visible literals in code" is enforced.
 
-There are no system tests. `test/system/` does not exist, and the CI job that ran `test:system` against it
-was removed — a green check over zero tests reads as "browser behavior verified" and verified nothing.
-`capybara` and `selenium-webdriver` stay in the `:test` group for whenever the first one gets written; add
-the job back in the same commit as that test, not before.
-
-So browser-level behavior has no automated coverage: autosave, the server countdown, drag-to-reorder, and
-the live board's broadcast-plus-poll reconciliation are all unverified. Cover what you can with an
+There are no system tests, so browser behavior has no automated coverage: autosave, the server countdown,
+drag-to-reorder, the live board's broadcast-plus-poll reconciliation. Cover what you can with an
 integration test that asserts rendered markup (`test/integration/answer_key_leak_test.rb` is the pattern).
+`capybara` and `selenium-webdriver` stay in the `:test` group; add the CI job back in the same commit as
+the first system test, not before.
 
 ## Git
 
@@ -194,11 +193,10 @@ integration test that asserts rendered markup (`test/integration/answer_key_leak
   `git restore`, `git checkout --`. The tree is the user's, not scratch space.
 - Remote is personal GitHub (`https://github.com/yaroV1/school-app`). Never push through a work GitHub
   account, and do not add a second remote.
-- In Claude Code these absolutes are also enforced mechanically (see `CLAUDE.md`). A blocked command means
-  you hit a rule in this section, not a tooling bug. Other tools have no such backstop — the rules bind you
-  either way.
-- `.gitignore` negates `/AGENTS.md` because some global gitignores exclude it. If it ever goes untracked,
-  `git add -f AGENTS.md`.
+- In Claude Code, permissions and a best-effort hook block common forbidden forms (see `CLAUDE.md`); they
+  are not a complete shell parser. A blocked command means you hit a rule in this section, not a tooling
+  bug. Cursor and Codex have no project git guard — the rules bind you either way, and nothing there catches
+  the mistake before it lands.
 
 ## Where things are
 
@@ -210,8 +208,7 @@ integration test that asserts rendered markup (`test/integration/answer_key_leak
 - Stimulus: `app/javascript/controllers/` · pins: `config/importmap.rb`
 - Strings: `config/locales/uk.yml` · Routes: `config/routes.rb` · Jobs: `app/jobs/`
 - Tests — read `test/` before adding a file:
-  - `test/services/` — scoring and attempt lifecycle. Availability windows and the expiry job are in
-    `phase11_test.rb`, which the name does not advertise.
+  - `test/services/` — scoring, attempt lifecycle, availability windows and expiry.
   - `test/integration/` — request-level flows: `mvp_flow_test.rb` (the teacher→student spine),
     `n_plus_one_test.rb` (query counts), `grade_integrity_test.rb`, `live_board_test.rb`, tab/filter tests.
   - `test/models/`, `test/controllers/`
@@ -219,39 +216,32 @@ integration test that asserts rendered markup (`test/integration/answer_key_leak
 
 ## Review tests
 
-The sections above state the rules; these are the tests for whether a diff honors them. Run them after
-`bin/rails test` is green and before reporting the change done. Write one line per test naming the evidence
-— the second caller, the precedent file, the deleted code, the reader that strips the key, the ownership
-scope. If you cannot write the line, the diff is not done.
+Four checks on the finished diff, run after `bin/rails test` is green and before reporting the change done.
+Answer each in one line naming the evidence; if you cannot write the line, the diff is not done. On the
+`/implement-prd` path the implementing agent answers the first three itself at § The loop step 4, and the
+review fan-out owns Security.
 
-On the `/implement-prd` path the review fan-out applies these instead; the implementing agent does not
-repeat them.
-
-**KISS.** If the diff adds a class, module, or service, name the second caller, the security boundary, or
-the nontrivial domain logic that justifies it. If you can name none of the three, inline it. If it adds an
-option or a flag, name the caller that passes the non-default value.
-
-**The Rails way.** Point at an existing file in this repo that the change resembles. A pattern with no
-precedent here needs a stated reason. New behavior maps onto the nouns in § Domain and naming and
-`db/schema.rb`, or it is probably the wrong shape.
-
-**Clean code.** Describe each new method in one sentence with no "and". Names come from the domain
-vocabulary in § Domain and naming; a reader who knows the domain should not need the body to guess what a
-name means. No user-visible string literals in `.rb` or `.erb` — grep the diff for Cyrillic. If the diff adds code to an existing file and deletes none, name the code the new path replaces,
-or state in one line why the old path still has callers. Additive-only change is how a codebase grows a
-second way to do one thing.
-
-**Security.** Re-read § Security against the diff and name the evidence for each rule it touches — the
-reader that strips the key, the ownership scope, the `permit` list. If it adds an export, a log line, a
-fixture, or a broadcast, state whether an
-`access_token` can reach it and name the assertion that proves it cannot. "The UI never links to it" is not
-an answer — `/t/:token` is public.
+- **KISS.** A new class, module, or service needs a second caller, a security boundary, or nontrivial
+  domain logic. None of the three: inline it. A new option or flag needs the caller that passes it.
+- **The Rails way.** Name the file in this repo the change resembles. A pattern with no precedent here needs
+  a stated reason, and new behavior maps onto the nouns in § Domain and naming and `db/schema.rb`.
+- **Clean code.** Each new method described in one sentence with no "and", named from the domain
+  vocabulary. If the diff adds code to an existing file and deletes none, name the path it replaces —
+  additive-only change is how a codebase grows a second way to do one thing.
+- **Security.** Name the evidence for each § Security rule the diff touches — the reader that strips the
+  key, the ownership scope, the `permit` list. For a new export, log line, fixture, or broadcast: can an
+  `access_token` reach it, and which assertion proves it cannot? "The UI never links to it" is not an
+  answer — `/t/:token` is public.
 
 ## When to ask vs inspect
 
 - If the codebase already has the answer, inspect it and proceed.
 - Ask if the request is ambiguous. Prefer one clarifying question over building the wrong feature.
-- If the choice is hard to reverse — schema, auth, scoring rules, new question type behavior — or it adds a
-  route or a controller action, spans a teacher-facing and a student-facing path, or needs more than one
-  commit to keep the suite green: do not ask-then-build. Run `/prd`. Asking resolves ambiguity; `/prd`
-  handles scope and irreversibility. None of those: just do it.
+- If the choice is hard to reverse — a schema change, auth, scoring rules, a new question type — or the work
+  needs more than one commit to keep the suite green: say so in one line and ask before building. Name a PRD
+  as an option if one would help. Do not start one. Adding a route or a controller action is not on its own
+  a reason to stop — most features add one.
+- None of those: just do it.
+
+`/prd` and `/implement-prd` run **only when the developer invokes them**, by slash command or by asking in
+their own words. No rule here starts either, and neither does the size or risk of a change.

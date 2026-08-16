@@ -4,6 +4,8 @@ CI.run do
   step "Setup", "bin/setup --skip-server"
 
   step "Style: Ruby", "bin/rubocop"
+  # User-visible strings belong in config/locales/uk.yml, never inline in app code.
+  step "Style: no Cyrillic literals in app/", "! git grep -nIP --untracked '\\p{Cyrillic}' -- app"
 
   step "Security: Gem audit", "bin/bundler-audit"
   step "Security: Importmap vulnerability audit", "bin/importmap audit"
