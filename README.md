@@ -49,4 +49,4 @@ bin/rails test
 
 - Domain model uses `Exam` (table `exams`) to avoid clashing with Minitest’s `Test`; UI and routes still say **Tests** (`/tests`).
 - Student-facing controllers live under the `Take` namespace (not `Student`) so they don’t clash with the `Student` model. URLs remain `/t/:token`.
-- Historical design notes — predates subjects, the `Take::` namespace, and three of the six question types: `docs/TECHNICAL_PLAN.md`. Not current; agent rules are in `docs/agent-rules.md`.
+- Agent rules for Claude Code, Cursor, and Codex live in `docs/agent-rules.md`.
