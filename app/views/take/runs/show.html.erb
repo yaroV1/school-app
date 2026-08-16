@@ -1,19 +1,9 @@
 <% content_for :title, @exam.title %>
 <% server_now = Time.current %>
 
-<div class="mb-6 flex items-center justify-between gap-3">
-  <div>
-    <p class="text-sm text-slate-500"><%= @exam.subject.name %></p>
-    <h1 class="text-xl font-semibold"><%= @exam.title %></h1>
-  </div>
-  <% if @attempt.deadline_at %>
-    <div data-controller="countdown"
-         data-countdown-deadline-value="<%= @attempt.deadline_at.iso8601 %>"
-         data-countdown-server-time-value="<%= server_now.iso8601 %>"
-         class="rounded-md bg-slate-900 px-3 py-1 font-mono text-white">
-      <span data-countdown-target="display">--:--</span>
-    </div>
-  <% end %>
+<div class="mb-5">
+  <p class="text-sm text-ink-muted"><%= @exam.subject.name %></p>
+  <h1 class="page-title mt-0.5"><%= @exam.title %></h1>
 </div>
 
 <%= form_with url: student_submit_path(token: @assignment.access_token), method: :post,
@@ -27,54 +17,38 @@
         autosave_failed_value: t("take.save_failed"),
         action: "countdown:ended@window->autosave#save ordering:changed->autosave#save"
       },
-      class: "space-y-6" do %>
+      class: "space-y-4" do %>
   <%= hidden_field_tag :attempt_id, @attempt.id %>
-  <div class="flex items-center gap-1.5 text-xs">
-    <svg data-autosave-target="spinner" class="hidden h-3.5 w-3.5 animate-spin text-slate-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" class="opacity-25" />
-      <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-    </svg>
-    <svg data-autosave-target="check" class="hidden h-3.5 w-3.5 text-emerald-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M3.5 8.5 6.5 11.5 12.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
-    <p class="text-slate-500" data-autosave-target="status"><%= t("take.autosave") %></p>
-  </div>
 
   <% @questions.each_with_index do |question, index| %>
     <% answer = @answers[question.id] %>
-    <% type_styles = {
-         "mcq" => "border-sky-200 bg-sky-50/40",
-         "short_text" => "border-amber-200 bg-amber-50/40",
-         "open" => "border-violet-200 bg-violet-50/40",
-         "ordering" => "border-emerald-200 bg-emerald-50/40",
-         "matching" => "border-rose-200 bg-rose-50/40",
-         "source" => "border-stone-300 bg-stone-50/50"
-       } %>
-    <fieldset class="rounded-lg border p-4 <%= type_styles.fetch(question.question_type, "border-slate-200") %>">
-      <legend class="px-1 text-sm font-medium text-slate-500"><%= t("take.question_legend", n: index + 1) %> · <%= t("exams.points", count: question.points) %></legend>
-      <div class="mb-3 flex flex-wrap items-center gap-2">
-        <span class="inline-flex rounded-full bg-white/80 px-2 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200">
-          <%= t("question_types.#{question.question_type}") %>
-        </span>
-        <span class="text-xs text-slate-600"><%= t("take.type_hint.#{question.question_type}") %></span>
+    <fieldset class="qcard" data-qtype="<%= question.question_type %>">
+      <legend class="qcard-legend px-1">
+        <%= t("take.question_legend", n: index + 1) %>
+        <span class="text-ink-subtle" aria-hidden="true">·</span>
+        <%= t("exams.points", count: question.points) %>
+      </legend>
+      <div class="mt-1 mb-3 flex flex-wrap items-center gap-2">
+        <span class="chip"><%= t("question_types.#{question.question_type}") %></span>
+        <span class="text-xs text-ink-muted"><%= t("take.type_hint.#{question.question_type}") %></span>
       </div>
       <%= render "questions/photo", question: question %>
       <% unless question.source? %>
-        <p class="mb-3 whitespace-pre-wrap font-medium"><%= question.prompt %></p>
+        <p class="mb-3 font-medium whitespace-pre-wrap text-ink"><%= question.prompt %></p>
       <% end %>
 
       <% if question.mcq? %>
         <div class="space-y-2">
           <% question.student_facing_options.each do |opt| %>
-            <label class="flex items-start gap-2 rounded-md bg-white/80 px-2 py-1.5 text-sm">
-              <%= radio_button_tag "answers[#{question.id}][option_id]", opt["id"], answer&.option_id == opt["id"] %>
+            <label class="option">
+              <%= radio_button_tag "answers[#{question.id}][option_id]", opt["id"], answer&.option_id == opt["id"], class: "mt-0.5 size-4 shrink-0 accent-accent" %>
               <span><%= opt["text"] %></span>
             </label>
           <% end %>
         </div>
       <% elsif question.ordering? %>
         <div data-controller="ordering" class="space-y-2">
-          <p class="text-xs text-slate-600"><%= t("take.ordering.hint") %></p>
+          <p class="text-xs text-ink-muted"><%= t("take.ordering.hint") %></p>
           <div class="space-y-2" role="list">
             <% question.display_items_for(answer, @attempt.id).each_with_index do |item, item_index| %>
               <div data-ordering-target="item"
@@ -82,15 +56,14 @@
                    role="listitem"
                    tabindex="0"
                    aria-selected="false"
-                   class="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-2 py-2 hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 aria-selected:bg-emerald-50 aria-selected:ring-2 aria-selected:ring-emerald-500 data-[dragging]:opacity-60 data-[dragging]:shadow-lg">
-                <span data-ordering-target="position"
-                      class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-900"><%= item_index + 1 %></span>
+                   class="order-item">
+                <span data-ordering-target="position" class="order-position"><%= item_index + 1 %></span>
                 <button type="button"
                         data-ordering-handle
                         data-action="pointerdown->ordering#startDrag"
-                        class="touch-none cursor-grab rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 active:cursor-grabbing"
+                        class="order-handle"
                         aria-label="<%= t("take.ordering.drag") %>">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="pointer-events-none size-5">
                     <path d="M7 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm8-12a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/>
                   </svg>
                 </button>
@@ -103,7 +76,7 @@
       <% elsif question.matching? %>
         <% given = answer&.pairs || {} %>
         <% rights = question.shuffled_right_items(@attempt.id) %>
-        <div class="space-y-2">
+        <div class="space-y-2.5">
           <% question.student_facing_left.each do |left| %>
             <div class="grid items-center gap-2 sm:grid-cols-2">
               <p class="text-sm"><%= left["text"] %></p>
@@ -112,7 +85,7 @@
                       [ [ t("take.matching.choose"), "" ] ] + rights.map { |right| [ right["text"], right["id"] ] },
                       given[left["id"]]
                     ),
-                    class: "#{field_class} bg-white" %>
+                    class: "#{field_class} mt-0" %>
             </div>
           <% end %>
         </div>
@@ -120,25 +93,57 @@
         <%= text_field_tag "answers[#{question.id}][text]", answer&.text_response,
               maxlength: 300,
               placeholder: t("take.placeholder.short_text"),
-              class: "#{field_class} bg-white" %>
+              class: "#{field_class} mt-0" %>
       <% elsif question.source? %>
         <div class="mb-3">
-          <p class="mb-1 text-xs font-medium text-stone-600"><%= t("take.source.label") %></p>
-          <div class="max-h-80 overflow-y-auto rounded-md border border-stone-200 bg-white p-3 text-sm leading-relaxed whitespace-pre-wrap text-stone-800"><%= question.source_text %></div>
+          <p class="mb-1.5 text-xs font-medium text-ink-muted"><%= t("take.source.label") %></p>
+          <div class="source-text max-h-80"><%= question.source_text %></div>
         </div>
-        <p class="mb-3 whitespace-pre-wrap font-medium"><%= question.prompt %></p>
+        <p class="mb-3 font-medium whitespace-pre-wrap text-ink"><%= question.prompt %></p>
         <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response,
               rows: 8,
               placeholder: t("take.placeholder.source"),
-              class: "#{field_class} bg-white min-h-40" %>
+              class: "#{field_class} mt-0 min-h-40" %>
       <% else %>
         <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response,
               rows: 8,
               placeholder: t("take.placeholder.open"),
-              class: "#{field_class} bg-white min-h-40" %>
+              class: "#{field_class} mt-0 min-h-40" %>
       <% end %>
     </fieldset>
   <% end %>
 
-  <%= submit_tag t("take.submit"), class: "#{btn_primary} w-full justify-center", data: { turbo_confirm: t("take.submit_confirm") } %>
+  <%# Sticky, so the clock and the save state stay in view while scrolling. The
+      submit deliberately stays below it, in flow: an attempt cannot be taken
+      back, so the button that ends it should not sit under a phone reader's
+      thumb for the whole test. The bar unsticks once the submit scrolls in. %>
+  <div class="run-bar">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div class="flex flex-wrap items-center gap-3">
+        <% if @attempt.deadline_at %>
+          <div data-controller="countdown"
+               data-countdown-deadline-value="<%= @attempt.deadline_at.iso8601 %>"
+               data-countdown-server-time-value="<%= server_now.iso8601 %>"
+               class="countdown">
+            <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="10" cy="10" r="7.25" /><path d="M10 6.25V10l2.5 1.75" />
+            </svg>
+            <span data-countdown-target="display">--:--</span>
+          </div>
+        <% end %>
+        <div class="flex items-center gap-1.5 text-xs">
+          <svg data-autosave-target="spinner" class="hidden size-3.5 animate-spin text-ink-subtle" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" class="opacity-25" />
+            <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <svg data-autosave-target="check" class="hidden size-3.5 text-success" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3.5 8.5 6.5 11.5 12.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <p class="autosave-status" data-autosave-target="status"><%= t("take.autosave") %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%= submit_tag t("take.submit"), class: "btn btn-primary btn-lg w-full", data: { turbo_confirm: t("take.submit_confirm") } %>
 <% end %>

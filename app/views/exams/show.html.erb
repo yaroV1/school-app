@@ -1,54 +1,67 @@
 <% content_for :title, @exam.title %>
 <%= render "exams/header", exam: @exam %>
 
-<div class="mb-6">
-  <% if @exam.description.present? %><p class="text-slate-600"><%= @exam.description %></p><% end %>
-  <p class="mt-2 text-sm text-slate-500">
-    <%= @exam.time_limit_sec ? t("exams.show.minutes_limit", minutes: @exam.time_limit_sec / 60) : t("exams.show.untimed") %>
-    · <%= t("exams.attempts_count", count: @exam.max_attempts) %>
+<div class="mb-8 space-y-3">
+  <% if @exam.description.present? %>
+    <p class="text-sm leading-relaxed whitespace-pre-wrap text-ink-muted"><%= @exam.description %></p>
+  <% end %>
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="chip"><%= @exam.time_limit_sec ? t("exams.show.minutes_limit", minutes: @exam.time_limit_sec / 60) : t("exams.show.untimed") %></span>
+    <span class="chip"><%= t("exams.attempts_count", count: @exam.max_attempts) %></span>
     <% if @exam.available_from || @exam.available_until %>
-      · <%= t("exams.show.window") %>:
-      <%= @exam.available_from ? l(@exam.available_from, format: :short) : t("common.now") %>
-      –
-      <%= @exam.available_until ? l(@exam.available_until, format: :short) : t("common.open_ended") %>
+      <span class="chip">
+        <%= t("exams.show.window") %>:
+        <%= @exam.available_from ? l(@exam.available_from, format: :short) : t("common.now") %>
+        –
+        <%= @exam.available_until ? l(@exam.available_until, format: :short) : t("common.open_ended") %>
+      </span>
     <% end %>
-  </p>
+  </div>
 </div>
 
-<section class="mb-10">
-  <h2 class="mb-3 text-lg font-medium"><%= t("exams.show.questions") %></h2>
+<section class="mb-8">
+  <h2 class="section-title mb-3"><%= t("exams.show.questions") %></h2>
   <% if @questions.any? %>
-    <ol class="space-y-4">
+    <ol class="space-y-3">
       <% @questions.each_with_index do |question, index| %>
-        <li class="rounded-lg border border-slate-200 bg-white p-4">
-          <div class="mb-1 flex items-center justify-between gap-2">
-            <p class="text-sm font-medium text-slate-500">№<%= index + 1 %> · <%= t("question_types.#{question.question_type}") %> · <%= t("exams.points", count: question.points) %></p>
+        <li class="card card-pad">
+          <div class="mb-2 flex flex-wrap items-start justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+              <span class="num font-semibold">№<%= index + 1 %></span>
+              <span class="chip"><%= t("question_types.#{question.question_type}") %></span>
+              <span><%= t("exams.points", count: question.points) %></span>
+            </div>
             <% if @exam.questions_editable? %>
-              <%= button_to t("exams.show.remove"), test_question_path(@exam, question), method: :delete, form: { data: { turbo_confirm: t("exams.show.remove_confirm") } }, class: "text-sm text-red-600 underline" %>
+              <%= button_to t("exams.show.remove"), test_question_path(@exam, question), method: :delete, form: { data: { turbo_confirm: t("exams.show.remove_confirm") } }, class: "#{btn_danger} btn-sm" %>
             <% end %>
           </div>
           <%= render "questions/photo", question: question %>
-          <p class="whitespace-pre-wrap"><%= question.prompt %></p>
+          <p class="font-medium whitespace-pre-wrap text-ink"><%= question.prompt %></p>
           <% if question.source? && question.source_text.present? %>
-            <div class="mt-3 max-h-48 overflow-y-auto rounded-md border border-stone-200 bg-stone-50 p-3 text-sm whitespace-pre-wrap text-stone-800"><%= question.source_text %></div>
+            <div class="source-text mt-3 max-h-48"><%= question.source_text %></div>
           <% end %>
           <% if question.mcq? %>
-            <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+            <%# A marker and an indent, so four options read as a list under the
+                prompt rather than as four more lines of it. %>
+            <ul class="mt-3 list-disc space-y-1.5 pl-5 text-sm text-ink marker:text-ink-subtle">
               <% question.options.each do |opt| %>
-                <li><%= opt["text"] %><% if opt["is_correct"] %> <span class="text-emerald-700"><%= t("exams.show.correct") %></span><% end %></li>
+                <li>
+                  <%= opt["text"] %>
+                  <% if opt["is_correct"] %><span class="badge badge-success ml-1 align-middle"><%= t("exams.show.correct") %></span><% end %>
+                </li>
               <% end %>
             </ul>
           <% elsif question.ordering? %>
-            <ol class="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-700">
+            <ol class="mt-3 list-decimal space-y-1 pl-5 text-sm text-ink">
               <% question.items.each do |item| %>
                 <li><%= item["text"] %></li>
               <% end %>
             </ol>
           <% elsif question.matching? %>
-            <ul class="mt-2 space-y-1 text-sm text-slate-700">
+            <ul class="mt-3 space-y-1 text-sm text-ink">
               <% question.left_items.each do |left| %>
                 <% right = question.right_items.find { |item| item["id"] == question.pairs[left["id"]] } %>
-                <li><%= left["text"] %> → <%= right&.fetch("text", t("common.dash")) %></li>
+                <li><%= left["text"] %> <span class="text-ink-muted">→</span> <%= right&.fetch("text", t("common.dash")) %></li>
               <% end %>
             </ul>
           <% end %>
@@ -56,84 +69,84 @@
       <% end %>
     </ol>
   <% else %>
-    <p class="text-slate-600"><%= t("exams.show.no_questions") %></p>
+    <p class="empty-state"><%= t("exams.show.no_questions") %></p>
   <% end %>
 </section>
 
 <% if @exam.questions_editable? %>
-  <section class="rounded-lg border border-slate-200 bg-white p-4">
-    <h2 class="mb-4 text-lg font-medium"><%= t("exams.show.add_question") %></h2>
+  <section class="card card-pad">
+    <h2 class="section-title mb-4"><%= t("exams.show.add_question") %></h2>
     <%= form_with url: test_questions_path(@exam), scope: :question, class: "space-y-4" do |f| %>
       <div class="grid gap-4 sm:grid-cols-2">
-        <div>
-          <%= f.label :question_type, t("exams.show.type"), class: "text-sm font-medium" %>
-          <%= f.select :question_type, Question.question_types.keys.map { |k| [t("question_types.#{k}"), k] }, {}, class: field_class, id: "question_type_select" %>
+        <div class="fieldset">
+          <%= f.label :question_type, t("exams.show.type"), class: "field-label" %>
+          <%= f.select :question_type, Question.question_types.keys.map { |k| [ t("question_types.#{k}"), k ] }, {}, class: field_class, id: "question_type_select" %>
         </div>
-        <div>
-          <%= f.label :points, class: "text-sm font-medium" %>
+        <div class="fieldset">
+          <%= f.label :points, class: "field-label" %>
           <%= f.number_field :points, value: 1, min: 1, class: field_class %>
         </div>
       </div>
-      <div>
-        <%= f.label :photo, t("exams.show.photo"), class: "text-sm font-medium" %>
+      <div class="fieldset">
+        <%= f.label :photo, t("exams.show.photo"), class: "field-label" %>
         <%= f.file_field :photo, accept: "image/jpeg,image/png,image/webp,image/gif", class: field_class %>
-        <p class="mt-1 text-xs text-slate-500"><%= t("exams.show.photo_hint") %></p>
+        <p class="field-hint"><%= t("exams.show.photo_hint") %></p>
       </div>
 
-      <div id="source_fields" class="hidden space-y-2">
-        <label class="text-sm font-medium"><%= t("exams.show.source") %></label>
+      <div id="source_fields" class="fieldset hidden">
+        <label class="field-label"><%= t("exams.show.source") %></label>
         <textarea name="question[source]" rows="8" placeholder="<%= t("exams.show.source_placeholder") %>" class="<%= field_class %>"></textarea>
-        <p class="text-xs text-slate-500"><%= t("exams.show.source_hint") %></p>
+        <p class="field-hint"><%= t("exams.show.source_hint") %></p>
       </div>
 
-      <div>
-        <%= f.label :prompt, t("exams.show.prompt"), class: "text-sm font-medium", id: "question_prompt_label" %>
+      <div class="fieldset">
+        <%= f.label :prompt, t("exams.show.prompt"), class: "field-label", id: "question_prompt_label" %>
         <%= f.text_area :prompt, rows: 3, required: true, class: field_class %>
       </div>
 
       <div id="mcq_fields" class="space-y-2">
-        <p class="text-sm font-medium"><%= t("exams.show.options_hint_title") %></p>
+        <p class="field-label"><%= t("exams.show.options_hint_title") %></p>
         <% 4.times do |i| %>
-          <div class="flex items-center gap-2">
-            <%= radio_button_tag "question[correct_index]", i, i == 0, id: "correct_#{i}" %>
-            <input type="text" name="question[options][<%= i %>][text]" placeholder="<%= t("exams.show.option_placeholder", n: i + 1) %>" class="<%= field_class %>">
+          <div class="flex items-center gap-2.5">
+            <%= radio_button_tag "question[correct_index]", i, i == 0, id: "correct_#{i}", class: "size-4 shrink-0 accent-accent" %>
+            <input type="text" name="question[options][<%= i %>][text]" placeholder="<%= t("exams.show.option_placeholder", n: i + 1) %>" class="<%= field_class %> mt-0">
           </div>
         <% end %>
-        <p class="text-xs text-slate-500"><%= t("exams.show.options_hint") %></p>
+        <p class="field-hint"><%= t("exams.show.options_hint") %></p>
       </div>
 
       <div id="text_fields" class="hidden space-y-3">
-        <div>
-          <label class="text-sm font-medium"><%= t("exams.show.rubric") %></label>
+        <div class="fieldset">
+          <label class="field-label"><%= t("exams.show.rubric") %></label>
           <textarea name="question[rubric]" rows="2" class="<%= field_class %>"></textarea>
         </div>
-        <div>
-          <label class="text-sm font-medium"><%= t("exams.show.model_answer") %></label>
+        <div class="fieldset">
+          <label class="field-label"><%= t("exams.show.model_answer") %></label>
           <textarea name="question[model_answer]" rows="2" class="<%= field_class %>"></textarea>
         </div>
       </div>
 
       <div id="ordering_fields" class="hidden space-y-2">
-        <p class="text-sm font-medium"><%= t("exams.show.ordering_hint_title") %></p>
+        <p class="field-label"><%= t("exams.show.ordering_hint_title") %></p>
         <% 8.times do |i| %>
-          <input type="text" name="question[items][<%= i %>][text]" placeholder="<%= t("exams.show.ordering_placeholder", n: i + 1) %>" class="<%= field_class %>">
+          <input type="text" name="question[items][<%= i %>][text]" placeholder="<%= t("exams.show.ordering_placeholder", n: i + 1) %>" class="<%= field_class %> mt-0">
         <% end %>
-        <p class="text-xs text-slate-500"><%= t("exams.show.ordering_hint") %></p>
+        <p class="field-hint"><%= t("exams.show.ordering_hint") %></p>
       </div>
 
       <div id="matching_fields" class="hidden space-y-2">
-        <p class="text-sm font-medium"><%= t("exams.show.matching_hint_title") %></p>
-        <div class="grid gap-2 sm:grid-cols-2 text-xs font-medium text-slate-500">
+        <p class="field-label"><%= t("exams.show.matching_hint_title") %></p>
+        <div class="grid gap-2 text-xs font-medium text-ink-muted sm:grid-cols-2">
           <p><%= t("exams.show.matching_left") %></p>
           <p class="hidden sm:block"><%= t("exams.show.matching_right") %></p>
         </div>
         <% 5.times do |i| %>
           <div class="grid gap-2 sm:grid-cols-2">
-            <input type="text" name="question[pairs][<%= i %>][left]" placeholder="<%= t("exams.show.matching_left_placeholder", n: i + 1) %>" class="<%= field_class %>">
-            <input type="text" name="question[pairs][<%= i %>][right]" placeholder="<%= t("exams.show.matching_right_placeholder", n: i + 1) %>" class="<%= field_class %>">
+            <input type="text" name="question[pairs][<%= i %>][left]" placeholder="<%= t("exams.show.matching_left_placeholder", n: i + 1) %>" class="<%= field_class %> mt-0">
+            <input type="text" name="question[pairs][<%= i %>][right]" placeholder="<%= t("exams.show.matching_right_placeholder", n: i + 1) %>" class="<%= field_class %> mt-0">
           </div>
         <% end %>
-        <p class="text-xs text-slate-500"><%= t("exams.show.matching_hint") %></p>
+        <p class="field-hint"><%= t("exams.show.matching_hint") %></p>
       </div>
 
       <%= f.submit t("exams.show.submit_question"), class: btn_primary %>

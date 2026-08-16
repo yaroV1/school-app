@@ -1,5 +1,469 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Design tokens
+
+   Semantic names only. Templates should reach for `bg-surface`, `text-ink-muted`
+   or `border-line` instead of a raw `slate-*`, so a palette change happens here
+   and nowhere else. Values mirror the Tailwind slate / indigo / red / emerald /
+   amber / sky ramps.
+
+   Every text token is at or above the 4.5:1 WCAG AA ratio on the surface it is
+   meant to sit on. `ink-subtle` is the one exception: it clears 3:1, so it is
+   for hairline separators, list markers and icon strokes only — never for text
+   a reader has to make out.
+--------------------------------------------------------------------------- */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+
+  /* Neutral surfaces, from the page backdrop up to raised panels */
+  --color-surface: oklch(0.984 0.003 247);
+  --color-surface-raised: #fff;
+  --color-surface-sunken: oklch(0.968 0.007 247);
+
+  /* Hairlines */
+  --color-line: oklch(0.929 0.013 255);
+  --color-line-strong: oklch(0.869 0.022 252);
+
+  /* Text, darkest to lightest. `ink-light` is the hover for solid ink fills.
+     `ink-subtle` is not a text colour — see the note above. */
+  --color-ink: oklch(0.208 0.042 265);
+  --color-ink-light: oklch(0.372 0.044 257);
+  --color-ink-muted: oklch(0.502 0.045 257);
+  --color-ink-subtle: oklch(0.64 0.043 257);
+
+  /* One accent, reserved for focus, current state and links */
+  --color-accent: oklch(0.511 0.262 276);
+  --color-accent-strong: oklch(0.457 0.24 277);
+  --color-accent-line: oklch(0.785 0.115 274);
+  --color-accent-soft: oklch(0.962 0.018 272);
+
+  --color-danger: oklch(0.505 0.213 27);
+  --color-danger-line: oklch(0.885 0.062 18);
+  --color-danger-soft: oklch(0.971 0.013 17);
+
+  /* Status hues. Same three-step shape as `danger`, so a badge and a flash can
+     be built from tokens rather than from a raw ramp. */
+  --color-success: oklch(0.508 0.118 165.612);
+  --color-success-strong: oklch(0.432 0.095 166.913);
+  --color-success-line: oklch(0.905 0.093 164.15);
+  --color-success-soft: oklch(0.979 0.021 166.113);
+
+  --color-warning: oklch(0.473 0.137 46.201);
+  --color-warning-line: oklch(0.924 0.12 95.746);
+  --color-warning-soft: oklch(0.987 0.022 95.277);
+
+  --color-info: oklch(0.5 0.134 242.749);
+  --color-info-line: oklch(0.901 0.058 230.902);
+  --color-info-soft: oklch(0.977 0.013 236.62);
+
+  --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-chip: 9999px;
+
+  --shadow-card: 0 1px 2px 0 oklch(0.208 0.042 265 / 0.04);
+  --shadow-raised: 0 4px 12px -2px oklch(0.208 0.042 265 / 0.08),
+    0 2px 4px -3px oklch(0.208 0.042 265 / 0.06);
+  --shadow-bar: 0 -1px 3px 0 oklch(0.208 0.042 265 / 0.05);
+}
+
+@layer base {
+  /* One visible focus treatment for every interactive element. Replaces the
+     `focus:outline-none` that used to leave inputs with no keyboard cue. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Components
+
+   Sits in the `components` layer so any utility class in a template still wins,
+   e.g. `class="btn btn-primary w-full"`.
+--------------------------------------------------------------------------- */
+@layer components {
+  /* ------------------------------- buttons ------------------------------- */
+  .btn {
+    @apply inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5
+      rounded-control border border-transparent px-3.5 py-2 text-sm font-medium
+      whitespace-nowrap transition-colors;
+  }
+
+  .btn:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-ink text-white hover:bg-ink-light;
+  }
+
+  .btn-secondary {
+    @apply border-line bg-surface-raised text-ink hover:border-line-strong hover:bg-surface-sunken;
+  }
+
+  .btn-ghost {
+    @apply text-ink-muted hover:bg-surface-sunken hover:text-ink;
+  }
+
+  .btn-danger {
+    @apply border-danger-line bg-surface-raised text-danger hover:bg-danger-soft;
+  }
+
+  .btn-sm {
+    @apply min-h-8 gap-1 px-2.5 py-1 text-xs;
+  }
+
+  .btn-lg {
+    @apply min-h-12 px-5 text-base;
+  }
+
+  /* ------------------------------- forms -------------------------------- */
+  .field-label {
+    @apply block text-sm font-medium text-ink;
+  }
+
+  .field {
+    @apply mt-1.5 block w-full rounded-control border border-line bg-surface-raised
+      px-3 py-2 text-sm text-ink transition-colors
+      placeholder:text-ink-muted hover:border-line-strong focus:border-accent;
+  }
+
+  .field-hint {
+    @apply mt-1.5 text-xs text-ink-muted;
+  }
+
+  .field-error {
+    @apply rounded-control border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger;
+  }
+
+  .fieldset {
+    @apply space-y-1.5;
+  }
+
+  /* --------------------------- surfaces & lists ------------------------- */
+  .card {
+    @apply rounded-card border border-line bg-surface-raised shadow-card;
+  }
+
+  .card-pad {
+    @apply p-4 sm:p-5;
+  }
+
+  .card-title {
+    @apply text-sm font-semibold text-ink;
+  }
+
+  .list {
+    @apply divide-y divide-line overflow-hidden rounded-card border border-line
+      bg-surface-raised shadow-card;
+  }
+
+  .list-row {
+    @apply flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-surface;
+  }
+
+  .list-row-title {
+    @apply font-medium text-ink hover:text-accent;
+  }
+
+  .list-row-meta {
+    @apply mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted;
+  }
+
+  /* ------------------------------- tables ------------------------------- */
+  .table-wrap {
+    @apply overflow-x-auto rounded-card border border-line bg-surface-raised shadow-card;
+  }
+
+  .data-table {
+    @apply min-w-full text-sm;
+  }
+
+  .data-table thead {
+    @apply bg-surface-sunken text-left;
+  }
+
+  .data-table th {
+    @apply px-3.5 py-2.5 text-xs font-semibold text-ink-muted;
+  }
+
+  .data-table tbody {
+    @apply divide-y divide-line;
+  }
+
+  .data-table tbody tr {
+    @apply transition-colors hover:bg-surface;
+  }
+
+  .data-table td {
+    @apply px-3.5 py-2.5 align-middle text-ink;
+  }
+
+  .num {
+    @apply font-mono tabular-nums;
+  }
+
+  /* ------------------------------- badges ------------------------------- */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-chip border px-2 py-0.5 text-xs font-medium;
+  }
+
+  .badge-neutral {
+    @apply border-line bg-surface-sunken text-ink-muted;
+  }
+
+  .badge-success {
+    @apply border-success-line bg-success-soft text-success;
+  }
+
+  .badge-warning {
+    @apply border-warning-line bg-warning-soft text-warning;
+  }
+
+  .badge-info {
+    @apply border-info-line bg-info-soft text-info;
+  }
+
+  .badge-danger {
+    @apply border-danger-line bg-danger-soft text-danger;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-chip border border-line
+      bg-surface-sunken px-2 py-0.5 text-xs font-medium text-ink-muted;
+  }
+
+  /* -------------------------- navigation & tabs ------------------------- */
+  .app-header {
+    @apply sticky top-0 z-30 border-b border-line bg-surface-raised/85 backdrop-blur;
+  }
+
+  .brand {
+    @apply inline-flex items-center gap-2 text-sm font-semibold tracking-tight text-ink;
+  }
+
+  .brand-mark {
+    @apply inline-flex size-7 items-center justify-center rounded-control bg-ink
+      text-xs font-bold text-white;
+  }
+
+  .nav-link {
+    @apply rounded-control px-2 py-1 text-sm font-medium text-ink-muted transition-colors
+      hover:bg-surface-sunken hover:text-ink;
+  }
+
+  .nav-link[aria-current="page"] {
+    @apply bg-surface-sunken text-ink;
+  }
+
+  .tab-bar {
+    @apply mb-6 flex flex-wrap gap-5 border-b border-line;
+  }
+
+  .tab {
+    @apply -mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-0.5
+      pt-1 pb-2.5 text-sm font-medium text-ink-muted transition-colors
+      hover:border-line-strong hover:text-ink;
+  }
+
+  .tab[aria-current="page"] {
+    @apply border-accent text-ink;
+  }
+
+  /* A real count, so it reads at AA rather than as decoration. */
+  .tab-count {
+    @apply text-xs text-ink-muted;
+  }
+
+  .breadcrumbs {
+    @apply flex flex-wrap items-center gap-1.5 text-sm text-ink-muted;
+  }
+
+  .breadcrumbs a {
+    @apply rounded underline decoration-line underline-offset-2 transition-colors
+      hover:text-ink hover:decoration-ink-subtle;
+  }
+
+  .breadcrumb-sep {
+    @apply text-ink-subtle select-none;
+  }
+
+  /* -------------------------------- text -------------------------------- */
+  .page-title {
+    @apply text-2xl font-semibold tracking-tight text-ink;
+  }
+
+  .page-subtitle {
+    @apply mt-1 text-sm text-ink-muted;
+  }
+
+  .section-title {
+    @apply text-base font-semibold text-ink;
+  }
+
+  .link {
+    @apply font-medium text-accent underline decoration-accent-line underline-offset-2
+      transition-colors hover:decoration-accent;
+  }
+
+  .link-muted {
+    @apply text-ink-muted underline decoration-line underline-offset-2 transition-colors hover:text-ink;
+  }
+
+  /* The link that carries a table row's identity. Reads as content, but keeps a
+     hairline underline so it is recognisable as a link without hovering — which
+     a touch reader never gets to do. */
+  .link-quiet {
+    @apply font-medium text-ink underline decoration-line underline-offset-2
+      transition-colors hover:text-accent hover:decoration-accent-line;
+  }
+
+  .link-danger {
+    @apply text-sm font-medium text-danger underline decoration-danger-line underline-offset-2
+      transition-colors hover:decoration-danger;
+  }
+
+  .empty-state {
+    @apply rounded-card border border-dashed border-line px-4 py-8 text-center text-sm text-ink-muted;
+  }
+
+  /* ------------------------------- flashes ------------------------------ */
+  .flash {
+    @apply mb-5 flex items-start gap-2.5 rounded-card border px-3.5 py-3 text-sm;
+  }
+
+  .flash-notice {
+    @apply border-success-line bg-success-soft text-success-strong;
+  }
+
+  .flash-alert {
+    @apply border-danger-line bg-danger-soft text-danger;
+  }
+
+  .flash-info {
+    @apply border-accent-line bg-accent-soft text-accent-strong;
+  }
+
+  .flash-warning {
+    @apply border-warning-line bg-warning-soft text-warning;
+  }
+
+  .flash-muted {
+    @apply border-line bg-surface-sunken text-ink-muted;
+  }
+
+  /* ------------------------- taking a test (Take::) --------------------- */
+  .qcard {
+    @apply rounded-card border border-line border-l-[3px] border-l-line-strong
+      bg-surface-raised p-4 shadow-card sm:p-5;
+  }
+
+  .qcard[data-qtype="mcq"] {
+    @apply border-l-sky-400;
+  }
+
+  .qcard[data-qtype="short_text"] {
+    @apply border-l-amber-400;
+  }
+
+  .qcard[data-qtype="open"] {
+    @apply border-l-violet-400;
+  }
+
+  .qcard[data-qtype="ordering"] {
+    @apply border-l-emerald-400;
+  }
+
+  .qcard[data-qtype="matching"] {
+    @apply border-l-rose-400;
+  }
+
+  .qcard[data-qtype="source"] {
+    @apply border-l-stone-400;
+  }
+
+  .qcard-legend {
+    @apply flex flex-wrap items-center gap-2 text-xs font-medium text-ink-muted;
+  }
+
+  /* Full-width tappable rows, so a phone user is not aiming at a radio dot. */
+  .option {
+    @apply flex cursor-pointer items-start gap-3 rounded-control border border-line
+      bg-surface-raised px-3.5 py-3 text-sm text-ink transition-colors
+      hover:border-accent-line hover:bg-accent-soft;
+  }
+
+  .option:has(input:checked) {
+    @apply border-accent bg-accent-soft font-medium;
+  }
+
+  .source-text {
+    @apply overflow-y-auto rounded-control border border-line bg-surface px-3.5 py-3
+      text-sm leading-relaxed whitespace-pre-wrap text-ink;
+  }
+
+  .run-bar {
+    @apply sticky bottom-0 z-20 -mx-4 border-t border-line bg-surface-raised/95 px-4 py-3
+      shadow-bar backdrop-blur;
+  }
+
+  .countdown {
+    @apply inline-flex items-center gap-1.5 rounded-control bg-ink px-3 py-1.5
+      font-mono text-sm tabular-nums text-white;
+  }
+
+  .countdown[data-urgency="urgent"] {
+    @apply bg-danger;
+  }
+
+  .countdown-cell[data-urgency="urgent"] {
+    @apply font-semibold text-danger;
+  }
+
+  /* Colour lives here rather than on the element, so the state rules below are
+     not outranked by a utility class in the template. */
+  .autosave-status {
+    @apply text-ink-muted transition-colors;
+  }
+
+  .autosave-status[data-state="saved"] {
+    @apply text-success;
+  }
+
+  .autosave-status[data-state="failed"] {
+    @apply text-danger;
+  }
+
+  /* ----------------------------- ordering ------------------------------- */
+  .order-item {
+    @apply flex items-center gap-3 rounded-control border border-line bg-surface-raised
+      px-2.5 py-2 transition-colors hover:border-accent-line
+      aria-selected:border-accent aria-selected:bg-accent-soft
+      data-[dragging]:shadow-raised data-[dragging]:opacity-60;
+  }
+
+  .order-position {
+    @apply flex size-7 shrink-0 items-center justify-center rounded-chip bg-surface-sunken
+      text-sm font-semibold tabular-nums text-ink-muted;
+  }
+
+  .order-item[aria-selected="true"] .order-position {
+    @apply bg-accent text-white;
+  }
+
+  .order-handle {
+    @apply cursor-grab touch-none rounded p-1 text-ink-subtle transition-colors
+      hover:bg-surface-sunken hover:text-ink active:cursor-grabbing;
+  }
+}
+
 @keyframes autosave-check-pop {
   0% { transform: scale(0.5); opacity: 0; }
   70% { transform: scale(1.15); opacity: 1; }
@@ -8,4 +472,16 @@
 
 .autosave-check-pop {
   animation: autosave-check-pop 300ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .autosave-check-pop {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -1,12 +1,22 @@
 <% content_for :title, t("take.done_title") %>
-<div class="space-y-4 text-center">
-  <h1 class="text-2xl font-semibold"><%= t("take.done_heading") %></h1>
-  <p class="text-slate-600"><%= t("take.done_body", name: @student.name, title: @exam.title) %></p>
+<div class="card card-pad mx-auto max-w-md space-y-3 text-center">
+  <span class="mx-auto flex size-11 items-center justify-center rounded-chip bg-success-soft text-success">
+    <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </svg>
+  </span>
+  <h1 class="page-title"><%= t("take.done_heading") %></h1>
+  <p class="text-sm text-ink-muted"><%= t("take.done_body", name: @student.name, title: @exam.title) %></p>
   <% if @latest %>
-    <p class="text-sm text-slate-500">
-      <%= t("take.done_attempt", n: @latest.attempt_no) %> · <%= t("statuses.#{@latest.status}") %>
-      <% if @latest.submitted_at %> · <%= l(@latest.submitted_at, format: :short) %><% end %>
+    <p class="text-sm">
+      <%= t("take.done_attempt", n: @latest.attempt_no) %>
+      <span class="text-ink-subtle" aria-hidden="true">·</span>
+      <%= status_badge(@latest.status) %>
+      <% if @latest.submitted_at %>
+        <span class="text-ink-subtle" aria-hidden="true">·</span>
+        <span class="text-ink-muted"><%= l(@latest.submitted_at, format: :short) %></span>
+      <% end %>
     </p>
   <% end %>
-  <p class="text-sm text-slate-500"><%= t("take.close_window") %></p>
+  <p class="text-sm text-ink-muted"><%= t("take.close_window") %></p>
 </div>

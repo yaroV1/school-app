@@ -1,28 +1,45 @@
 module ApplicationHelper
-  def nav_class(path)
-    base = "hover:text-slate-900"
-    current_page?(path) ? "#{base} text-slate-900 underline underline-offset-4" : "#{base} text-slate-600"
-  end
-
-  def tab_class(path)
-    base = "border-b-2 px-1 pb-2 text-sm font-medium"
-    if current_page?(path)
-      "#{base} border-slate-900 text-slate-900"
-    else
-      "#{base} border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800"
-    end
-  end
+  STATUS_BADGES = {
+    "draft" => "badge-neutral",
+    "published" => "badge-success",
+    "closed" => "badge-warning",
+    "not_started" => "badge-neutral",
+    "in_progress" => "badge-info",
+    "submitted" => "badge-success",
+    "expired" => "badge-warning",
+    "revoked" => "badge-danger",
+    "abandoned" => "badge-neutral",
+    "active" => "badge-success"
+  }.freeze
 
   def btn_primary
-    "inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
+    "btn btn-primary"
   end
 
   def btn_secondary
-    "inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+    "btn btn-secondary"
+  end
+
+  def btn_danger
+    "btn btn-danger"
   end
 
   def field_class
-    "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 shadow-sm focus:border-slate-500 focus:outline-none"
+    "field"
+  end
+
+  # `aria-current` carries the active state, so highlighting is not tied to a
+  # particular colour class.
+  def nav_link_to(text, path)
+    link_to text, path, class: "nav-link", aria: { current: ("page" if current_page?(path)) }
+  end
+
+  def tab_link_to(text, path, count: nil)
+    link_to path, class: "tab", aria: { current: ("page" if current_page?(path)) } do
+      parts = [ text ]
+      parts << content_tag(:span, count, class: "tab-count") if count
+      safe_join(parts, " ")
+    end
   end
 
   # Same shape the countdown controller writes, so the server-rendered cell and
@@ -34,17 +51,7 @@ module ApplicationHelper
   end
 
   def status_badge(status)
-    colors = {
-      "draft" => "bg-slate-100 text-slate-700",
-      "published" => "bg-emerald-100 text-emerald-800",
-      "closed" => "bg-amber-100 text-amber-800",
-      "not_started" => "bg-slate-100 text-slate-600",
-      "in_progress" => "bg-sky-100 text-sky-800",
-      "submitted" => "bg-emerald-100 text-emerald-800",
-      "expired" => "bg-orange-100 text-orange-800",
-      "revoked" => "bg-red-100 text-red-700",
-      "abandoned" => "bg-slate-100 text-slate-600"
-    }
-    content_tag(:span, t("statuses.#{status}"), class: "inline-flex rounded-full px-2 py-0.5 text-xs font-medium #{colors[status.to_s] || 'bg-slate-100'}")
+    variant = STATUS_BADGES.fetch(status.to_s, "badge-neutral")
+    content_tag(:span, t("statuses.#{status}"), class: "badge #{variant}")
   end
 end

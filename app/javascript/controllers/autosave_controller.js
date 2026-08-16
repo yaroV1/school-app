@@ -93,9 +93,8 @@ export default class extends Controller {
   setStatus(kind, text) {
     if (this.hasStatusTarget) {
       this.statusTarget.textContent = text
-      this.statusTarget.classList.remove("text-slate-500", "text-emerald-700", "text-red-700")
-      const color = { saving: "text-slate-500", saved: "text-emerald-700", failed: "text-red-700" }[kind]
-      if (color) this.statusTarget.classList.add(color)
+      // Colour is a stylesheet concern; see .autosave-status[data-state].
+      this.statusTarget.dataset.state = kind
     }
 
     if (this.hasSpinnerTarget) {

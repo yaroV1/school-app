@@ -2,48 +2,49 @@
 <%= render "subjects/header", subject: @subject %>
 
 <section>
-  <div class="mb-3 flex items-center justify-between gap-3">
-    <h2 class="text-lg font-medium"><%= t("subjects.show.tests") %></h2>
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <h2 class="section-title"><%= t("subjects.show.tests") %></h2>
     <%= link_to t("subjects.show.new_test"), new_subject_exam_path(@subject), class: btn_primary %>
   </div>
 
   <%= form_with url: subject_path(@subject), method: :get,
         data: { controller: "autosubmit", turbo_action: "replace" },
-        class: "mb-4 flex flex-wrap items-end gap-3" do %>
+        class: "card card-pad mb-4 flex flex-wrap items-end gap-3" do %>
     <div class="min-w-56 flex-1">
-      <%= label_tag :q, t("subjects.show.search"), class: "text-sm font-medium" %>
+      <%= label_tag :q, t("subjects.show.search"), class: "field-label" %>
       <%= search_field_tag :q, @query, placeholder: t("subjects.show.search_placeholder"), class: field_class %>
     </div>
     <div>
-      <%= label_tag :sort, t("subjects.show.sort"), class: "text-sm font-medium" %>
+      <%= label_tag :sort, t("subjects.show.sort"), class: "field-label" %>
       <%= select_tag :sort, options_for_select(@sort_options, @sort),
             class: field_class, data: { action: "change->autosubmit#submit" } %>
     </div>
     <%= submit_tag t("common.apply"), class: btn_secondary %>
     <% if @filtered %>
-      <%= link_to t("subjects.show.clear"), subject_path(@subject), class: "pb-2 text-sm text-slate-600 underline" %>
+      <%= link_to t("subjects.show.clear"), subject_path(@subject), class: "btn btn-ghost" %>
     <% end %>
   <% end %>
 
   <% if @exams.any? %>
-    <ul class="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
+    <ul class="list">
       <% @exams.each do |exam| %>
-        <li class="flex items-center justify-between gap-3 px-4 py-3">
+        <li class="list-row">
           <div>
-            <%= link_to exam.title, test_path(exam), class: "font-medium hover:underline" %>
-            <div class="mt-1 flex items-center gap-2 text-sm text-slate-500">
+            <%= link_to exam.title, test_path(exam), class: "list-row-title" %>
+            <div class="list-row-meta">
               <%= status_badge(exam.status) %>
               <span><%= t("exams.questions_count", count: exam.questions.size) %></span>
-              <span>· <%= l(exam.created_at, format: :short) %></span>
+              <span aria-hidden="true">·</span>
+              <span><%= l(exam.created_at, format: :short) %></span>
             </div>
           </div>
-          <%= link_to t("common.open"), test_path(exam), class: btn_secondary %>
+          <%= link_to t("common.open"), test_path(exam), class: "#{btn_secondary} btn-sm" %>
         </li>
       <% end %>
     </ul>
   <% elsif @query.present? %>
-    <p class="text-slate-600"><%= t("subjects.show.no_matches", query: @query) %></p>
+    <p class="empty-state"><%= t("subjects.show.no_matches", query: @query) %></p>
   <% else %>
-    <p class="text-slate-600"><%= t("subjects.show.empty_tests") %></p>
+    <p class="empty-state"><%= t("subjects.show.empty_tests") %></p>
   <% end %>
 </section>

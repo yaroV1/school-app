@@ -1,37 +1,35 @@
-<%= form_with model: exam, url: exam.persisted? ? test_path(exam) : subject_exams_path(exam.subject), class: "space-y-4 max-w-xl" do |f| %>
-  <% if exam.errors.any? %>
-    <div class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"><%= exam.errors.full_messages.to_sentence %></div>
-  <% end %>
-  <div>
-    <%= f.label :title, class: "text-sm font-medium" %>
+<%= form_with model: exam, url: exam.persisted? ? test_path(exam) : subject_exams_path(exam.subject), class: "card card-pad max-w-xl space-y-4" do |f| %>
+  <%= render "shared/form_errors", record: exam %>
+  <div class="fieldset">
+    <%= f.label :title, class: "field-label" %>
     <%= f.text_field :title, required: true, class: field_class %>
   </div>
-  <div>
-    <%= f.label :description, class: "text-sm font-medium" %>
+  <div class="fieldset">
+    <%= f.label :description, class: "field-label" %>
     <%= f.text_area :description, rows: 3, class: field_class %>
   </div>
   <div class="grid gap-4 sm:grid-cols-2">
-    <div>
-      <%= f.label :time_limit_sec, t("exams.form.time_limit"), class: "text-sm font-medium" %>
+    <div class="fieldset">
+      <%= f.label :time_limit_sec, t("exams.form.time_limit"), class: "field-label" %>
       <%= f.number_field :time_limit_sec, min: 1, class: field_class %>
     </div>
-    <div>
-      <%= f.label :max_attempts, class: "text-sm font-medium" %>
+    <div class="fieldset">
+      <%= f.label :max_attempts, class: "field-label" %>
       <%= f.number_field :max_attempts, min: 1, required: true, class: field_class %>
     </div>
   </div>
   <div class="grid gap-4 sm:grid-cols-2">
-    <div>
-      <%= f.label :available_from, t("exams.form.available_from"), class: "text-sm font-medium" %>
+    <div class="fieldset">
+      <%= f.label :available_from, t("exams.form.available_from"), class: "field-label" %>
       <%= f.datetime_local_field :available_from, class: field_class,
             value: exam.available_from&.strftime("%Y-%m-%dT%H:%M") %>
     </div>
-    <div>
-      <%= f.label :available_until, t("exams.form.available_until"), class: "text-sm font-medium" %>
+    <div class="fieldset">
+      <%= f.label :available_until, t("exams.form.available_until"), class: "field-label" %>
       <%= f.datetime_local_field :available_until, class: field_class,
             value: exam.available_until&.strftime("%Y-%m-%dT%H:%M") %>
     </div>
   </div>
-  <p class="text-xs text-slate-500"><%= t("exams.form.window_hint") %></p>
+  <p class="field-hint"><%= t("exams.form.window_hint") %></p>
   <%= f.submit class: btn_primary %>
 <% end %>

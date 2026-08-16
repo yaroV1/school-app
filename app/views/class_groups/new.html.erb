@@ -1,2 +1,9 @@
-<h1 class="mb-6 text-2xl font-semibold"><%= t("classes.new.title") %></h1>
+<% content_for :title, t("classes.new.title") %>
+<div class="mb-6">
+  <%= render "shared/breadcrumbs", crumbs: [
+        [ t("classes.index.title"), class_groups_path ],
+        [ t("classes.new.title"), nil ]
+      ] %>
+  <h1 class="page-title mt-3"><%= t("classes.new.title") %></h1>
+</div>
 <%= render "form", class_group: @class_group %>
