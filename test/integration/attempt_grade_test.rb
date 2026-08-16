@@ -28,6 +28,15 @@ class AttemptGradeTest < ActionDispatch::IntegrationTest
     assert_select "input[name='answers[][teacher_score]']"
   end
 
+  test "the finalize control is labelled, not captioned with its own flag value" do
+    get attempt_path(@attempt)
+    assert_response :success
+    # submit_tag lets an options hash overwrite its label argument, so passing
+    # value: "1" for the finalize flag rendered a button captioned "1".
+    assert_select "button[type=submit][name=finalize][value=?]", "1",
+      text: I18n.t("attempts.grade.save_finalize")
+  end
+
   test "submitted attempt hides the live writing hint and opens no subscription" do
     AttemptLifecycle.submit!(@attempt)
     get attempt_path(@attempt)

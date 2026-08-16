@@ -60,6 +60,8 @@
 
   <div class="flex flex-wrap gap-2">
     <%= submit_tag t("attempts.grade.save"), class: btn_secondary %>
-    <%= submit_tag t("attempts.grade.save_finalize"), name: "finalize", value: "1", class: btn_primary %>
+    <%# button_tag, not submit_tag: an options hash overrides submit_tag's label
+        argument, so the finalize flag was rendering as the button's caption. %>
+    <%= button_tag t("attempts.grade.save_finalize"), type: "submit", name: "finalize", value: "1", class: btn_primary %>
   </div>
 <% end %>
