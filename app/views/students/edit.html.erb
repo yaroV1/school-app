@@ -1,10 +1,13 @@
 <% content_for :title, t("students.edit.title") %>
+<% group = @student.class_groups.first %>
 <div class="mb-6">
+  <%# Same trail as students#show, so editing does not drop a level. %>
   <%= render "shared/breadcrumbs", crumbs: [
         [ t("classes.index.title"), class_groups_path ],
+        (group ? [ group.name, students_class_group_path(group) ] : nil),
         [ @student.name, student_path(@student) ],
         [ t("students.edit.title"), nil ]
-      ] %>
+      ].compact %>
   <h1 class="page-title mt-3"><%= t("students.edit.title") %></h1>
 </div>
 <%= render "form", student: @student %>

@@ -3,6 +3,7 @@
 <%= turbo_stream_from @attempt, :grade_live if @attempt.in_progress? %>
 <div class="mb-6">
   <%= render "shared/breadcrumbs", crumbs: [
+        [ t("classes.index.title"), class_groups_path ],
         [ @exam.class_group.name, class_group_path(@exam.class_group) ],
         [ @exam.subject.name, subject_path(@exam.subject) ],
         [ @exam.title, test_path(@exam) ],
