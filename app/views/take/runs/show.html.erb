@@ -113,9 +113,12 @@
     </fieldset>
   <% end %>
 
-  <%# Sticky, so the clock and the save state stay in view while scrolling. %>
+  <%# Sticky, so the clock and the save state stay in view while scrolling. The
+      submit deliberately stays below it, in flow: an attempt cannot be taken
+      back, so the button that ends it should not sit under a phone reader's
+      thumb for the whole test. The bar unsticks once the submit scrolls in. %>
   <div class="run-bar">
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
       <div class="flex flex-wrap items-center gap-3">
         <% if @attempt.deadline_at %>
           <div data-controller="countdown"
@@ -133,13 +136,14 @@
             <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" class="opacity-25" />
             <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
           </svg>
-          <svg data-autosave-target="check" class="hidden size-3.5 text-emerald-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <svg data-autosave-target="check" class="hidden size-3.5 text-success" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M3.5 8.5 6.5 11.5 12.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
           <p class="autosave-status" data-autosave-target="status"><%= t("take.autosave") %></p>
         </div>
       </div>
-      <%= submit_tag t("take.submit"), class: "btn btn-primary btn-lg w-full sm:w-auto", data: { turbo_confirm: t("take.submit_confirm") } %>
     </div>
   </div>
+
+  <%= submit_tag t("take.submit"), class: "btn btn-primary btn-lg w-full", data: { turbo_confirm: t("take.submit_confirm") } %>
 <% end %>

@@ -158,6 +158,24 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_select "[data-autosave-target=?]", "spinner"
   end
 
+  test "the submit control stays below the sticky bar, not inside it" do
+    exam = create_exam!(@teacher, title: "Sticky", status: :published, time_limit_sec: 300)
+    exam.questions.create!(question_type: :short_text, prompt: "Sky?", points: 1, position: 0, config: {})
+    student = @teacher.students.create!(name: "Olia")
+    assignment = exam.assignments.create!(student: student)
+
+    post student_start_url(token: assignment.access_token)
+    follow_redirect!
+    assert_response :success
+
+    # The clock and the save state ride along while scrolling; submitting ends
+    # the attempt for good, so that button must not sit under a reader's thumb.
+    assert_select ".run-bar [data-countdown-target=display]"
+    assert_select ".run-bar [data-autosave-target=status]"
+    assert_select ".run-bar input[type=submit]", false
+    assert_select "form input[type=submit][value=?]", I18n.t("take.submit")
+  end
+
   test "class tabs split subjects and students; subject tabs split tests and stats" do
     sign_in_as @teacher
 
