@@ -140,9 +140,9 @@ Mandatory. Answer every line in writing. `N/A — <why>` is a valid answer; a mi
 The rules are in `docs/agent-rules.md` § Security — state compliance, do not restate them.
 
 - **Student-facing output** — does this render or serialize question data to a student? If yes: name each
-  field sent, as an allowlist, and the `Question` student-facing reader that strips the key. The readers,
-  and why hardening `QuestionSanitizer` alone changes nothing a student sees:
-  `docs/agent-rules.md` § Never leak answer keys.
+  field sent, as an allowlist, and the `Question` student-facing reader that strips the key. Readers and
+  the boundary: `docs/agent-rules.md` § Never leak answer keys. A new question type or student-facing
+  field also needs a case in `test/integration/answer_key_leak_test.rb`.
 - **Teacher data** — does this read or write teacher-owned records? If yes: name the exact scope —
   `Current.user.<assoc>.find`, or the ownership join.
 - **Unauthenticated `Take::`** — does this add or change a `Take::` action? If yes: name the
@@ -290,9 +290,9 @@ No description. Ask first — three questions, not ten:
 
 Answers: a `numeric` type, auto-scored with a tolerance, new input, new exams only.
 
-Then research `Question`, `Scoring`, `QuestionSanitizer`, `app/views/exams/show.html.erb` (the teacher
-question editor lives there, not in `app/views/questions/`), `app/views/take/runs/`, and
-`test/services/scoring_test.rb` before creating `prd/_to_refine/numeric-question-type/project.md`.
+Then research `Question`, `Scoring`, `app/views/exams/show.html.erb` (the teacher question editor lives
+there, not in `app/views/questions/`), `app/views/take/runs/`, `test/services/scoring_test.rb`, and
+`test/integration/answer_key_leak_test.rb` before creating `prd/_to_refine/numeric-question-type/project.md`.
 
 Two things that PRD must get right:
 
@@ -308,9 +308,9 @@ there is no migration, and each task leaves the suite green.
       proof: `test/models/question_test.rb`
 - [ ] FR-2 — Score `numeric` in `Scoring` with tolerance, all-or-nothing — done when: a response inside
       the tolerance scores full and one outside scores zero — proof: `test/services/scoring_test.rb`
-- [ ] FR-3 — Render prompt only for `numeric` in `app/views/take/runs/show.html.erb`, and mirror it in
-      `QuestionSanitizer` — done when: the student page and the sanitizer payload both carry the prompt
-      and neither carries the expected value or tolerance — proof: `test/models/question_test.rb`
+- [ ] FR-3 — Render prompt only for `numeric` in `app/views/take/runs/show.html.erb` — done when: the
+      rendered student page carries the prompt and neither the expected value nor the tolerance —
+      proof: `test/integration/answer_key_leak_test.rb`
 - [ ] FR-4 — Teacher editor input in `app/views/exams/show.html.erb`, plus `uk.yml` keys — done when:
       selecting `numeric` renders the tolerance input and `POST test_questions_path` persists it —
       proof: `test/integration/exam_tabs_test.rb`, extended

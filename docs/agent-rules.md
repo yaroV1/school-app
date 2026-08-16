@@ -49,8 +49,8 @@ code before assuming anything.
 
 - Follow Rails layout and copy nearby code. Prefer simple, explicit changes.
 - Extract a service for nontrivial domain or security logic. Existing: `Scoring`, `AttemptLifecycle`,
-  `QuestionSanitizer`, `TokenGenerator`, `LiveBoard`, `GradeLive` — plus `LiveBroadcast`, which is **not** a
-  service but a mixin. Read `app/services/` and reuse before adding another. Do not add layers "for SOLID."
+  `TokenGenerator`, `LiveBoard`, `GradeLive` — plus `LiveBroadcast`, which is **not** a service but a
+  mixin. Read `app/services/` and reuse before adding another. Do not add layers "for SOLID."
 - **Turbo naming.** Stream name is `[record, :channel]` — `turbo_stream_from @exam, :live_board` must pair
   with `broadcast_replace_to(@exam, :live_board, …)`. Broadcast the same partial the page renders, with the
   same locals — rendered inline (`attempts/show.html.erb` renders `attempts/live_header`) or through a lazy
@@ -82,9 +82,12 @@ assignment. Do not add `Current.user` there. Proposing it in review is a wrong f
 
 The live student path is `app/views/take/runs/show.html.erb`, which calls the `Question` student-facing
 readers directly: `student_facing_options`, `display_items_for`, `shuffled_right_items`,
-`student_facing_left`, `source_text`. **That is the only boundary.** `QuestionSanitizer` states the same
-policy as a payload object and is covered by `test/models/question_test.rb`, but no application code calls
-it — hardening it alone changes nothing a student sees. If you change one, change both.
+`student_facing_left`, `source_text`. **That view is the only boundary** — there is no sanitizer layer
+between it and the response, so a leak introduced there ships.
+
+`test/integration/answer_key_leak_test.rb` renders that page as an unauthenticated student and asserts no
+key reaches the body. Extend it whenever you add a question type or a student-facing field; a new type
+with no entry there is untested by construction.
 
 Build every student payload as an **allowlist** — name each key you send. Never pass `question.config` or a
 sub-hash of it through; the readers do this with `slice("id", "text")`.
@@ -169,9 +172,14 @@ No coverage %. Never report a check as passing without running it.
 CI (`--exit-on-warn --exit-on-error` locally vs a bare `bin/brakeman --no-pager` on GitHub), so a red
 Brakeman step locally is not proof the PR will be red.
 
-`.github/workflows/ci.yml` defines a `system-test` job, but `test/system/` does not exist — the repo has
-zero system tests and capybara/selenium are unused scaffolding. That job exercises nothing. Browser-level
-behavior has no automated coverage anywhere; cover it with an integration test.
+There are no system tests. `test/system/` does not exist, and the CI job that ran `test:system` against it
+was removed — a green check over zero tests reads as "browser behavior verified" and verified nothing.
+`capybara` and `selenium-webdriver` stay in the `:test` group for whenever the first one gets written; add
+the job back in the same commit as that test, not before.
+
+So browser-level behavior has no automated coverage: autosave, the server countdown, drag-to-reorder, and
+the live board's broadcast-plus-poll reconciliation are all unverified. Cover what you can with an
+integration test that asserts rendered markup (`test/integration/answer_key_leak_test.rb` is the pattern).
 
 ## Git
 
