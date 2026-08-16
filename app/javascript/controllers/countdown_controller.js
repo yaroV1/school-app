@@ -30,6 +30,7 @@ export default class extends Controller {
     const m = Math.floor(remaining / 60)
     const s = remaining % 60
     this.displayTarget.textContent = `${m}:${String(s).padStart(2, "0")}`
+    this.element.dataset.urgency = remaining <= 60 ? "urgent" : "normal"
     if (remaining === 0) {
       clearInterval(this.timer)
       this.element.dispatchEvent(new CustomEvent("countdown:ended", { bubbles: true }))
