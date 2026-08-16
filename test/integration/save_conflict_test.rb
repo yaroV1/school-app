@@ -10,9 +10,13 @@ require "test_helper"
 # production that same escape is a 500 page, and autosave_controller.js falls back to the
 # generic take.save_failed because the body is not JSON.
 #
-# In production the collision originates in `locked.update!(last_activity_at:)` — `attempts`
-# is the only table carrying lock_version. Nothing can inject there from outside, so the
-# scorer inside the same transaction stands in for it: same begin/rescue, same retry count.
+# The collision is injected, and has to be. `attempts` is the only table carrying lock_version,
+# and both write paths below read it inside an `Attempt.transaction` — which is IMMEDIATE, so it
+# holds the SQLite write lock from BEGIN to COMMIT and nothing else can commit in the window
+# between the read and the write. So these pin the rescue contract, not a race this adapter can
+# reach; the scorer stands in for the write, with the same begin/rescue and retry count. The one
+# path that genuinely loses the race is the one that reads *outside* a transaction — `expire!`,
+# covered in test/services/attempt_lifecycle_test.rb against a real stale row rather than a stub.
 # `replacing` is in test_helper.rb.
 class SaveConflictTest < ActionDispatch::IntegrationTest
   setup do
