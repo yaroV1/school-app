@@ -43,3 +43,9 @@
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
+
+# /implement-prd build logs. progress.md records one run — reviewer findings, probes,
+# what was fixed — and stops being useful once the PRD is merged. project.md stays
+# tracked: it is the spec, and its Affected Areas list is the scope rail the skill
+# enforces against the diff.
+/prd/**/progress.md

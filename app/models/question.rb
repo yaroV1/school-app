@@ -1,6 +1,7 @@
 class Question < ApplicationRecord
   PHOTO_TYPES = %w[image/jpeg image/png image/webp image/gif].freeze
   PHOTO_MAX_BYTES = 8.megabytes
+  TEXT_BEARING_KEYS = %w[options items left right].freeze
 
   belongs_to :exam, inverse_of: :questions
   has_many :answers, dependent: :destroy
@@ -15,6 +16,7 @@ class Question < ApplicationRecord
   validate :matching_has_pairs
   validate :source_has_text
   validate :acceptable_photo
+  validate :structure_unchanged_outside_draft
 
   def auto_gradable?
     mcq? || ordering? || matching?
@@ -139,5 +141,29 @@ class Question < ApplicationRecord
 
     errors.add(:photo, :invalid_type) unless photo.content_type.in?(PHOTO_TYPES)
     errors.add(:photo, :too_big) if photo.byte_size > PHOTO_MAX_BYTES
+  end
+
+  def structure_unchanged_outside_draft
+    return if new_record? || exam.nil? || exam.questions_editable?
+    return unless structure_moved?
+
+    errors.add(:base, :structure_frozen)
+  end
+
+  def structure_moved?
+    points_changed? || question_type_changed? || position_changed? ||
+      config_skeleton(config_was) != config_skeleton(config)
+  end
+
+  def config_skeleton(raw)
+    skeleton = raw || {}
+    skeleton = skeleton.except("source") if source?
+    TEXT_BEARING_KEYS.each do |key|
+      next unless skeleton.key?(key)
+
+      entries = Array(skeleton[key]).map { |entry| entry.is_a?(Hash) ? entry.except("text") : entry }
+      skeleton = skeleton.merge(key => entries)
+    end
+    skeleton
   end
 end

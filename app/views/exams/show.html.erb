@@ -65,6 +65,9 @@
               <% end %>
             </ul>
           <% end %>
+          <% if @exam.wording_editable? %>
+            <%= render "questions/wording_form", exam: @exam, question: question %>
+          <% end %>
         </li>
       <% end %>
     </ol>

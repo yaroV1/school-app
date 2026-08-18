@@ -30,6 +30,10 @@ class Exam < ApplicationRecord
     draft?
   end
 
+  def wording_editable?
+    draft? || published?
+  end
+
   def max_score
     if questions.loaded?
       questions.sum(&:points)
