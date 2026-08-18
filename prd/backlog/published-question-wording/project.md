@@ -256,7 +256,7 @@ One commit per task.
       closed exam redirects with `wording_locked`, POST and DELETE on a published exam still redirect with
       `questions_locked`, and a PATCH by another teacher 404s — proof:
       `test/integration/question_wording_test.rb`
-- [ ] FR-1 — Add `app/views/questions/_wording_form.html.erb` and render it per question in
+- [x] FR-1 — Add `app/views/questions/_wording_form.html.erb` and render it per question in
       `app/views/exams/show.html.erb` when `@exam.wording_editable?`, with the `exams.show.*` wording keys —
       done when: the published test page renders a prefilled prompt textarea and one text input per existing
       option, item and matching entry, renders no points field, no radio and no add- or remove-row control,
