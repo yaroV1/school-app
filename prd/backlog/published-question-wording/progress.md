@@ -26,6 +26,24 @@ environment gap, not a red suite.
 - rebutted: none
 - deferred: model freeze does not cover create/destroy on a published exam → § Deferred
 
+## FR-1 — Add `Exam#wording_editable?` beside `questions_editable?`
+- commit: 0c78b21 Separate the wording gate from the structure gate on an exam
+- reviews: security 1 · tests 2 — criticals/majors: none
+- fixed: both lenses independently flagged the same thing — `!closed?` is a denylist that fails open,
+  where the sibling `questions_editable?` is an allowlist. The tests lens probed it:
+  `Exam.new(status: nil).wording_editable?` returned `true` while `questions_editable?` returned
+  `false`. For a predicate whose job is to gate writes to a live exam the safe failure mode is
+  deny-by-default, so it is now `draft? || published?` — which is also literally the done-when's
+  wording — plus a test pinning that an untaught status denies. Probed the new test against the old
+  form: it goes red. The state test also reached `published` through `update!` on an exam with no
+  questions, a state the app cannot produce (`publish!` raises when `questions.none?`); it now adds a
+  question and uses `publish!` / `close!`, the real transitions.
+- rebutted: none
+- deferred: none
+
+Self-inflicted note: the first version of the untaught-status test asserted on `Exam.new`, which the
+column default makes `draft` — so it failed correctly and the test was wrong, not the predicate.
+
 ## Deferred
 - The `new_record?` early return means the model freeze does not cover adding or removing a question
   on a published exam — both still move `Exam#max_score` under finalized grades, and both are held

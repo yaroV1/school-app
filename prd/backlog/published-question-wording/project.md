@@ -244,7 +244,7 @@ One commit per task.
       `config` change saves, and a change to `points`, `question_type`, `position`, any entry `id`,
       `is_correct`, an array's length or order, `pairs`, `rubric`, or `model_answer` fails with the
       translated message, while all of them still save on a draft exam — proof: `test/models/question_test.rb`
-- [ ] FR-1 — Add `Exam#wording_editable?` beside `questions_editable?` — done when: it is true for `draft`
+- [x] FR-1 — Add `Exam#wording_editable?` beside `questions_editable?` — done when: it is true for `draft`
       and `published` and false for `closed`, and `questions_editable?` still answers `draft` only —
       proof: `test/models/exam_test.rb`
 - [ ] FR-2, FR-3 — In `QuestionsController`, split `ensure_editable` into a structure guard on
