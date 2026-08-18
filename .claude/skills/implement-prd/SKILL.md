@@ -40,10 +40,10 @@ force-push, never change git config.
 ## Preflight — once per run
 
 1. `git diff --quiet && git diff --cached --quiet` — no tracked modifications and nothing staged.
-   Untracked files are allowed and must not be added. One exception, on resume: uncommitted changes
-   confined to `prd/backlog/<name>/project.md` and `progress.md` are this skill's own step-9
-   bookkeeping — report them and continue; the next commit sweeps them in. Any other dirty tracked
-   file: stop and ask. Do not stash, do not commit it.
+   Untracked files are allowed and must not be added. One exception, on resume: an uncommitted
+   `prd/backlog/<name>/project.md` is this skill's own step-9 bookkeeping — report it and continue; the
+   next commit sweeps it in. `progress.md` is git-ignored and never appears here at all. Any other dirty
+   tracked file: stop and ask. Do not stash, do not commit it.
 2. `git branch --show-current` and `git rev-parse --short HEAD` — report both. All work stays on that
    branch; that sha is the run's **baseline** for the completion report.
 3. `bin/rails test` — green **before** the first edit. Red: stop (§ Stop conditions). A pre-existing
@@ -87,9 +87,10 @@ to reviewers; `proof:` is the test that must exist and pass. A task missing eith
    not the task number or the PRD name. Match `git log --oneline -10`; this repo uses no `feat:` /
    `fix:` prefixes.
 9. **Record.** Tick the checkbox in `project.md`. Append the `progress.md` entry: task, sha from
-   `git rev-parse --short HEAD`, what each reviewer found, what was deferred or rebutted. Both files
-   stay uncommitted until the next task's commit sweeps them in — the sha does not exist before the
-   commit, and amending to add it would change it.
+   `git rev-parse --short HEAD`, what each reviewer found, what was deferred or rebutted. `project.md`
+   stays uncommitted until the next task's commit sweeps it in — the sha does not exist before the
+   commit, and amending to add it would change it. `progress.md` is git-ignored: write it for the run
+   and for a resume, never stage it. A `## Deferred` item that must outlive the run goes in an issue.
 10. **Next.** The next unchecked task, in order. Do not skip ahead. Reorder only when a later task
     blocks the current one, and write the one-line reason in `progress.md` first.
 
