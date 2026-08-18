@@ -262,7 +262,7 @@ One commit per task.
       option, item and matching entry, renders no points field, no radio and no add- or remove-row control,
       and still renders neither the remove button nor the add-question section — proof:
       `test/integration/question_wording_test.rb`
-- [ ] FR-5 — Assert a wording edit moves no recorded work — done when: for an exam with an in-progress, a
+- [x] FR-5 — Assert a wording edit moves no recorded work — done when: for an exam with an in-progress, a
       submitted and a teacher-finalized attempt, every `auto_score`, `teacher_score`, `grade.total_score`,
       `grade.max_score` and `Exam#max_score` is unchanged after the edit — proof:
       `test/integration/grade_integrity_test.rb`

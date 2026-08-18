@@ -96,6 +96,37 @@ Self-inflicted note: ran `bin/rubocop -A` over the `.erb` and `.yml` files, whic
 693 phantom offenses and an autocorrect pass that thankfully could not rewrite what it could not
 parse. Verified both files against `git diff` before committing. Lint Ruby only.
 
+## FR-5 — Assert a wording edit moves no recorded work
+- commit: f28547a Prove a wording fix leaves recorded work untouched
+- reviews: security 2 · tests 2 — criticals/majors: test/integration/grade_integrity_test.rb:148
+- fixed: the in-progress attempt was passing by construction — a wording PATCH writes only to
+  `questions`, so nothing could move that attempt's stored `auto_score` inside the assertion window,
+  and the state where a mid-exam student's work genuinely can move is `AttemptLifecycle.submit!`,
+  which runs `Scoring.score_all_auto!` against the config as it then stands. The test now submits
+  after the edit and asserts the rescore lands on the same option. The snapshot compared scores but
+  not the answers themselves: a probe rewriting every student's `payload` passed green, so `payload`
+  is now in the compared tuple. Added the missing anti-vacuity pins for `teacher_score`,
+  `grade.max_score` and `Exam#max_score` — three of the five values the done-when names were
+  unpinned, so the equality could have gone on passing on nothing. Added a broadcast check for the
+  PRD's "none added" claim and § Out of Scope's "no push to a student mid-exam".
+- rebutted: none
+- deferred: none
+
+Two mistakes of mine worth recording. `assert_no_turbo_stream_broadcasts` calls the block and then
+counts **every** broadcast on the stream, not the delta — unlike `assert_turbo_stream_broadcasts`,
+which with a block does take a delta. My first version therefore failed on the `autosave!` pushes this
+test makes in its own setup, and I misread that as a stray push from the controller; the reviewer's
+measurement was right and my assertion was wrong. The broadcast check is now an explicit before/after
+count. Separately, my first probe run injected nothing at all — `if @question.save` appears in both
+`create` and `update`, so the uniqueness guard in the injection script aborted and the suite ran green
+against an unmodified controller. A green probe that proves nothing is worse than no probe; re-ran it
+against a unique anchor, and both injected breaks turn the test red.
+
+Reviewer note carried forward: the two review agents probe by editing the same working tree, and this
+round they collided — a `points: 99` probe from one appeared mid-run in the other's suite and produced
+transient `SQLite3::BusyException` failures. Future fan-outs should tell reviewers to copy the repo
+before mutating it.
+
 ## Deferred
 - The `new_record?` early return means the model freeze does not cover adding or removing a question
   on a published exam — both still move `Exam#max_score` under finalized grades, and both are held
