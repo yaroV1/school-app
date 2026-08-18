@@ -1,0 +1,42 @@
+<%# A disclosure, not an always-open form: this list is for reading the test, and a
+    typo fix is the rare visit. %>
+<details class="mt-3">
+  <summary class="cursor-pointer text-xs font-medium text-ink-muted marker:text-ink-subtle hover:text-ink">
+    <%= t("exams.show.edit_wording") %>
+  </summary>
+
+  <%= form_with model: question, url: test_question_path(exam, question), class: "mt-3 space-y-3" do |f| %>
+    <%# Every question on the page renders one of these, so the ids have to carry the
+        question: a bare "question_prompt" would repeat and steal the add-question
+        form's label. %>
+    <div class="fieldset">
+      <%= f.label :prompt, t("exams.show.prompt"), class: "field-label", for: dom_id(question, :prompt) %>
+      <%= f.text_area :prompt, rows: 3, required: true, id: dom_id(question, :prompt), class: field_class %>
+    </div>
+
+    <% if question.source? %>
+      <div class="fieldset">
+        <%= label_tag dom_id(question, :source), t("exams.show.source"), class: "field-label" %>
+        <%= text_area_tag "question[source]", question.source_text, rows: 6, id: dom_id(question, :source), class: field_class %>
+      </div>
+    <% end %>
+
+    <%# Keyed by the entry's own id, never by position: the controller rewrites text in
+        place and mints no ids, so a renamed key would silently match nothing. %>
+    <% [ [ t("exams.show.wording_options"), question.options ],
+         [ t("exams.show.wording_items"), question.items ],
+         [ t("exams.show.matching_left"), question.left_items ],
+         [ t("exams.show.matching_right"), question.right_items ] ].each do |label, entries| %>
+      <% next if entries.blank? %>
+      <div class="fieldset">
+        <p class="field-label"><%= label %></p>
+        <% entries.each do |entry| %>
+          <%= text_field_tag "question[texts][#{entry["id"]}]", entry["text"], class: field_class %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <p class="field-hint"><%= t("exams.show.wording_hint") %></p>
+    <%= f.submit t("exams.show.save_wording"), class: "#{btn_secondary} btn-sm" %>
+  <% end %>
+</details>

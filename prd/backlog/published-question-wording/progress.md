@@ -44,6 +44,31 @@ environment gap, not a red suite.
 Self-inflicted note: the first version of the untaught-status test asserted on `Exam.new`, which the
 column default makes `draft` — so it failed correctly and the test was wrong, not the predicate.
 
+## FR-2, FR-3 — In `QuestionsController`, split `ensure_editable` into a structure guard on `create`/`destroy` and a wording guard on `update`, rewrite `update` to write only `prompt`, `source` and `texts` keyed by existing id through a new narrow permit list, and add the `wording_locked` and reworded `questions_locked` keys
+- commit: 0766676 Let a teacher correct question wording while a test is running
+- reviews: security (round 1: the nested-`texts` hole; lens (a) re-review after the fix: no findings) ·
+  tests 5 — criticals/majors: app/controllers/questions_controller.rb:64,
+  test/integration/question_wording_test.rb:82, test/integration/question_wording_test.rb:8
+- fixed: `texts: {}` was not narrow at the leaf — it permitted arbitrary nesting, so a request could
+  store a Hash, an Array or a number as an entry's `text`, and the student run page renders whatever
+  lands there. The model guard did not catch it either, because `config_skeleton` strips `text` before
+  the structure comparison, so this was the one shape both guards were blind to. `reworded_entry` now
+  accepts only a present String. The re-review re-ran both original exploits plus JSON bodies carrying
+  a number, `true`, `null` and an array of objects: all refused, every stored `text` still a `String`,
+  and the narrowing opened nothing new. Tests: three of the nine passed against the pre-change
+  controller that redirects every PATCH with `questions_locked`, so they proved nothing — the
+  unknown-id case re-sent the prompt the question already had and asserted only that the options were
+  untouched, and the blank-prompt case asserted only `flash[:alert].present?`, which the lock redirect
+  satisfies just as well. Both now assert what only a save that actually ran can produce. `ordering`
+  and `matching` had no coverage at all, leaving three of the four `TEXT_BEARING_KEYS` unexercised and
+  `matching` — the type where a mis-keyed rewrite would silently disturb `pairs` — untested; both are
+  covered now, asserting `pairs` and `correct_order_ids` are byte-identical after a text rewrite.
+- rebutted: the suggestion to skip a blank `source` the way a blank entry text is skipped. FR-2's
+  "blank leaves it unchanged" is about entries in a list; `source` is a single required field like
+  `prompt`, and § Edge Cases already chose rejection for it. Kept the rejection and added the test that
+  was missing in both directions.
+- deferred: none
+
 ## Deferred
 - The `new_record?` early return means the model freeze does not cover adding or removing a question
   on a published exam — both still move `Exam#max_score` under finalized grades, and both are held

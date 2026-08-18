@@ -34,6 +34,10 @@ class QuestionWordingTest < ActionDispatch::IntegrationTest
         "pairs" => { "l1" => "r2", "l2" => "r1" }
       }
     )
+    @short = @exam.questions.create!(
+      question_type: :short_text, prompt: "Хто написав?", points: 1, position: 4,
+      config: { "rubric" => "секретна рубрика", "model_answer" => "секретна відповідь" }
+    )
     @exam.publish!
   end
 
@@ -195,5 +199,102 @@ class QuestionWordingTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
     assert_equal "Столиця?", @mcq.reload.prompt
+  end
+
+  test "the published test page renders a prefilled wording form for every question" do
+    get test_path(@exam)
+    assert_response :success
+
+    assert_select "form[action=?]", test_question_path(@exam, @mcq) do
+      assert_select "input[type=hidden][name=_method][value=patch]"
+      assert_select "textarea[name=?]", "question[prompt]", text: /Столиця\?/
+      assert_select "input[name=?][value=?]", "question[texts][a]", "Париж"
+      assert_select "input[name=?][value=?]", "question[texts][b]", "Кийв"
+    end
+
+    assert_select "form[action=?]", test_question_path(@exam, @ordering) do
+      assert_select "input[name=?][value=?]", "question[texts][i1]", "Перша"
+      assert_select "input[name=?][value=?]", "question[texts][i2]", "Друга"
+      assert_select "input[name=?][value=?]", "question[texts][i3]", "Трета"
+    end
+
+    assert_select "form[action=?]", test_question_path(@exam, @matching) do
+      assert_select "input[name=?][value=?]", "question[texts][l1]", "Альфа"
+      assert_select "input[name=?][value=?]", "question[texts][l2]", "Бета"
+      assert_select "input[name=?][value=?]", "question[texts][r1]", "Один"
+      assert_select "input[name=?][value=?]", "question[texts][r2]", "Два"
+    end
+
+    assert_select "form[action=?]", test_question_path(@exam, @source) do
+      assert_select "textarea[name=?]", "question[source]", text: /Уривк тексту\./
+    end
+  end
+
+  test "the wording form offers no structural control" do
+    get test_path(@exam)
+
+    assert_select "form[action=?]", test_question_path(@exam, @mcq) do
+      assert_select "input[name=?]", "question[points]", false
+      assert_select "input[name=?]", "question[correct_index]", false
+      assert_select "input[type=radio]", false
+      assert_select "select[name=?]", "question[question_type]", false
+    end
+
+    assert_select "form[action=?] input[type=text]", test_question_path(@exam, @mcq), count: 2
+    assert_select "form[action=?] input[type=text]", test_question_path(@exam, @ordering), count: 3
+    assert_select "form[action=?] input[type=text]", test_question_path(@exam, @matching), count: 4
+    assert_select "form[action=?] input[type=text]", test_question_path(@exam, @source), count: 0
+    assert_select "form[action=?] button", test_question_path(@exam, @mcq), false, "no add- or remove-row control"
+
+    assert_select "form[action=?] textarea[name=?]", test_question_path(@exam, @short), "question[prompt]"
+    assert_select "form[action=?] input[name^=?]", test_question_path(@exam, @short), "question[texts]", false
+
+    assert_select "form[action=?] input[name=_method][value=delete]",
+      test_question_path(@exam, @mcq), false, "remove stays draft-only"
+    assert_select "form[action=?]", test_questions_path(@exam), false, "add stays draft-only"
+    assert_no_match(/секретна рубрика/, response.body, "the form must carry wording, not the whole config")
+    assert_no_match(/секретна відповідь/, response.body)
+  end
+
+  test "a closed test renders no wording form" do
+    @exam.close!
+
+    get test_path(@exam)
+
+    assert_response :success
+    assert_select "form[action=?]", test_question_path(@exam, @mcq), false
+    assert_select "textarea[name=?]", "question[prompt]", false
+  end
+
+  test "a draft test renders the wording form beside the structural controls" do
+    draft = create_exam!(@teacher, title: "Чернетка")
+    question = draft.questions.create!(
+      question_type: :mcq, prompt: "Чернеткове?", points: 1, position: 0,
+      config: { "options" => [ { "id" => "d1", "text" => "Так", "is_correct" => true } ] }
+    )
+
+    get test_path(draft)
+
+    assert_response :success
+    assert_select "form[action=?] textarea[name=?]", test_question_path(draft, question), "question[prompt]"
+    assert_select "form[action=?] input[name=_method][value=delete]", test_question_path(draft, question)
+    assert_select "form[action=?]", test_questions_path(draft)
+  end
+  test "a wording form does not steal the add-question form's field ids" do
+    draft = create_exam!(@teacher, title: "Чернетка")
+    draft.questions.create!(
+      question_type: :mcq, prompt: "Перше", points: 1, position: 0,
+      config: { "options" => [ { "id" => "d1", "text" => "Так", "is_correct" => true } ] }
+    )
+    draft.questions.create!(
+      question_type: :mcq, prompt: "Друге", points: 1, position: 1,
+      config: { "options" => [ { "id" => "d2", "text" => "Ні", "is_correct" => true } ] }
+    )
+
+    get test_path(draft)
+
+    ids = css_select("textarea[name='question[prompt]']").map { |node| node["id"] }
+    assert_equal ids.uniq, ids, "a repeated id makes every label focus the first textarea"
+    assert_equal 1, ids.count("question_prompt"), "only the add-question form owns the bare id"
   end
 end

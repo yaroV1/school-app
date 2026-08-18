@@ -247,7 +247,7 @@ One commit per task.
 - [x] FR-1 — Add `Exam#wording_editable?` beside `questions_editable?` — done when: it is true for `draft`
       and `published` and false for `closed`, and `questions_editable?` still answers `draft` only —
       proof: `test/models/exam_test.rb`
-- [ ] FR-2, FR-3 — In `QuestionsController`, split `ensure_editable` into a structure guard on
+- [x] FR-2, FR-3 — In `QuestionsController`, split `ensure_editable` into a structure guard on
       `create`/`destroy` and a wording guard on `update`, rewrite `update` to write only `prompt`, `source`
       and `texts` keyed by existing id through a new narrow permit list, and add the `wording_locked` and
       reworded `questions_locked` keys — done when: a PATCH on a published exam updates prompt and entry
