@@ -266,7 +266,7 @@ One commit per task.
       submitted and a teacher-finalized attempt, every `auto_score`, `teacher_score`, `grade.total_score`,
       `grade.max_score` and `Exam#max_score` is unchanged after the edit — proof:
       `test/integration/grade_integrity_test.rb`
-- [ ] FR-6 — Assert the student boundary survives a wording edit — done when: the run page rendered after an
+- [x] FR-6 — Assert the student boundary survives a wording edit — done when: the run page rendered after an
       edit exposes the corrected text and no rubric, model answer, `is_correct`, or `pairs` value, and an
       ordering question returns the same item order across two loads for the same attempt — proof:
       `test/integration/answer_key_leak_test.rb`

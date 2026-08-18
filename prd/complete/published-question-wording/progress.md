@@ -127,11 +127,43 @@ round they collided — a `points: 99` probe from one appeared mid-run in the ot
 transient `SQLite3::BusyException` failures. Future fan-outs should tell reviewers to copy the repo
 before mutating it.
 
+## FR-6 — Assert the student boundary survives a wording edit
+- commit: 7cd8af6 Hold the answer-key boundary across a wording fix
+- reviews: security 4 · tests 4 — criticals/majors: test/integration/answer_key_leak_test.rb:94-118
+  (both lenses, independently)
+- fixed: the `MODEL_ANSWER` refutation was vacuous — `@open` is the only question whose config holds a
+  model answer and the test never PATCHed it, so that assertion was inherited from an unedited question
+  and added nothing over the test that already existed. Both reviewers demonstrated the same probe:
+  append `config["model_answer"]` to an open question's prompt inside `apply_wording!` and everything
+  stays green. The fourth PATCH is in, and the probe now turns it red. The ordering comparison passed on
+  `[] == []`, so a renamed field would have slipped through — `refute_empty` guards it, mirroring the
+  neighbouring test at :74. `assert_no_answer_key` read `@matching.pairs` from the setup-time in-memory
+  record rather than what is stored after the edit; it reloads now. `assert_redirected_to test_path`
+  could not distinguish a successful edit from a refused one — both `ensure_wording_editable` and the
+  save-failure branch redirect to the same path — so the edits are pinned by their flash instead. Added
+  an assertion that no option renders pre-checked, which is the answer key wearing a different shape.
+- rebutted: none
+- deferred: a value-shaped leak through the right-column order → § Deferred
+
 ## Deferred
 - The `new_record?` early return means the model freeze does not cover adding or removing a question
   on a published exam — both still move `Exam#max_score` under finalized grades, and both are held
-  only by `QuestionsController#ensure_editable`. Not fixed here: rejecting `new_record?` would break
-  `create` and reaches past this task's done-when, and § Out of Scope keeps add/remove draft-only
-  rather than enabling them. **Constraint on the FR-2/FR-3 task: the guard split must keep `create`
-  and `destroy` on the structure guard, because this validation will not catch them.**
-  (task: FR-4 — structure-freeze validation)
+  only by `QuestionsController#ensure_editable`. Not fixed there: rejecting `new_record?` would break
+  `create` and reaches past that task's done-when, and § Out of Scope keeps add/remove draft-only
+  rather than enabling them. **Constraint honoured by the FR-2/FR-3 task: `create` and `destroy` stayed
+  on the structure guard.** (task: FR-4 — structure-freeze validation)
+- `assert_no_answer_key` matches key *names* and pair *ids*, so a leak that emits the key as a *value* —
+  the right column ordered to mirror `pairs` — is not covered. The suggested `refute_equal` cannot be
+  taken as-is: the matching fixture has two pairs, so the shuffle coincides with the key half the time
+  by construction and the assertion would be a coin flip that already fails today. Making it meaningful
+  needs a wider matching fixture, which is its own change. The pre-checked-radio half of the same
+  finding was fixed. (task: FR-6 — student boundary)
+
+## Run complete — 2026-08-18
+
+6 of 6 tasks committed, baseline `bffdfa5` on `claude/published-exam-editing-6x7r6z`.
+`bin/ci` green in one run after the last task: 169 runs, 853 assertions, 0 failures.
+
+Still open, both recorded above under § Deferred: the model-level freeze does not cover adding or
+removing a question on a published exam (held by the controller guard instead), and the answer-key
+helper does not cover a key that leaks as a value through the right column's order.
