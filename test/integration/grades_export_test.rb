@@ -138,6 +138,27 @@ class GradesExportTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
+  test "neither csv carries access_token, portal path, or student email" do
+    student = @teacher.students.create!(name: "Ann", email: "ann@example.com")
+    @group.add_student!(student)
+    assignment = @exam.assignments.create!(student: student)
+    now = Time.zone.parse("2026-03-15 12:00")
+    attempt = started_attempt!(assignment, attempt_no: 1, status: :submitted, at: now, submitted_at: now)
+    attempt.create_grade!(max_score: 1, total_score: 1)
+
+    [ results_test_path(@exam, format: :csv), stats_subject_path(@exam.subject, format: :csv) ].each do |path|
+      get path
+      assert_response :success
+      body = response.body
+      names = parse_journal_csv(body).drop(1).map(&:first)
+      assert_includes names, student.name
+      refute_match(/access_token/i, body)
+      refute_includes body, assignment.access_token
+      refute_includes body, "/t/"
+      refute_includes body, student.email
+    end
+  end
+
   private
 
   def assign_student!(name)
