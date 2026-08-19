@@ -294,6 +294,7 @@ uk:
       latest_status: "Останній статус"
       submitted: "Здано"
       score: "Бал"
+      max_score: "Максимум"
       finalized: "затверджено"
       grade: "Оцінити"
       empty: "Ще немає призначень."
