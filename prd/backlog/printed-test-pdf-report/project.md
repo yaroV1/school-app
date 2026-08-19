@@ -39,6 +39,16 @@ Neither may carry an answer key.
   no `pairs` map, no `rubric`, no `model_answer`, and no per-answer correct/incorrect marker. It also
   carries no `access_token`. This holds while the test is still `published` and the rest of the
   class is writing.
+- FR-8 (student) — A printed shuffle is never the answer order. `ordering` items never print in
+  `correct_order_ids` order, and the `matching` bank never prints so that reading it down the page
+  answers the left column. A plain seeded shuffle lands on the answer order with probability `1/n!`
+  — one in two for the smallest legal matching question — and on paper the whole class holds that
+  same sheet, so the guarantee has to be structural, not probabilistic. It holds from three entries
+  up. With two there is exactly one order that is not the key, so refusing the key would print its
+  reverse every time and a reader who knows the rule takes it bottom-up: the even chance of a plain
+  draw is the best available at that size, and the draw is kept. The refusal is a re-draw on a
+  derived seed, never a fixed transform of the drawn order — undoing a public transform names the
+  key, which measurably beats a blind guess.
 - FR-7 (teacher) — The paper copy is reachable from the test tab bar; the answer-key copy only from
   the paper copy; the report only from the attempt's grading page. All three links disappear when
   the page is printed.
@@ -81,7 +91,11 @@ be nothing left in the third layout but a `<main>`.
 
 ### Affected Areas
 
-- Models: none.
+- Models: `app/models/question.rb` — add `unaligned_items` and `unaligned_right_items` beside the
+  existing shuffle readers, plus one private helper. `why`: the comparison that proves a shuffle is
+  not the answer order has to read `correct_order_ids` and `pairs`, and those are exactly the
+  readers the print view may never touch. Doing it in the view was the rejected alternative — it
+  would put the answer key inside the answer-key boundary to keep the key out of it.
 - Controllers: `app/controllers/exams_controller.rb` — add `print` and `print_key`, both on the
   existing `set_exam`. `app/controllers/attempts_controller.rb` — add `report` on the existing
   `set_attempt`, and move `show`'s four ivar assignments into a private `load_attempt_view` both
@@ -282,6 +296,11 @@ stray string fails the build rather than shipping.
 - **Exam status.** All three pages work for `draft`, `published` and `closed`. Printing is a read;
   nothing about it depends on the lifecycle, and gating the paper backup on `published` would deny
   it exactly when a teacher is preparing.
+- **Two-entry matching bank.** FR-8 does not cover it, by design — see § Open Questions. The plain
+  even chance is kept rather than replaced by a certain reverse.
+- **Matching bank colliding with the answer order.** `matching_has_pairs` allows two pairs, where a
+  plain shuffle prints the bank in answer order half the time — a student lettering straight down the
+  left column would score full marks. FR-8 removes this rather than documenting it.
 - **Ordering shuffle colliding with the stored order.** With three items there is a 1-in-6 chance
   `shuffled_items(@exam.id)` lands on `correct_order_ids`. On paper this is far weaker than the same
   collision online: the student writes numbers into empty boxes, so a coincidentally-correct listing
@@ -332,6 +351,13 @@ stray string fails the build rather than shipping.
 
 ## Open Questions
 
+- Should a `matching` question be required to carry more right items than pairs, or at least three
+  pairs? — **non-blocking, but the sharpest remaining edge.** FR-8 cannot protect a two-entry bank:
+  the security review that produced FR-8 also showed that refusing the key there prints its reverse
+  every time, so the code deliberately keeps the even chance instead. `matching_has_pairs` allows two
+  pairs, so a teacher can still author a printed question that a coin-flip reads correctly. Widening
+  the validation, or letting the bank carry distractors, would close it — both change what a teacher
+  may author, so neither belongs in this PRD.
 - Should `docs/agent-rules.md` § Never leak answer keys gain a sentence covering the non-attempt
   seed? — **non-blocking.** The rule as written says "always pass `@attempt.id` explicitly", which
   is right for the run page and unsatisfiable for a blank sheet. The PRD's answer is `@exam.id` with
@@ -392,14 +418,22 @@ Quality loop and commands: `docs/agent-rules.md` § Quality.
 
 One commit per task.
 
+- [ ] FR-8 — Add `Question#unaligned_items` and `Question#unaligned_right_items`, which return a
+      seeded shuffle that is never the recorded answer order — done when: for every seed in a wide
+      range, `unaligned_items` never equals `correct_order_ids` and the first `left_items.size`
+      entries of `unaligned_right_items` never equal the correct right-id sequence, both are stable
+      across repeated calls for one seed, a question whose plain shuffle *is* the answer order still
+      returns an unaligned list, repeated re-draws do not all land on one order, a bank longer than
+      its left column is still covered, and a two-entry bank still returns both of its orders —
+      proof: `test/models/question_test.rb`
 - [ ] FR-1, FR-2, FR-4 — Add the `print` member route, `ExamsController#print` on the existing
       `set_exam`, `app/views/exams/print.html.erb`, the `exams.print.*` and `common.print` keys, and
       the `@media print` section in `app/assets/tailwind/application.css` — done when: a GET by the
       owning teacher on a `draft`, a `published` and a `closed` test renders every question in
       position order with its number, type label, points and prompt; `mcq` renders unticked boxes
-      from `student_facing_options`, `ordering` renders `shuffled_items(@exam.id)` each with an
+      from `student_facing_options`, `ordering` renders `unaligned_items(@exam.id)` each with an
       empty position box, `matching` renders `student_facing_left` with a blank plus a lettered bank
-      from `shuffled_right_items(@exam.id)`, `short_text` / `open` / `source` render ruled
+      from `unaligned_right_items(@exam.id)`, `short_text` / `open` / `source` render ruled
       `answer-lines` and `source` also its `source_text`; the page root carries `print-sheet`, every
       question block `print-question` and every control `no-print`; a test with no questions renders
       the header alone; and a GET by another teacher 404s — proof:
