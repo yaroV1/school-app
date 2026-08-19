@@ -240,6 +240,18 @@ uk:
       rubric: "Критерії (необов’язково)"
       model_answer: "Зразок відповіді (необов’язково)"
       submit_question: "Додати питання"
+    print:
+      title: "Друк: %{title}"
+      hint: "Роздрукуйте цей аркуш (Ctrl+P) і роздайте учням. Правильних відповідей тут немає."
+      name_field: "Ім’я"
+      class_field: "Клас"
+      date_field: "Дата"
+      score_field: "Бал"
+      answer_label: "Відповідь"
+      order_hint: "Проставте номери від 1 до %{count} у клітинках."
+      matching_bank: "Варіанти відповідностей"
+      matching_hint: "Впишіть літеру потрібного варіанта поруч з кожним фактом."
+      matching_letters: "А Б В Г Д Е Ж З И К Л М Н П Р С Т У Ф Х"
     questions_count:
       one: "%{count} питання"
       few: "%{count} питання"

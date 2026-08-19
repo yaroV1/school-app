@@ -418,7 +418,7 @@ Quality loop and commands: `docs/agent-rules.md` § Quality.
 
 One commit per task.
 
-- [ ] FR-8 — Add `Question#unaligned_items` and `Question#unaligned_right_items`, which return a
+- [x] FR-8 — Add `Question#unaligned_items` and `Question#unaligned_right_items`, which return a
       seeded shuffle that is never the recorded answer order — done when: for every seed in a wide
       range, `unaligned_items` never equals `correct_order_ids` and the first `left_items.size`
       entries of `unaligned_right_items` never equal the correct right-id sequence, both are stable

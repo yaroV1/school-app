@@ -31,6 +31,7 @@ Rails.application.routes.draw do
       post :close
       get :results
       get :live
+      get :print
     end
 
     resources :questions, only: %i[create update destroy]
