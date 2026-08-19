@@ -449,7 +449,7 @@ One commit per task.
       `correct_order_ids` order, lists every `pairs` entry as left → right, prints `rubric` and
       `model_answer` under the existing `exams.show.*` labels, carries the `no-print` teacher-only
       warning, and a GET by another teacher 404s — proof: `test/integration/exam_print_test.rb`
-- [ ] FR-5, FR-4 — Add the `report` member route on `resources :attempts`,
+- [x] FR-5, FR-4 — Add the `report` member route on `resources :attempts`,
       `AttemptsController#report` sharing `show`'s loading through a new private
       `load_attempt_view`, `app/views/attempts/report.html.erb`,
       `app/views/attempts/_report_answer.html.erb` and the `attempts.report.*` and
@@ -464,10 +464,15 @@ One commit per task.
       `test/integration/attempt_report_test.rb`
 - [ ] FR-6 — Extend `test/integration/answer_key_leak_test.rb` with the parent report — done when:
       the report rendered for a submitted attempt passes `assert_no_answer_key`, carries the
-      student's own answer text so an empty render cannot pass vacuously, and contains neither
-      `t("attempts.grade.correct_order")`, nor the expected-pair text
-      `t("attempts.grade.pair_expected", …)`, nor the assignment's `access_token` — proof:
-      `test/integration/answer_key_leak_test.rb`
+      student's own answer text so an empty render cannot pass vacuously, contains neither the
+      expected-pair text `t("attempts.grade.pair_expected", …)` nor the assignment's
+      `access_token`, and renders the student's own order and mapping rather than the stored
+      ones — proof: `test/integration/answer_key_leak_test.rb`
+
+      Do **not** refute `t("attempts.grade.correct_order")` against the whole body: it is
+      byte-identical to `t("question_types.ordering")`, which the type chip prints, so the
+      assertion fails on any report carrying an ordering question. Scope that property to the
+      answer block instead, by comparing it to the student's `order_ids`.
 - [ ] FR-7 — Add the "Друк" tab to `app/views/exams/_tabs.html.erb`, the `exams.print_key.sheet_link`
       and `exams.print.key_link` cross-links on the two test copies, and the "Звіт для батьків" link
       on `app/views/attempts/show.html.erb`, every one of them `no-print` — done when: the tab bar

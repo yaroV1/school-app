@@ -357,6 +357,16 @@ uk:
       overall_comment: "Загальний коментар"
       save: "Зберегти бали"
       save_finalize: "Зберегти і затвердити"
+    report:
+      title: "Звіт: %{name}"
+      heading: "Звіт про виконання тесту"
+      class_group: "Клас"
+      subject: "Предмет"
+      date: "Дата"
+      total: "Підсумковий бал"
+      earned: "%{score} з %{max}"
+      teacher_comment: "Коментар учителя"
+      provisional: "Оцінку ще не затверджено."
     history:
       test: "Тест"
       attempt: "Спроба"
@@ -365,6 +375,7 @@ uk:
       score: "Бал"
     flash:
       need_scores: "Поставте бали за всі відповіді, які оцінює вчитель, перед затвердженням."
+      report_in_progress: "Звіт можна надрукувати після того, як учень здасть роботу."
       finalized: "Оцінку затверджено."
       saved: "Бали збережено."
 

@@ -1,11 +1,15 @@
 class AttemptsController < ApplicationController
   before_action :set_attempt
+  before_action :ensure_finished, only: :report
 
   def show
-    @exam = @attempt.exam
-    @questions = @exam.questions.with_attached_photo
-    @answers = @attempt.answers.index_by(&:question_id)
-    @grade = @attempt.grade
+    load_attempt_view
+  end
+
+  # The same records the grading page loads, rendered for a parent instead of a
+  # teacher: no correct answer, no rubric, no per-answer right-or-wrong mark.
+  def report
+    load_attempt_view
   end
 
   def update
@@ -38,6 +42,21 @@ class AttemptsController < ApplicationController
   end
 
   private
+
+  def load_attempt_view
+    @exam = @attempt.exam
+    @questions = @exam.questions.with_attached_photo
+    @answers = @attempt.answers.index_by(&:question_id)
+    @grade = @attempt.grade
+  end
+
+  # A report for a student still writing would be a moving target, and the score on it
+  # would be stale before it reached the printer.
+  def ensure_finished
+    return unless @attempt.in_progress?
+
+    redirect_to attempt_path(@attempt), alert: t("attempts.flash.report_in_progress")
+  end
 
   def set_attempt
     @attempt = Attempt.joins(assignment: :exam)

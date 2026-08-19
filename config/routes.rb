@@ -51,7 +51,11 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :attempts, only: %i[show update]
+  resources :attempts, only: %i[show update] do
+    member do
+      get :report
+    end
+  end
 
   # module "take" avoids clashing with the Student ActiveRecord model
   scope "/t/:token", module: :take, as: :student do
