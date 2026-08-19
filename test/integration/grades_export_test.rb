@@ -78,6 +78,46 @@ class GradesExportTest < ActionDispatch::IntegrationTest
     assert_equal I18n.t("exams.assign.student"), rows.first.first
   end
 
+  test "owner downloads stats csv matching student_stat_rows" do
+    now = Time.zone.parse("2026-03-15 12:00")
+    scored = assign_student!("Ann")
+    idle = @teacher.students.create!(name: "Bea")
+    @group.add_student!(idle)
+
+    attempt = started_attempt!(scored, attempt_no: 1, status: :submitted, at: now, submitted_at: now)
+    attempt.create_grade!(max_score: 4, total_score: 3)
+
+    get stats_subject_path(@exam.subject)
+    assert_response :success
+
+    get stats_subject_path(@exam.subject, format: :csv)
+    assert_response :success
+    assert_match %r{text/csv}, response.media_type
+
+    rows = parse_journal_csv(response.body)
+    expected = @exam.subject.student_stat_rows
+    assert_equal [
+      I18n.t("subjects.stats.student"),
+      I18n.t("subjects.stats.tests"),
+      I18n.t("subjects.stats.average"),
+      I18n.t("subjects.stats.last")
+    ], rows.first
+    assert_equal expected.size + 1, rows.size
+
+    expected.each_with_index do |stat, index|
+      row = rows[index + 1]
+      assert_equal stat.student.name, row[0]
+      progress = if stat.assigned.positive?
+        I18n.t("subjects.stats.progress", finished: stat.finished, assigned: stat.assigned)
+      else
+        ""
+      end
+      assert_equal progress, row[1]
+      assert_equal stat.average_percent.nil? ? "" : stat.average_percent.to_s, row[2]
+      assert_equal stat.last_activity_at ? I18n.l(stat.last_activity_at, format: :short) : "", row[3]
+    end
+  end
+
   private
 
   def assign_student!(name)

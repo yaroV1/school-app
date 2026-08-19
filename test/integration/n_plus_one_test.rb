@@ -97,6 +97,17 @@ class NPlusOneTest < ActionDispatch::IntegrationTest
     assert_no_per_record_loads sql, "grades", "attempt_id"
   end
 
+  test "subject stats csv does not query assignments per exam or attempts per assignment" do
+    seed_assignments! 8, attempts: 1
+    get stats_subject_path(@exam.subject, format: :csv)
+    assert_response :success
+
+    sql = capture_sql { get stats_subject_path(@exam.subject, format: :csv) }
+    assert_no_per_record_loads sql, "assignments", "exam_id"
+    assert_no_per_record_loads sql, "attempts", "assignment_id"
+    assert_no_per_record_loads sql, "grades", "attempt_id"
+  end
+
   test "student history does not load the exam per attempt" do
     student = @teacher.students.create!(name: "Historian")
     @group.add_student!(student)

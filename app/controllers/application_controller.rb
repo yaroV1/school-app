@@ -18,4 +18,12 @@ class ApplicationController < ActionController::Base
     end
     send_data "\uFEFF#{body}", filename: filename, type: "text/csv; charset=utf-8"
   end
+
+  def csv_time(time)
+    time ? I18n.l(time, format: :short) : ""
+  end
+
+  def csv_decimal(value)
+    value.nil? ? "" : value.to_d.to_s("F")
+  end
 end

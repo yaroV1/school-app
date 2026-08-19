@@ -105,14 +105,6 @@ class ExamsController < ApplicationController
     end
   end
 
-  def csv_time(time)
-    time ? I18n.l(time, format: :short) : ""
-  end
-
-  def csv_decimal(value)
-    value.nil? ? "" : value.to_d.to_s("F")
-  end
-
   def exam_params
     permitted = params.require(:exam).permit(
       :title, :description, :time_limit_sec, :max_attempts,
