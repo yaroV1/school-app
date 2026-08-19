@@ -1,6 +1,6 @@
 class ExamsController < ApplicationController
   before_action :set_subject, only: %i[new create]
-  before_action :set_exam, only: %i[show edit update destroy publish close results live print]
+  before_action :set_exam, only: %i[show edit update destroy publish close results live print print_key]
 
   def show
     @questions = @exam.questions.with_attached_photo
@@ -62,6 +62,12 @@ class ExamsController < ApplicationController
   # Kernel#print is private, so a public action of the same name shadows nothing
   # Rails or Ruby calls on the controller.
   def print
+    @questions = @exam.questions.with_attached_photo
+  end
+
+  # A separate action rendering a separate template, rather than a flag on #print:
+  # the student sheet then has no branch that could be inverted into printing the key.
+  def print_key
     @questions = @exam.questions.with_attached_photo
   end
 

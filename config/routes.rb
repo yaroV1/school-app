@@ -32,6 +32,7 @@ Rails.application.routes.draw do
       get :results
       get :live
       get :print
+      get :print_key
     end
 
     resources :questions, only: %i[create update destroy]

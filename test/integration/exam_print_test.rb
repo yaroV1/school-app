@@ -19,9 +19,13 @@ class ExamPrintTest < ActionDispatch::IntegrationTest
     # order" cannot pass by accidentally agreeing with id order.
     @mcq = @exam.questions.create!(
       question_type: :mcq, prompt: "Capital?", points: 1, position: 0,
+      # Four options with the correct one neither first nor last: two options with the
+      # answer last cannot tell "reads is_correct" from "marks the last row".
       config: { "options" => [
         { "id" => "a", "text" => "Paris", "is_correct" => false },
-        { "id" => "b", "text" => "Kyiv", "is_correct" => true }
+        { "id" => "b", "text" => "Kyiv", "is_correct" => true },
+        { "id" => "c", "text" => "Warsaw", "is_correct" => false },
+        { "id" => "d", "text" => "Prague", "is_correct" => false }
       ] }
     )
     @short = @exam.questions.create!(
@@ -244,6 +248,86 @@ class ExamPrintTest < ActionDispatch::IntegrationTest
     assert_select ".no-print .breadcrumbs"
     assert_select ".no-print", /#{Regexp.escape(I18n.t('exams.print.hint'))}/
     assert_select ".no-print article.print-sheet", false, "the sheet itself must survive printing"
+  end
+
+  test "the answer key marks the correct mcq option and no other" do
+    get print_key_test_path(@exam)
+    assert_response :success
+
+    rows = css_select("##{dom_id(@mcq, :print_key)} li")
+    assert_equal @mcq.options.size, rows.size, "every distractor must still print"
+
+    marked = rows.select { |li| li.text.include?(I18n.t("exams.show.correct")) }
+    assert_equal 1, marked.size, "exactly one option is the answer"
+    correct = @mcq.options.find { |option| option["id"] == @mcq.correct_option_id }
+    assert_includes marked.first.text, correct["text"]
+  end
+
+  test "the answer key lists the ordering in the stored answer order" do
+    get print_key_test_path(@exam)
+
+    rendered = css_select("##{dom_id(@ordering, :print_key)} ol li").map { |el| el.text.strip }
+    assert_equal @ordering.items.map { |item| item["text"] }, rendered
+  end
+
+  test "the answer key lists every matching pair as left to right" do
+    get print_key_test_path(@exam)
+
+    expected = @matching.left_items.map do |left|
+      right = @matching.right_items.find { |entry| entry["id"] == @matching.pairs[left["id"]] }
+      "#{left['text']} → #{right['text']}"
+    end
+    assert_equal expected,
+                 css_select("##{dom_id(@matching, :print_key)} ul li").map { |el| el.text.squish }
+  end
+
+  test "the answer key prints the rubric and the model answer" do
+    get print_key_test_path(@exam)
+    body = response.body
+
+    assert_match RUBRIC, body
+    assert_match MODEL_ANSWER, body
+    assert_select "##{dom_id(@source, :print_key)}",
+                  /#{Regexp.escape(I18n.t('exams.show.rubric'))}/
+    assert_select "##{dom_id(@open, :print_key)}",
+                  /#{Regexp.escape(I18n.t('exams.show.model_answer'))}/
+
+    # A question with neither must show neither label, or every mcq and ordering block
+    # would print an empty "Критерії" heading.
+    bare = css_select("##{dom_id(@short, :print_key)}").first.text
+    refute_includes bare, I18n.t("exams.show.rubric")
+    refute_includes bare, I18n.t("exams.show.model_answer")
+  end
+
+  test "the answer key warns on screen and still names itself on paper" do
+    get print_key_test_path(@exam)
+
+    assert_select ".no-print", /#{Regexp.escape(I18n.t('exams.print_key.warning'))}/
+    # The warning is chrome, but a key left on a desk still has to say what it is.
+    assert_select "article.print-sheet header",
+                  /#{Regexp.escape(I18n.t('exams.print_key.heading'))}/
+    assert_select ".no-print article.print-sheet", false,
+                  "the key sheet itself must survive printing"
+  end
+
+  test "an unauthenticated request reaches neither sheet" do
+    sign_out
+
+    get print_test_path(@exam)
+    assert_redirected_to new_session_path
+
+    get print_key_test_path(@exam)
+    assert_redirected_to new_session_path
+    refute_match RUBRIC, response.body
+    refute_match MODEL_ANSWER, response.body
+  end
+
+  test "another teacher cannot print the answer key" do
+    sign_in_as users(:two)
+
+    get print_key_test_path(@exam)
+
+    assert_response :not_found
   end
 
   test "another teacher cannot print the sheet" do

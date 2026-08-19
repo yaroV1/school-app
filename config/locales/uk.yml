@@ -252,6 +252,12 @@ uk:
       matching_bank: "Варіанти відповідностей"
       matching_hint: "Впишіть літеру потрібного варіанта поруч з кожним фактом."
       matching_letters: "А Б В Г Д Е Ж З И К Л М Н П Р С Т У Ф Х"
+    print_key:
+      title: "Відповіді: %{title}"
+      heading: "Аркуш з відповідями"
+      warning: "Лише для вчителя. Не роздавайте цей аркуш учням."
+      pairs: "Пари"
+      sheet_link: "Аркуш для учня"
     questions_count:
       one: "%{count} питання"
       few: "%{count} питання"

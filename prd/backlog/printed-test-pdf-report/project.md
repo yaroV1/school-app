@@ -443,7 +443,7 @@ One commit per task.
       carries the option, left-item and source text so an empty render cannot pass vacuously, and
       lists its ordering items in an order that is not `correct_order_ids` — proof:
       `test/integration/answer_key_leak_test.rb`
-- [ ] FR-3 — Add the `print_key` member route, `ExamsController#print_key`,
+- [x] FR-3 — Add the `print_key` member route, `ExamsController#print_key`,
       `app/views/exams/print_key.html.erb` and the `exams.print_key.*` keys — done when: the key
       sheet marks the correct `mcq` option with `exams.show.correct`, lists `ordering` items in
       `correct_order_ids` order, lists every `pairs` entry as left → right, prints `rubric` and

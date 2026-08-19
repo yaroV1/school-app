@@ -1,0 +1,85 @@
+<% content_for :title, t("exams.print_key.title", title: @exam.title) %>
+
+<%# The teacher's copy, and deliberately the opposite of app/views/exams/print.html.erb:
+    this file reads correct_option_id, items, pairs, rubric and model_answer on purpose.
+    It shares no partial with the student sheet, so nothing here can be reached from it. %>
+<div class="no-print">
+  <%= render "exams/header", exam: @exam %>
+  <p class="flash flash-warning"><%= t("exams.print_key.warning") %></p>
+</div>
+
+<article class="print-sheet">
+  <header class="border-b border-line pb-4">
+    <p class="text-sm text-ink-muted">
+      <%= @exam.class_group.name %> · <%= @exam.subject.name %>
+    </p>
+    <h2 class="page-title mt-0.5"><%= @exam.title %></h2>
+    <%# Printed, unlike the warning above: a key left on a desk has to say what it is. %>
+    <p class="mt-1 text-sm font-semibold text-ink"><%= t("exams.print_key.heading") %></p>
+    <p class="mt-3 text-sm text-ink-muted"><%= t("exams.points", count: @exam.max_score) %></p>
+  </header>
+
+  <ol class="mt-6 space-y-6">
+    <% @questions.each_with_index do |question, index| %>
+      <li id="<%= dom_id(question, :print_key) %>" class="print-question">
+        <div class="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+          <span class="num font-semibold">№<%= index + 1 %></span>
+          <span class="chip"><%= t("question_types.#{question.question_type}") %></span>
+          <span><%= t("exams.points_short", count: question.points) %></span>
+        </div>
+
+        <%= render "questions/photo", question: question %>
+
+        <% if question.source? %>
+          <div class="mt-3">
+            <p class="mb-1.5 text-xs font-medium text-ink-muted"><%= t("take.source.label") %></p>
+            <div class="source-text"><%= question.source_text %></div>
+          </div>
+        <% end %>
+
+        <p class="mt-3 font-medium whitespace-pre-wrap text-ink"><%= question.prompt %></p>
+
+        <% if question.mcq? %>
+          <ul class="mt-3 space-y-1.5 text-sm text-ink">
+            <% question.options.each do |option| %>
+              <li class="flex flex-wrap items-center gap-2">
+                <span><%= option["text"] %></span>
+                <% if option["is_correct"] %>
+                  <span class="badge badge-success"><%= t("exams.show.correct") %></span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% elsif question.ordering? %>
+          <p class="mt-3 text-xs font-medium text-ink-muted"><%= t("attempts.grade.correct_order") %></p>
+          <ol class="mt-1.5 list-decimal space-y-1 pl-5 text-sm text-ink">
+            <% question.items.each do |item| %>
+              <li><%= item["text"] %></li>
+            <% end %>
+          </ol>
+        <% elsif question.matching? %>
+          <p class="mt-3 text-xs font-medium text-ink-muted"><%= t("exams.print_key.pairs") %></p>
+          <ul class="mt-1.5 space-y-1 text-sm text-ink">
+            <% question.left_items.each do |left| %>
+              <% match = question.right_items.find { |right| right["id"] == question.pairs[left["id"]] } %>
+              <li>
+                <%= left["text"] %>
+                <span class="text-ink-subtle" aria-hidden="true">→</span>
+                <%= match ? match["text"] : t("common.dash") %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+
+        <% if question.rubric.present? %>
+          <p class="mt-3 text-xs font-medium text-ink-muted"><%= t("exams.show.rubric") %></p>
+          <p class="mt-1 text-sm whitespace-pre-wrap text-ink"><%= question.rubric %></p>
+        <% end %>
+        <% if question.model_answer.present? %>
+          <p class="mt-3 text-xs font-medium text-ink-muted"><%= t("exams.show.model_answer") %></p>
+          <p class="mt-1 text-sm whitespace-pre-wrap text-ink"><%= question.model_answer %></p>
+        <% end %>
+      </li>
+    <% end %>
+  </ol>
+</article>
