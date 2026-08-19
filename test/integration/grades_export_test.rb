@@ -118,6 +118,26 @@ class GradesExportTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "another teacher cannot download either csv" do
+    sign_in_as users(:two)
+
+    get results_test_path(@exam, format: :csv)
+    assert_response :not_found
+
+    get stats_subject_path(@exam.subject, format: :csv)
+    assert_response :not_found
+  end
+
+  test "signed-out request for either csv redirects to sign-in" do
+    sign_out
+
+    get results_test_path(@exam, format: :csv)
+    assert_redirected_to new_session_path
+
+    get stats_subject_path(@exam.subject, format: :csv)
+    assert_redirected_to new_session_path
+  end
+
   private
 
   def assign_student!(name)
