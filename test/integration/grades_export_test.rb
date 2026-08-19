@@ -159,6 +159,31 @@ class GradesExportTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "results and stats pages offer a turbo-disabled csv download including when empty" do
+    get results_test_path(@exam)
+    assert_response :success
+    assert_select "p.empty-state", text: I18n.t("exams.results.empty")
+    assert_select "a.btn-secondary[href=?][data-turbo=false]", results_test_path(@exam, format: :csv),
+      text: I18n.t("common.export_csv")
+
+    get stats_subject_path(@exam.subject)
+    assert_response :success
+    assert_select "p.empty-state"
+    assert_select "a.btn-secondary[href=?][data-turbo=false]", stats_subject_path(@exam.subject, format: :csv),
+      text: I18n.t("common.export_csv")
+
+    assign_student!("Ann")
+    get results_test_path(@exam)
+    assert_select "tbody tr", 1
+    assert_select "a.btn-secondary[href=?][data-turbo=false]", results_test_path(@exam, format: :csv),
+      text: I18n.t("common.export_csv")
+
+    get stats_subject_path(@exam.subject)
+    assert_select "tbody tr", 1
+    assert_select "a.btn-secondary[href=?][data-turbo=false]", stats_subject_path(@exam.subject, format: :csv),
+      text: I18n.t("common.export_csv")
+  end
+
   private
 
   def assign_student!(name)

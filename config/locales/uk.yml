@@ -15,6 +15,7 @@ uk:
     dash: "—"
     now: "зараз"
     open_ended: "без обмеження"
+    export_csv: "Завантажити CSV"
 
   statuses:
     draft: "Чернетка"
