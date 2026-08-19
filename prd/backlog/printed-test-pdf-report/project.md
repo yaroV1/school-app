@@ -462,7 +462,7 @@ One commit per task.
       `attempts.report.provisional`; a GET on an `in_progress` attempt redirects with
       `attempts.flash.report_in_progress`; and another teacher's attempt 404s — proof:
       `test/integration/attempt_report_test.rb`
-- [ ] FR-6 — Extend `test/integration/answer_key_leak_test.rb` with the parent report — done when:
+- [x] FR-6 — Extend `test/integration/answer_key_leak_test.rb` with the parent report — done when:
       the report rendered for a submitted attempt passes `assert_no_answer_key`, carries the
       student's own answer text so an empty render cannot pass vacuously, contains neither the
       expected-pair text `t("attempts.grade.pair_expected", …)` nor the assignment's
