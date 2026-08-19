@@ -6,6 +6,9 @@
 <div class="no-print">
   <%= render "exams/header", exam: @exam %>
   <p class="flash flash-warning"><%= t("exams.print_key.warning") %></p>
+  <p class="mb-6">
+    <%= link_to t("exams.print_key.sheet_link"), print_test_path(@exam), class: "link" %>
+  </p>
 </div>
 
 <article class="print-sheet">

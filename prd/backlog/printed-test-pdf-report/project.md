@@ -473,7 +473,7 @@ One commit per task.
       byte-identical to `t("question_types.ordering")`, which the type chip prints, so the
       assertion fails on any report carrying an ordering question. Scope that property to the
       answer block instead, by comparing it to the student's `order_ids`.
-- [ ] FR-7 — Add the "Друк" tab to `app/views/exams/_tabs.html.erb`, the `exams.print_key.sheet_link`
+- [x] FR-7 — Add the "Друк" tab to `app/views/exams/_tabs.html.erb`, the `exams.print_key.sheet_link`
       and `exams.print.key_link` cross-links on the two test copies, and the "Звіт для батьків" link
       on `app/views/attempts/show.html.erb`, every one of them `no-print` — done when: the tab bar
       links to `print_test_path` for `draft`, `published` and `closed`; the paper copy links to

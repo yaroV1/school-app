@@ -227,6 +227,22 @@ class AttemptReportTest < ActionDispatch::IntegrationTest
                   "the report itself must survive printing"
   end
 
+  test "the grading page links to the report once the work is in, and not before" do
+    get attempt_path(@attempt)
+    assert_response :success
+    assert_select "a[href=?]", report_attempt_path(@attempt)
+    # The link is chrome: it must carry no-print so it never reaches the paper.
+    assert_select "a.no-print[href=?]", report_attempt_path(@attempt)
+
+    @attempt.update!(status: :in_progress, submitted_at: nil)
+
+    get attempt_path(@attempt)
+    # Without this, a redirect would make the refutation below pass on an empty body.
+    assert_response :success
+    assert_select "a[href=?]", report_attempt_path(@attempt), false,
+                  "no report link while the student is still writing"
+  end
+
   test "another teacher cannot reach the report" do
     sign_in_as users(:two)
 

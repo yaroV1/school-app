@@ -4,7 +4,10 @@
     print rules strip all of it, so what leaves the printer is the sheet alone. %>
 <div class="no-print">
   <%= render "exams/header", exam: @exam %>
-  <p class="field-hint mb-6"><%= t("exams.print.hint") %></p>
+  <p class="field-hint"><%= t("exams.print.hint") %></p>
+  <p class="mt-2 mb-6">
+    <%= link_to t("exams.print.key_link"), print_key_test_path(@exam), class: "link" %>
+  </p>
 </div>
 
 <%# Answer-key boundary. Every reader below is a student-facing one; `options`,

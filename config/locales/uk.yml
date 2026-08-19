@@ -205,6 +205,7 @@ uk:
       live_board: "Онлайн-табло"
       assign: "Призначити / посилання"
       results: "Результати"
+      print: "Друк"
       questions: "Питання"
       no_questions: "Ще немає питань."
       remove: "Видалити"
@@ -252,6 +253,7 @@ uk:
       matching_bank: "Варіанти відповідностей"
       matching_hint: "Впишіть літеру потрібного варіанта поруч з кожним фактом."
       matching_letters: "А Б В Г Д Е Ж З И К Л М Н П Р С Т У Ф Х"
+      key_link: "Аркуш з відповідями"
     print_key:
       title: "Відповіді: %{title}"
       heading: "Аркуш з відповідями"
@@ -335,6 +337,8 @@ uk:
       regenerate: "Нове посилання"
 
   attempts:
+    show:
+      report: "Звіт для батьків"
     grade:
       title: "Оцінити спробу"
       back: "← Результати"
