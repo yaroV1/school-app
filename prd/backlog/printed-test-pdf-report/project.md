@@ -426,7 +426,7 @@ One commit per task.
       returns an unaligned list, repeated re-draws do not all land on one order, a bank longer than
       its left column is still covered, and a two-entry bank still returns both of its orders —
       proof: `test/models/question_test.rb`
-- [ ] FR-1, FR-2, FR-4 — Add the `print` member route, `ExamsController#print` on the existing
+- [x] FR-1, FR-2, FR-4 — Add the `print` member route, `ExamsController#print` on the existing
       `set_exam`, `app/views/exams/print.html.erb`, the `exams.print.*` and `common.print` keys, and
       the `@media print` section in `app/assets/tailwind/application.css` — done when: a GET by the
       owning teacher on a `draft`, a `published` and a `closed` test renders every question in
@@ -438,7 +438,7 @@ One commit per task.
       question block `print-question` and every control `no-print`; a test with no questions renders
       the header alone; and a GET by another teacher 404s — proof:
       `test/integration/exam_print_test.rb`
-- [ ] FR-2 — Extend `test/integration/answer_key_leak_test.rb` with the printed student sheet —
+- [x] FR-2 — Extend `test/integration/answer_key_leak_test.rb` with the printed student sheet —
       done when: the sheet rendered for the owning teacher passes the file's `assert_no_answer_key`,
       carries the option, left-item and source text so an empty render cannot pass vacuously, and
       lists its ordering items in an order that is not `correct_order_ids` — proof:
