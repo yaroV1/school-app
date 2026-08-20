@@ -50,6 +50,10 @@ class ExamsController < ApplicationController
 
   def results
     @assignments = @exam.assignments.preload(:student, attempts: :grade).joins(:student).order("students.name")
+    respond_to do |format|
+      format.html
+      format.csv { send_csv("#{@exam.title}.csv", results_csv_headers, results_csv_rows) }
+    end
   end
 
   def live
@@ -85,6 +89,32 @@ class ExamsController < ApplicationController
   # ExpireOverdueAttemptsJob from recurring.yml.
   def expire_overdue_attempts
     AttemptLifecycle.expire_overdue!(@exam.attempts.overdue)
+  end
+
+  def results_csv_headers
+    [
+      t("exams.assign.student"),
+      t("exams.results.latest_status"),
+      t("attempts.history.started"),
+      t("exams.results.submitted"),
+      t("exams.results.score"),
+      t("exams.results.max_score")
+    ]
+  end
+
+  def results_csv_rows
+    @assignments.map do |assignment|
+      attempt = assignment.latest_attempt
+      grade = attempt&.grade
+      [
+        assignment.student.name,
+        attempt ? t("statuses.#{attempt.status}") : t("statuses.not_started"),
+        csv_time(attempt&.started_at),
+        csv_time(attempt&.submitted_at),
+        csv_decimal(grade&.total_score),
+        grade ? csv_decimal(grade.max_score) : ""
+      ]
+    end
   end
 
   def exam_params

@@ -14,6 +14,10 @@ class SubjectsController < ApplicationController
 
   def stats
     @stat_rows = @subject.student_stat_rows
+    respond_to do |format|
+      format.html
+      format.csv { send_csv("#{@subject.name}.csv", stats_csv_headers, stats_csv_rows) }
+    end
   end
 
   def create
@@ -72,6 +76,26 @@ class SubjectsController < ApplicationController
 
   def set_subject
     @subject = Current.user.subjects.find(params[:id])
+  end
+
+  def stats_csv_headers
+    [
+      t("subjects.stats.student"),
+      t("subjects.stats.tests"),
+      t("subjects.stats.average"),
+      t("subjects.stats.last")
+    ]
+  end
+
+  def stats_csv_rows
+    @stat_rows.map do |row|
+      [
+        row.student.name,
+        row.assigned.positive? ? t("subjects.stats.progress", finished: row.finished, assigned: row.assigned) : "",
+        row.average_percent.nil? ? "" : row.average_percent.to_s,
+        csv_time(row.last_activity_at)
+      ]
+    end
   end
 
   def subject_params

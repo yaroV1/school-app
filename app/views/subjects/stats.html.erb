@@ -2,9 +2,12 @@
 <%= render "subjects/header", subject: @subject %>
 
 <section>
-  <div class="mb-4">
-    <h2 class="section-title"><%= t("subjects.show.stats") %></h2>
-    <p class="page-subtitle"><%= t("subjects.show.stats_hint") %></p>
+  <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 class="section-title"><%= t("subjects.show.stats") %></h2>
+      <p class="page-subtitle"><%= t("subjects.show.stats_hint") %></p>
+    </div>
+    <%= link_to t("common.export_csv"), stats_subject_path(@subject, format: :csv), class: btn_secondary, data: { turbo: false } %>
   </div>
 
   <% if @stat_rows.any? %>

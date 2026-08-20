@@ -1,6 +1,10 @@
 <% content_for :title, t("exams.results.title", title: @exam.title) %>
 <%= render "exams/header", exam: @exam %>
 
+<div class="mb-4 flex flex-wrap items-center justify-end gap-3">
+  <%= link_to t("common.export_csv"), results_test_path(@exam, format: :csv), class: btn_secondary, data: { turbo: false } %>
+</div>
+
 <% if @assignments.any? %>
   <div class="table-wrap">
     <table class="data-table">
