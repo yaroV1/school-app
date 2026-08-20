@@ -1,0 +1,111 @@
+<% content_for :title, t("exams.print.title", title: @exam.title) %>
+
+<%# Chrome stays on screen so the teacher keeps the tabs and a way back; the
+    print rules strip all of it, so what leaves the printer is the sheet alone. %>
+<div class="no-print">
+  <%= render "exams/header", exam: @exam %>
+  <p class="field-hint"><%= t("exams.print.hint") %></p>
+  <p class="mt-2 mb-6">
+    <%= link_to t("exams.print.key_link"), print_key_test_path(@exam), class: "link" %>
+  </p>
+</div>
+
+<%# Answer-key boundary. Every reader below is a student-facing one; `options`,
+    `items`, `left_items`, `right_items`, `pairs`, `rubric` and `model_answer`
+    must never appear in this file. Ordering and matching are seeded with the
+    exam, not an attempt: one photocopied sheet is one order by construction, and the
+    unaligned_* readers guarantee that order is never the answer order (FR-8). %>
+<article class="print-sheet">
+  <header class="border-b border-line pb-4">
+    <p class="text-sm text-ink-muted">
+      <%= @exam.class_group.name %> · <%= @exam.subject.name %>
+    </p>
+    <h2 class="page-title mt-0.5"><%= @exam.title %></h2>
+
+    <dl class="mt-4 grid gap-x-8 gap-y-3 sm:grid-cols-2">
+      <% [ :name_field, :class_field, :date_field, :score_field ].each do |field| %>
+        <div class="flex items-baseline gap-2">
+          <dt class="shrink-0 text-sm text-ink-muted"><%= t("exams.print.#{field}") %></dt>
+          <dd class="fill-line"></dd>
+        </div>
+      <% end %>
+    </dl>
+
+    <p class="mt-4 text-sm text-ink-muted"><%= t("exams.points", count: @exam.max_score) %></p>
+  </header>
+
+  <ol class="mt-6 space-y-6">
+    <% @questions.each_with_index do |question, index| %>
+      <li id="<%= dom_id(question, :print) %>" class="print-question">
+        <div class="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+          <span class="num font-semibold">№<%= index + 1 %></span>
+          <span class="chip"><%= t("question_types.#{question.question_type}") %></span>
+          <span><%= t("exams.points_short", count: question.points) %></span>
+        </div>
+
+        <%= render "questions/photo", question: question %>
+
+        <% if question.source? %>
+          <div class="mt-3">
+            <p class="mb-1.5 text-xs font-medium text-ink-muted"><%= t("take.source.label") %></p>
+            <div class="source-text"><%= question.source_text %></div>
+          </div>
+        <% end %>
+
+        <p class="mt-3 font-medium whitespace-pre-wrap text-ink"><%= question.prompt %></p>
+
+        <% if question.mcq? %>
+          <ul class="mt-3 space-y-2">
+            <% question.student_facing_options.each do |option| %>
+              <li class="flex items-start gap-3 text-sm text-ink">
+                <span class="answer-box" aria-hidden="true"></span>
+                <span class="pt-0.5"><%= option["text"] %></span>
+              </li>
+            <% end %>
+          </ul>
+        <% elsif question.ordering? %>
+          <% shuffled = question.unaligned_items(@exam.id) %>
+          <p class="mt-3 text-xs text-ink-muted"><%= t("exams.print.order_hint", count: shuffled.size) %></p>
+          <ul class="mt-2 space-y-2">
+            <% shuffled.each do |item| %>
+              <li class="flex items-start gap-3 text-sm text-ink">
+                <span class="answer-box" aria-hidden="true"></span>
+                <span class="pt-0.5"><%= item["text"] %></span>
+              </li>
+            <% end %>
+          </ul>
+        <% elsif question.matching? %>
+          <p class="mt-3 text-xs text-ink-muted"><%= t("exams.print.matching_hint") %></p>
+          <ul class="mt-2 space-y-2">
+            <% question.student_facing_left.each do |left| %>
+              <li class="flex items-start gap-3 text-sm text-ink">
+                <span class="answer-box" aria-hidden="true"></span>
+                <span class="pt-0.5"><%= left["text"] %></span>
+              </li>
+            <% end %>
+          </ul>
+          <p class="mt-4 text-xs font-medium text-ink-muted"><%= t("exams.print.matching_bank") %></p>
+          <%# Letters, not numbers: an ordering question on the same sheet already asks for
+              numbers in boxes, so a numbered bank beside it reads as the same instruction.
+              The alphabet is a locale value — bin/ci fails on a Cyrillic literal in app/. %>
+          <% letters = t("exams.print.matching_letters").split %>
+          <ol class="mt-1.5 space-y-1 text-sm text-ink">
+            <% question.unaligned_right_items(@exam.id).each_with_index do |right, right_index| %>
+              <li>
+                <span class="num font-semibold"><%= letters[right_index] || right_index.next %>.</span>
+                <%= right["text"] %>
+              </li>
+            <% end %>
+          </ol>
+        <% else %>
+          <p class="mt-3 text-xs font-medium text-ink-muted"><%= t("exams.print.answer_label") %></p>
+          <div class="mt-1.5">
+            <% (question.short_text? ? 1 : 6).times do %>
+              <span class="answer-line"></span>
+            <% end %>
+          </div>
+        <% end %>
+      </li>
+    <% end %>
+  </ol>
+</article>

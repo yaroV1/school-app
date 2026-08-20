@@ -304,6 +304,121 @@ class QuestionTest < ActiveSupport::TestCase
     assert retyped.update(question_type: :short_text), retyped.errors.full_messages.to_sentence
   end
 
+  # FR-8. The shared MATCHING_CONFIG maps l1->r1, l2->r2, so its answer sequence is
+  # indistinguishable from plain right-item order — useless for proving which one the
+  # guarantee compares against. These two cross the mapping instead.
+  CROSSED_MATCHING = {
+    "left" => [ { "id" => "l1", "text" => "A" }, { "id" => "l2", "text" => "B" },
+                { "id" => "l3", "text" => "C" } ],
+    "right" => [ { "id" => "r1", "text" => "1" }, { "id" => "r2", "text" => "2" },
+                 { "id" => "r3", "text" => "3" } ],
+    "pairs" => { "l1" => "r3", "l2" => "r1", "l3" => "r2" }
+  }.freeze
+  # Three right items for two left ones: the bank is longer than the answer sequence.
+  DISTRACTOR_MATCHING = {
+    "left" => [ { "id" => "l1", "text" => "A" }, { "id" => "l2", "text" => "B" } ],
+    "right" => [ { "id" => "r1", "text" => "1" }, { "id" => "r2", "text" => "2" },
+                 { "id" => "r3", "text" => "3" } ],
+    "pairs" => { "l1" => "r2", "l2" => "r3" }
+  }.freeze
+
+  test "unaligned_items never returns the recorded answer order" do
+    question = question_with(:ordering, ORDERING_CONFIG)
+    seeds = (1..200)
+
+    # Guard: the plain shuffle has to collide somewhere in this range, or the assertion
+    # below would also hold for a reader that does nothing at all.
+    collisions = seeds.count do |seed|
+      question.shuffled_items(seed).map { |item| item["id"] } == question.correct_order_ids
+    end
+    assert_operator collisions, :>, 0,
+                    "shuffled_items never hit the answer order, so unaligned_items proves nothing here"
+
+    seeds.each do |seed|
+      assert_not_equal question.correct_order_ids,
+                       question.unaligned_items(seed).map { |item| item["id"] },
+                       "seed #{seed} printed the items in the answer order"
+    end
+  end
+
+  test "unaligned_right_items never lines the bank up with the left column" do
+    question = question_with(:matching, CROSSED_MATCHING)
+    expected = question.left_items.map { |left| question.pairs[left["id"]] }
+    seeds = (1..200)
+
+    # The mapping is crossed, so this cannot be satisfied by plain right-item order.
+    assert_not_equal question.right_items.map { |right| right["id"] }, expected
+
+    collisions = seeds.count do |seed|
+      question.shuffled_right_items(seed).first(expected.size).map { |right| right["id"] } == expected
+    end
+    assert_operator collisions, :>, 0,
+                    "shuffled_right_items never lined up, so unaligned_right_items proves nothing here"
+
+    seeds.each do |seed|
+      assert_not_equal expected,
+                       question.unaligned_right_items(seed).first(expected.size).map { |right| right["id"] },
+                       "seed #{seed} lettered the bank in answer order"
+    end
+  end
+
+  test "a bank longer than the left column still never answers it in reading order" do
+    question = question_with(:matching, DISTRACTOR_MATCHING)
+    expected = question.left_items.map { |left| question.pairs[left["id"]] }
+
+    (1..200).each do |seed|
+      assert_not_equal expected,
+                       question.unaligned_right_items(seed).first(expected.size).map { |right| right["id"] },
+                       "seed #{seed} answered the left column despite the distractor"
+    end
+  end
+
+  # The security review that produced FR-8 also produced its limit: with two entries there
+  # is exactly one order that is not the key, so refusing the key would print its reverse
+  # every time and a student who knows the rule reads it backwards. An even chance is the
+  # best available at that size, so the draw is kept.
+  test "a two-entry bank keeps the plain draw rather than always reversing the key" do
+    question = question_with(:matching, MATCHING_CONFIG)
+    answer = question.left_items.map { |left| question.pairs[left["id"]] }
+    banks = (1..200).map { |seed| question.unaligned_right_items(seed).map { |right| right["id"] } }
+
+    assert_equal 2, banks.uniq.size, "a two-item bank has two orders and both must occur"
+    assert_includes banks, answer,
+                    "never printing the answer order of a two-item bank makes the reverse a certainty"
+  end
+
+  test "a redraw is not one fixed transform of the answer order" do
+    question = question_with(:ordering, ORDERING_CONFIG)
+    redrawn = (1..600).select do |seed|
+      question.shuffled_items(seed).map { |item| item["id"] } == question.correct_order_ids
+    end.map { |seed| question.unaligned_items(seed).map { |item| item["id"] } }
+
+    assert_operator redrawn.size, :>, 5, "too few collisions in range to judge the redraw"
+    assert_operator redrawn.uniq.size, :>, 1,
+                    "every redraw gave the same order, so undoing one public transform names the key"
+  end
+
+  test "an unaligned shuffle is stable for one seed and keeps every entry exactly once" do
+    ordering = question_with(:ordering, ORDERING_CONFIG)
+    matching = question_with(:matching, CROSSED_MATCHING)
+
+    assert_equal ordering.unaligned_items(7), ordering.unaligned_items(7)
+    assert_equal matching.unaligned_right_items(7), matching.unaligned_right_items(7)
+
+    assert_equal ordering.correct_order_ids.sort,
+                 ordering.unaligned_items(7).map { |item| item["id"] }.sort
+    assert_equal matching.student_facing_right.map { |right| right["id"] }.sort,
+                 matching.unaligned_right_items(7).map { |right| right["id"] }.sort
+  end
+
+  test "the unaligned readers carry id and text only" do
+    ordering = question_with(:ordering, ORDERING_CONFIG)
+    matching = question_with(:matching, CROSSED_MATCHING)
+
+    assert_equal [ %w[id text] ], ordering.unaligned_items(3).map(&:keys).uniq
+    assert_equal [ %w[id text] ], matching.unaligned_right_items(3).map(&:keys).uniq
+  end
+
   private
 
   def question_with(type, config)

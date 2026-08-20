@@ -50,6 +50,15 @@ module ApplicationHelper
     format("%d:%02d", seconds / 60, seconds % 60)
   end
 
+  # Scores are decimal(8,2), so a whole mark renders "1.0". That reads as machine output
+  # on a sheet a parent is handed; a score is written 1, and 1.5 only when it is a half.
+  def score_text(value)
+    return t("common.dash") if value.nil?
+
+    number = BigDecimal(value.to_s)
+    number.frac.zero? ? number.to_i.to_s : number.to_s("F")
+  end
+
   def status_badge(status)
     variant = STATUS_BADGES.fetch(status.to_s, "badge-neutral")
     content_tag(:span, t("statuses.#{status}"), class: "badge #{variant}")
