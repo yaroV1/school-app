@@ -15,12 +15,11 @@ Never start either on your own initiative, however large or risky the change loo
 `docs/agent-rules.md` § When to ask vs inspect says to stop and ask, ask; naming a PRD as an option is
 allowed, starting one is not.
 
-- `/prd` — writes a spec into `prd/_to_refine/`. Contract: `.claude/skills/prd/SKILL.md`.
-- `/implement-prd` — executes a PRD already in `prd/backlog/`. Contract:
+- `/prd` — writes a local, git-ignored spec into `prd/<name>/`. Contract:
+  `.claude/skills/prd/SKILL.md`.
+- `/implement-prd` — executes a PRD from `prd/<name>/`. Contract:
   `.claude/skills/implement-prd/SKILL.md`; the git carve-out it runs under is `docs/agent-rules.md` § Git,
   scoped by that skill's § Git authorization.
-
-Stage lifecycle for `prd/`: `prd/README.md`.
 
 ## Git guard
 
