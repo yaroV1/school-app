@@ -78,31 +78,37 @@ Exception: `Take::` controllers are unauthenticated. They resolve
 `Assignment.find_by!(access_token: params[:token])`, then scope attempts and answers through that
 assignment. Do not add `Current.user` there. Proposing it in review is a wrong finding, not a fix.
 
-### Never leak answer keys
+### Never leak answer keys unintentionally
 
 The live student path is `app/views/take/runs/show.html.erb`, which calls the `Question` student-facing
 readers directly: `student_facing_options`, `display_items_for`, `shuffled_right_items`,
-`student_facing_left`, `source_text`. **That view is the only boundary** — there is no sanitizer layer
-between it and the response, so a leak introduced there ships.
+`student_facing_left`, `source_text`. There is no sanitizer layer between it and the response, so a leak
+introduced there ships. The only other student answer-key surface is the finalized result at
+`app/views/take/submissions/_correct_answer.html.erb`: it intentionally reveals the answer for auto-scored
+types only when the exam setting allows it and the teacher finalized the grade.
 
-`test/integration/answer_key_leak_test.rb` renders that page as an unauthenticated student and asserts no
-key reaches the body. Extend it whenever you add a question type or a student-facing field; a new type
-with no entry there is untested by construction.
+`test/integration/answer_key_leak_test.rb` renders both surfaces as an unauthenticated student. It asserts
+that no key reaches the live page and that the finalized result carries only the intentionally published
+auto-scored answers. Extend it whenever you add a question type or a student-facing field; a new type with
+no entry there is untested by construction.
 
 Build every student payload as an **allowlist** — name each key you send. Never pass `question.config` or a
 sub-hash of it through; the readers do this with `slice("id", "text")`.
 
-- MCQ: option `id` + `text`. Never `is_correct`.
+- MCQ: option `id` + `text`. Never `is_correct`; the finalized result identifies the correct option by text
+  without serializing that flag.
 - Ordering: items shuffled with the **attempt** as seed — `question.display_items_for(answer, @attempt.id)`.
   `Question#stable_seed` keeps the order stable per (question, seed) so a reload does not reshuffle under the
   student. Always pass `@attempt.id` explicitly; the student-facing readers have no default seed, and using
   `question.id` instead would give every student in the class the same order and defeat the point.
-- Matching: left items and shuffled right items. Never `config["pairs"]`. A student **response** may use
-  `payload["pairs"]` / `payload["order"]` — that is not the key.
+- Matching: left items and shuffled right items. Never serialize `config["pairs"]`. A student **response**
+  may use `payload["pairs"]` / `payload["order"]` — that is not the key. The finalized result may resolve
+  the stored mapping into allowlisted left/right text, but must not send the mapping or its ids.
 - Source: `source_text` and the prompt, nothing else from `config` — `rubric` and `model_answer` live in the
   same hash.
 - short_text / open: prompt only. No config is student-visible.
-- Never send rubric or model answer, for any type.
+- Never send rubric or model answer, for any type. The finalized result reveals correct answers only for
+  `mcq`, `ordering`, and `matching`; teacher-scored types reveal score and comments only.
 
 ### Params
 

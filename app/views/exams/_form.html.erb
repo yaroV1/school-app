@@ -31,5 +31,14 @@
     </div>
   </div>
   <p class="field-hint"><%= t("exams.form.window_hint") %></p>
+  <div class="rounded-control border border-line bg-surface-sunken p-3.5">
+    <label class="flex items-start gap-3">
+      <%= f.check_box :show_results_to_students, class: "mt-0.5 size-4 shrink-0 accent-accent" %>
+      <span>
+        <span class="block text-sm font-medium text-ink"><%= t("exams.form.show_results_to_students") %></span>
+        <span class="mt-1 block text-xs leading-relaxed text-ink-muted"><%= t("exams.form.show_results_hint") %></span>
+      </span>
+    </label>
+  </div>
   <%= f.submit class: btn_primary %>
 <% end %>

@@ -1,0 +1,27 @@
+<div id="<%= dom_id(question, :correct_answer) %>" class="mt-3 rounded-control border border-success-line bg-success-soft px-3.5 py-3 text-sm">
+  <p class="mb-1.5 text-xs font-medium text-success"><%= t("take.results.correct_answer") %></p>
+
+  <% if question.mcq? %>
+    <% correct = question.student_facing_options.find { |option| option["id"].to_s == question.correct_option_id.to_s } %>
+    <p class="text-ink"><%= correct&.dig("text") || t("common.dash") %></p>
+  <% elsif question.ordering? %>
+    <% items = question.student_facing_items.index_by { |item| item["id"].to_s } %>
+    <ol class="list-decimal space-y-1 pl-5 text-ink">
+      <% question.correct_order_ids.each do |id| %>
+        <li><%= items[id]&.dig("text") || t("common.dash") %></li>
+      <% end %>
+    </ol>
+  <% elsif question.matching? %>
+    <% rights = question.student_facing_right.index_by { |right| right["id"].to_s } %>
+    <ul class="space-y-1 text-ink">
+      <% question.student_facing_left.each do |left| %>
+        <% correct = rights[question.pairs[left["id"].to_s].to_s] %>
+        <li>
+          <%= left["text"] %>
+          <span class="text-ink-subtle" aria-hidden="true">→</span>
+          <%= correct&.dig("text") || t("common.dash") %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

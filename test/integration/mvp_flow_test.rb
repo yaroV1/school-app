@@ -15,7 +15,9 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
 
     post class_group_subjects_url(group), params: { subject: { name: "History of Ukraine" } }
     subject = Subject.order(:id).last
-    post subject_exams_url(subject), params: { exam: { title: "Unit 1", max_attempts: 1, time_limit_sec: 300 } }
+    post subject_exams_url(subject), params: {
+      exam: { title: "Unit 1", max_attempts: 1, time_limit_sec: 300, show_results_to_students: "1" }
+    }
     exam = Exam.order(:id).last
 
     post test_questions_url(exam), params: {
@@ -117,6 +119,29 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_equal 3, attempt.answers.find_by!(question: matching).auto_score.to_i
     assert_equal "Kyiv is the capital.", attempt.answers.find_by!(question: source).text_response
     assert_nil attempt.answers.find_by!(question: source).auto_score
+
+    sign_in_as @teacher
+    patch attempt_url(attempt), params: {
+      answers: [
+        { question_id: short_q.id, teacher_score: 1, teacher_comment: "Добре" },
+        { question_id: open_q.id, teacher_score: 2 },
+        { question_id: source.id, teacher_score: 2 }
+      ],
+      teacher_comment: "Роботу перевірено",
+      finalize: "1"
+    }
+    assert_redirected_to attempt_url(attempt)
+    assert attempt.grade.reload.finalized_by_teacher?
+    sign_out
+
+    get student_done_url(token: token)
+    assert_response :success
+    assert_select "#student_result"
+    assert_match I18n.t("attempts.report.earned", score: "11", max: "11"), response.body
+    assert_select "#correct_answer_question_#{mcq.id}", text: /4/
+    assert_match "Добре", response.body
+    assert_match "Роботу перевірено", response.body
+    refute_match "Mentions capital", response.body
   end
 
   test "closing a test does not lock a student out of the attempt in progress" do
