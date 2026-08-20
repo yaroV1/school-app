@@ -1,0 +1,45 @@
+<%# The parent's copy of a student's answer.
+    app/views/attempts/_student_answer.html.erb renders this same data for the teacher and
+    prints the answer key doing it: the stored order under attempts.grade.correct_order, and
+    the expected right item through attempts.grade.pair_expected. This file exists because
+    that one must not leave the teacher's screen. Every reader below is a student-facing one,
+    and nothing here marks an answer right or wrong — the score does that, and only in points. %>
+<div class="mt-3 text-sm">
+  <p class="mb-1 text-xs font-medium text-ink-muted"><%= t("attempts.grade.student_answer") %></p>
+
+  <% if answer.nil? %>
+    <p class="text-ink-muted italic"><%= t("attempts.grade.no_answer") %></p>
+  <% elsif question.mcq? %>
+    <% chosen = question.student_facing_options.find { |option| option["id"] == answer.option_id } %>
+    <p class="text-ink"><%= chosen ? chosen["text"] : t("attempts.grade.no_answer") %></p>
+  <% elsif question.ordering? %>
+    <% if answer.order_ids.blank? %>
+      <p class="text-ink-muted italic"><%= t("attempts.grade.no_answer") %></p>
+    <% else %>
+      <% items = question.student_facing_items.index_by { |item| item["id"].to_s } %>
+      <ol class="list-decimal space-y-1 pl-5 text-ink">
+        <% answer.order_ids.each do |id| %>
+          <li><%= items[id.to_s]&.dig("text") || t("common.dash") %></li>
+        <% end %>
+      </ol>
+    <% end %>
+  <% elsif question.matching? %>
+    <% if answer.pairs.values.all?(&:blank?) %>
+      <p class="text-ink-muted italic"><%= t("attempts.grade.no_answer") %></p>
+    <% else %>
+      <% rights = question.student_facing_right.index_by { |right| right["id"].to_s } %>
+      <ul class="space-y-1 text-ink">
+        <% question.student_facing_left.each do |left| %>
+          <% chosen = rights[answer.pairs[left["id"]].to_s] %>
+          <li>
+            <%= left["text"] %>
+            <span class="text-ink-subtle" aria-hidden="true">→</span>
+            <%= chosen ? chosen["text"] : t("common.dash") %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  <% else %>
+    <p class="whitespace-pre-wrap text-ink"><%= answer.text_response.presence || t("common.dash") %></p>
+  <% end %>
+</div>

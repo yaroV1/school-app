@@ -18,6 +18,8 @@ gem "stimulus-rails"
 gem "tailwindcss-rails"
 # Ukrainian (and other) Rails locale data
 gem "rails-i18n"
+# Ruby 3.4 moved csv out of default gems; Bundler LoadErrors a bare require "csv".
+gem "csv"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"

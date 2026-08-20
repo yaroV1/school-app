@@ -15,7 +15,8 @@ class ExamTabsTest < ActionDispatch::IntegrationTest
       edit_test_path(@exam) => t("exams.show.edit_settings"),
       manage_test_assignments_path(@exam) => t("exams.show.assign"),
       live_test_path(@exam) => t("exams.show.live_board"),
-      results_test_path(@exam) => t("exams.show.results")
+      results_test_path(@exam) => t("exams.show.results"),
+      print_test_path(@exam) => t("exams.show.print")
     }.each do |path, expected|
       get path
       assert_response :success
@@ -70,6 +71,31 @@ class ExamTabsTest < ActionDispatch::IntegrationTest
     get test_path(@exam)
     assert_select "form[action=?]", close_test_path(@exam), false
     assert_select "form[action=?]", publish_test_path(@exam), false
+  end
+
+  test "the print tab is offered in every state, unlike the live board and results" do
+    %i[draft published closed].each do |status|
+      @exam.update_column(:status, Exam.statuses[status])
+
+      get test_path(@exam)
+      assert_response :success
+      assert_select "nav a[href=?]", print_test_path(@exam), 1,
+                    "the paper copy must be reachable while a test is #{status}"
+    end
+  end
+
+  test "the paper copy and the answer key link to each other, out of the printer" do
+    get print_test_path(@exam)
+    assert_response :success
+    assert_select ".no-print a[href=?]", print_key_test_path(@exam)
+
+    get print_key_test_path(@exam)
+    assert_response :success
+    # Pinned to the link's own label: the Друк tab is also inside this page's .no-print
+    # chrome and also points at print_test_path, so an href-only assertion is satisfied by
+    # the tab bar and proves nothing about the back-link.
+    assert_select ".no-print a[href=?]", print_test_path(@exam),
+                  text: t("exams.print_key.sheet_link")
   end
 
   private

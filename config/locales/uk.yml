@@ -15,6 +15,7 @@ uk:
     dash: "—"
     now: "зараз"
     open_ended: "без обмеження"
+    export_csv: "Завантажити CSV"
 
   statuses:
     draft: "Чернетка"
@@ -205,6 +206,7 @@ uk:
       live_board: "Онлайн-табло"
       assign: "Призначити / посилання"
       results: "Результати"
+      print: "Друк"
       questions: "Питання"
       no_questions: "Ще немає питань."
       remove: "Видалити"
@@ -240,6 +242,25 @@ uk:
       rubric: "Критерії (необов’язково)"
       model_answer: "Зразок відповіді (необов’язково)"
       submit_question: "Додати питання"
+    print:
+      title: "Друк: %{title}"
+      hint: "Роздрукуйте цей аркуш (Ctrl+P) і роздайте учням. Правильних відповідей тут немає."
+      name_field: "Ім’я"
+      class_field: "Клас"
+      date_field: "Дата"
+      score_field: "Бал"
+      answer_label: "Відповідь"
+      order_hint: "Проставте номери від 1 до %{count} у клітинках."
+      matching_bank: "Варіанти відповідностей"
+      matching_hint: "Впишіть літеру потрібного варіанта поруч з кожним фактом."
+      matching_letters: "А Б В Г Д Е Ж З И К Л М Н П Р С Т У Ф Х"
+      key_link: "Аркуш з відповідями"
+    print_key:
+      title: "Відповіді: %{title}"
+      heading: "Аркуш з відповідями"
+      warning: "Лише для вчителя. Не роздавайте цей аркуш учням."
+      pairs: "Пари"
+      sheet_link: "Аркуш для учня"
     questions_count:
       one: "%{count} питання"
       few: "%{count} питання"
@@ -294,6 +315,7 @@ uk:
       latest_status: "Останній статус"
       submitted: "Здано"
       score: "Бал"
+      max_score: "Максимум"
       finalized: "затверджено"
       grade: "Оцінити"
       empty: "Ще немає призначень."
@@ -317,6 +339,8 @@ uk:
       regenerate: "Нове посилання"
 
   attempts:
+    show:
+      report: "Звіт для батьків"
     grade:
       title: "Оцінити спробу"
       back: "← Результати"
@@ -339,6 +363,16 @@ uk:
       overall_comment: "Загальний коментар"
       save: "Зберегти бали"
       save_finalize: "Зберегти і затвердити"
+    report:
+      title: "Звіт: %{name}"
+      heading: "Звіт про виконання тесту"
+      class_group: "Клас"
+      subject: "Предмет"
+      date: "Дата"
+      total: "Підсумковий бал"
+      earned: "%{score} з %{max}"
+      teacher_comment: "Коментар учителя"
+      provisional: "Оцінку ще не затверджено."
     history:
       test: "Тест"
       attempt: "Спроба"
@@ -347,6 +381,7 @@ uk:
       score: "Бал"
     flash:
       need_scores: "Поставте бали за всі відповіді, які оцінює вчитель, перед затвердженням."
+      report_in_progress: "Звіт можна надрукувати після того, як учень здасть роботу."
       finalized: "Оцінку затверджено."
       saved: "Бали збережено."
 

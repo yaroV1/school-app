@@ -2,6 +2,7 @@
   <%= tab_link_to t("exams.show.overview"), test_path(exam) %>
   <%= tab_link_to t("exams.show.edit_settings"), edit_test_path(exam) %>
   <%= tab_link_to t("exams.show.assign"), manage_test_assignments_path(exam) %>
+  <%= tab_link_to t("exams.show.print"), print_test_path(exam) %>
   <% if exam.published? || exam.closed? %>
     <%= tab_link_to t("exams.show.live_board"), live_test_path(exam) %>
     <%= tab_link_to t("exams.show.results"), results_test_path(exam) %>

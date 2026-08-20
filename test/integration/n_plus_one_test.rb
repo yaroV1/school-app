@@ -19,6 +19,16 @@ class NPlusOneTest < ActionDispatch::IntegrationTest
     assert_no_per_record_loads sql, "grades", "attempt_id"
   end
 
+  test "results csv does not query attempts or grades per assignment" do
+    seed_assignments! 8, attempts: 1
+    get results_test_path(@exam, format: :csv)
+    assert_response :success
+
+    sql = capture_sql { get results_test_path(@exam, format: :csv) }
+    assert_no_per_record_loads sql, "attempts", "assignment_id"
+    assert_no_per_record_loads sql, "grades", "attempt_id"
+  end
+
   test "results page lists each assignment once when students have several attempts" do
     seed_assignments! 3, attempts: 2
     get results_test_path(@exam)
@@ -82,6 +92,17 @@ class NPlusOneTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     sql = capture_sql { get stats_subject_path(@exam.subject) }
+    assert_no_per_record_loads sql, "assignments", "exam_id"
+    assert_no_per_record_loads sql, "attempts", "assignment_id"
+    assert_no_per_record_loads sql, "grades", "attempt_id"
+  end
+
+  test "subject stats csv does not query assignments per exam or attempts per assignment" do
+    seed_assignments! 8, attempts: 1
+    get stats_subject_path(@exam.subject, format: :csv)
+    assert_response :success
+
+    sql = capture_sql { get stats_subject_path(@exam.subject, format: :csv) }
     assert_no_per_record_loads sql, "assignments", "exam_id"
     assert_no_per_record_loads sql, "attempts", "assignment_id"
     assert_no_per_record_loads sql, "grades", "attempt_id"

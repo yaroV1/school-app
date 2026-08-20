@@ -2,6 +2,7 @@ class Question < ApplicationRecord
   PHOTO_TYPES = %w[image/jpeg image/png image/webp image/gif].freeze
   PHOTO_MAX_BYTES = 8.megabytes
   TEXT_BEARING_KEYS = %w[options items left right].freeze
+  UNALIGN_DRAWS = 12
 
   belongs_to :exam, inverse_of: :questions
   has_many :answers, dependent: :destroy
@@ -86,6 +87,16 @@ class Question < ApplicationRecord
     student_facing_right.shuffle(random: Random.new(stable_seed(seed, "match")))
   end
 
+  def unaligned_items(seed)
+    unaligned(student_facing_items, seed, "order") do |candidate|
+      candidate.map { |item| item["id"].to_s } == correct_order_ids
+    end
+  end
+
+  def unaligned_right_items(seed)
+    unaligned(student_facing_right, seed, "match") { |candidate| answers_the_left?(candidate) }
+  end
+
   def display_items_for(answer, seed)
     saved = Array(answer&.order_ids)
     return shuffled_items(seed) if saved.blank?
@@ -96,6 +107,43 @@ class Question < ApplicationRecord
   end
 
   private
+
+  # A seeded shuffle lands on the answer order once in n! draws. On the run page that only
+  # costs a student who never touches the control, but a printed sheet is one order held by
+  # the whole class, so an alignment there is the answer key.
+  #
+  # Two rules keep the cure from being worse than the disease:
+  #
+  # Below three entries the draw is kept as it is. With two, refusing the answer order
+  # leaves exactly one alternative, so the sheet would print the reverse of the key every
+  # time and a student who knows that reads it backwards for full marks — worse than the
+  # even chance a plain draw gives, which is already the best available at that size.
+  #
+  # Above that, re-draw with a derived seed rather than transform the drawn order. Rejection
+  # sampling stays uniform across the orders that remain, whereas a fixed transform — swap
+  # the first two, reverse, rotate — is public, so undoing it names the key.
+  def unaligned(list, seed, suffix)
+    drawn = list.shuffle(random: Random.new(stable_seed(seed, suffix)))
+    return drawn if list.size < 3 || !yield(drawn)
+
+    UNALIGN_DRAWS.times do |draw|
+      candidate = list.shuffle(random: Random.new(stable_seed(seed, "#{suffix}:#{draw}")))
+      return candidate unless yield(candidate)
+    end
+    drawn
+  end
+
+  # Position by position over the left column, skipping a left item that has no pair: a
+  # bank that answers every paired left item in reading order is the key, however many
+  # distractors sit under it.
+  def answers_the_left?(candidate)
+    return false if pairs.empty?
+
+    left_items.each_with_index.all? do |left, index|
+      want = pairs[left["id"].to_s]
+      want.nil? || candidate[index].to_h["id"].to_s == want.to_s
+    end
+  end
 
   def stable_seed(seed, suffix)
     Digest::SHA256.hexdigest("#{id}:#{seed}:#{suffix}").to_i(16) % (2**31)

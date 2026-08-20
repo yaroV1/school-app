@@ -39,17 +39,32 @@ class AnswerKeyLeakTest < ActionDispatch::IntegrationTest
     )
     @source = @exam.questions.create!(
       question_type: :source, prompt: "Summarize", points: 2, position: 3,
-      config: { "source" => "A short passage.", "rubric" => RUBRIC }
+      config: { "source" => "A short passage.", "rubric" => RUBRIC, "model_answer" => MODEL_ANSWER }
     )
     @open = @exam.questions.create!(
       question_type: :open, prompt: "Explain", points: 2, position: 4,
-      config: { "model_answer" => MODEL_ANSWER }
+      config: { "model_answer" => MODEL_ANSWER, "rubric" => RUBRIC }
     )
 
     student = @teacher.students.create!(name: "Lin")
     @assignment = @exam.assignments.create!(student: student)
     @attempt = AttemptLifecycle.start!(@assignment)
     @token = @assignment.access_token
+  end
+
+  # Answers that are deliberately WRONG, so the student's own work is distinguishable from
+  # the key. A report rendering the key would look identical if they matched.
+  def answer_wrongly_and_submit!
+    AttemptLifecycle.submit!(@attempt, answers: [
+      { "question_id" => @mcq.id, "payload" => { "option_id" => "a" } },
+      { "question_id" => @ordering.id, "payload" => { "order" => %w[e4 e3 e2 e1] } },
+      { "question_id" => @matching.id, "payload" => { "pairs" => { "l1" => "r1", "l2" => "r1" } } },
+      { "question_id" => @source.id, "payload" => { "text" => "My source answer" } },
+      { "question_id" => @open.id, "payload" => { "text" => "My open answer" } }
+    ])
+    @attempt.reload
+    assert @attempt.submitted?, "the fixture attempt did not actually submit"
+    @attempt
   end
 
   test "the student run page carries no answer key" do
@@ -138,7 +153,105 @@ class AnswerKeyLeakTest < ActionDispatch::IntegrationTest
     assert_match "First, corrected", response.body
   end
 
+  # The printed sheet is the second answer-key boundary: the same question data, on paper,
+  # handed to the same students, and unrevocable once photocopied. It renders through the
+  # same student-facing readers, so it answers to the same assertions.
+  test "the printed paper sheet carries no answer key" do
+    sign_in_as @teacher
+
+    get print_test_path(@exam)
+    assert_response :success
+    body = response.body
+
+    # The content the sheet exists to carry, so a body that merely failed to render
+    # cannot pass the refutes below.
+    assert_match "Kyiv", body
+    assert_match "A short passage.", body
+    assert_match "Alpha", body
+    assert_match "Explain", body
+
+    assert_no_answer_key body
+    refute_match @assignment.access_token, body,
+                 "an assignment token reached a sheet that is handed to students"
+
+    # Paper gives the key away by what is written beside a row, not by an id or a config
+    # key, so every refute above is blind to it. Pin each block to exactly what the
+    # student-facing reader returns: a marker, a letter or a star added to a row fails here.
+    assert_equal @mcq.student_facing_options.map { |option| option["text"] },
+                 rendered_texts(dom_id(@mcq, :print)),
+                 "an mcq row carries something the student-facing reader did not return"
+    assert_equal @matching.student_facing_left.map { |left| left["text"] },
+                 css_select("##{dom_id(@matching, :print)} ul li").map { |el| el.text.squish },
+                 "a matching left row carries something beyond its own text"
+    assert_equal @ordering.unaligned_items(@exam.id).map { |item| item["text"] },
+                 rendered_texts(dom_id(@ordering, :print)),
+                 "the ordering block is not what the unaligned reader returned"
+  end
+
+  # The parent report is the third answer-key boundary: it leaves the building in a
+  # schoolbag and cannot be recalled. It renders the student's own payload through the
+  # student-facing readers, never attempts/_student_answer, which prints the key by design.
+  test "the parent report carries no answer key" do
+    answer_wrongly_and_submit!
+    sign_in_as @teacher
+
+    get report_attempt_path(@attempt)
+    assert_response :success
+    body = response.body
+
+    # The student's own work, so an empty render cannot pass the refutes below.
+    assert_match "My open answer", body
+    assert_match "My source answer", body
+    assert_match "Paris", body
+
+    assert_no_answer_key body
+    refute_match @token, body, "an assignment token reached a report sent home"
+
+    # The student chose Paris, so the correct option must appear nowhere. Without this the
+    # mcq block had no key guard at all: assert_no_answer_key checks is_correct, checked
+    # radios, the sentinels and the pairs ids, and none of those is how an mcq key leaks here.
+    refute_match "Kyiv", body, "the correct option reached the parent"
+
+    # Refute the templates, not one interpolation of them: pinning value: "One" forbade a
+    # single rendering and let every other one through.
+    expected_marker = I18n.t("attempts.grade.pair_expected", value: "\u0000").split("\u0000").first
+    refute_match expected_marker, body, "the expected-pair marker reached a parent"
+    refute_match I18n.t("attempts.grade.pair_correct"), body, "a correctness marker reached a parent"
+
+    # Structural and answer-independent: the teacher's grading partial roots every block at
+    # dom_id(question, :student_answer), so this fails if it is ever rendered here at all.
+    assert_select "[id^='student_answer_question_']", false,
+                  "the teacher grading partial reached the report"
+  end
+
+  test "the report shows the student's own order and mapping, not the stored ones" do
+    answer_wrongly_and_submit!
+    sign_in_as @teacher
+
+    get report_attempt_path(@attempt)
+    assert_response :success
+
+    order = css_select("##{dom_id(@ordering, :report)} ol li").map { |el| el.text.strip }
+    assert_equal %w[Fourth Third Second First], order, "the student's own order must print"
+    refute_equal @ordering.items.map { |item| item["text"] }, order
+
+    mapping = css_select("##{dom_id(@matching, :report)} ul li").map { |el| el.text.squish }
+    # Neither the key (Alpha->Two, Beta->One) nor the index-aligned default
+    # (Alpha->One, Beta->Two): a view ignoring answer.pairs renders the latter, so an
+    # identity payload would have proved nothing.
+    assert_equal [ "Alpha → One", "Beta → One" ], mapping, "the student's own mapping must print"
+    refute_includes mapping, "Alpha → Two", "the key reached the parent"
+    refute_includes mapping, "Beta → Two", "the index-aligned default was printed, not the student"
+  end
+
   private
+
+  # Every answer row on the printed sheet is a box plus this span.
+  def rendered_texts(block_id)
+    texts = css_select("##{block_id} li span.pt-0\\.5").map { |el| el.text.strip }
+    refute_empty texts, "an empty render would make the comparison meaningless"
+    texts
+  end
 
   def rendered_ordering_ids
     get student_run_url(token: @token)

@@ -462,6 +462,27 @@
     @apply cursor-grab touch-none rounded p-1 text-ink-subtle transition-colors
       hover:bg-surface-sunken hover:text-ink active:cursor-grabbing;
   }
+
+  /* --------------------------- printed sheets --------------------------- */
+  /* Hooks the @media print block at the end of this file keys on. `print-sheet`
+     and `print-question` are structural markers with no on-screen look of their
+     own; the three blank-space classes are what a student writes into, so they
+     have to read the same on screen as on paper. */
+  .print-question {
+    break-inside: avoid;
+  }
+
+  .fill-line {
+    @apply block h-5 min-w-32 flex-1 border-b border-line-strong;
+  }
+
+  .answer-line {
+    @apply block h-7 border-b border-line-strong;
+  }
+
+  .answer-box {
+    @apply inline-block size-6 rounded border border-line-strong;
+  }
 }
 
 @keyframes autosave-check-pop {
@@ -483,5 +504,56 @@
   *::before,
   *::after {
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Print
+
+   The paper backup and the parent report are the deliverable: the teacher prints
+   the page and saves it as PDF. Everything the app wraps around the document —
+   header, tabs, breadcrumbs, buttons — is marked `no-print` in the template and
+   removed here, so the sheet carries the document and nothing else.
+
+   Borders are restated as #000 because the tokens above are oklch, which most
+   print pipelines flatten to a grey too light to photocopy.
+--------------------------------------------------------------------------- */
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  .no-print,
+  .app-header,
+  .flash {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  /* On screen this scrolls inside its box; on paper every line has to show. */
+  .source-text {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .print-sheet {
+    color: #000;
+  }
+
+  .answer-line,
+  .answer-box,
+  .fill-line {
+    border-color: #000;
   }
 }

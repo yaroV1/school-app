@@ -1,6 +1,6 @@
 class ExamsController < ApplicationController
   before_action :set_subject, only: %i[new create]
-  before_action :set_exam, only: %i[show edit update destroy publish close results live]
+  before_action :set_exam, only: %i[show edit update destroy publish close results live print print_key]
 
   def show
     @questions = @exam.questions.with_attached_photo
@@ -50,6 +50,10 @@ class ExamsController < ApplicationController
 
   def results
     @assignments = @exam.assignments.preload(:student, attempts: :grade).joins(:student).order("students.name")
+    respond_to do |format|
+      format.html
+      format.csv { send_csv("#{@exam.title}.csv", results_csv_headers, results_csv_rows) }
+    end
   end
 
   def live
@@ -57,6 +61,18 @@ class ExamsController < ApplicationController
       expire_overdue_attempts
       render partial: "exams/live_board", layout: false, locals: LiveBoard.snapshot(@exam)
     end
+  end
+
+  # Kernel#print is private, so a public action of the same name shadows nothing
+  # Rails or Ruby calls on the controller.
+  def print
+    @questions = @exam.questions.with_attached_photo
+  end
+
+  # A separate action rendering a separate template, rather than a flag on #print:
+  # the student sheet then has no branch that could be inverted into printing the key.
+  def print_key
+    @questions = @exam.questions.with_attached_photo
   end
 
   private
@@ -73,6 +89,32 @@ class ExamsController < ApplicationController
   # ExpireOverdueAttemptsJob from recurring.yml.
   def expire_overdue_attempts
     AttemptLifecycle.expire_overdue!(@exam.attempts.overdue)
+  end
+
+  def results_csv_headers
+    [
+      t("exams.assign.student"),
+      t("exams.results.latest_status"),
+      t("attempts.history.started"),
+      t("exams.results.submitted"),
+      t("exams.results.score"),
+      t("exams.results.max_score")
+    ]
+  end
+
+  def results_csv_rows
+    @assignments.map do |assignment|
+      attempt = assignment.latest_attempt
+      grade = attempt&.grade
+      [
+        assignment.student.name,
+        attempt ? t("statuses.#{attempt.status}") : t("statuses.not_started"),
+        csv_time(attempt&.started_at),
+        csv_time(attempt&.submitted_at),
+        csv_decimal(grade&.total_score),
+        grade ? csv_decimal(grade.max_score) : ""
+      ]
+    end
   end
 
   def exam_params
