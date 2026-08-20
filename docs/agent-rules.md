@@ -201,10 +201,11 @@ the first system test, not before.
 ## Git
 
 - Never `git commit` or `git push` unless the user explicitly asks in that message.
-- Exception, and the only one: invoking `/implement-prd` **is** that explicit request, for that run, on the
-  current branch — `git add` of files the run touched, `git commit` (one per task plus the completion
-  commit), and the `prd/backlog → prd/complete` `git mv`. Nothing else: no push, no `--amend`, no new
-  branch, no PR. Scope and limits: `.claude/skills/implement-prd/SKILL.md` § Git authorization.
+- Exception, and the only one: invoking `/implement-prd` **is** that explicit request to create
+  `feature/<feature-name>` from clean `main`, then run on that branch — `git add` of files the run touched,
+  `git commit` (one per task plus the completion commit), and the `prd/backlog → prd/complete` `git mv`.
+  Nothing else: no push, no `--amend`, no switching to an existing branch, no PR. Scope and limits:
+  `.claude/skills/implement-prd/SKILL.md` § Git authorization.
 - Never `--no-verify`, never force-push, never change git config.
 - Never `git add -A`, `git add --all`, or `git add .` — stage the files you touched, by name.
 - Never run a command that throws away uncommitted work: `git stash`, `git clean`, `git reset --hard`,

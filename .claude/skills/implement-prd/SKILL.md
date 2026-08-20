@@ -1,6 +1,6 @@
 ---
 name: implement-prd
-description: Execute a refined PRD from prd/backlog/ one task at a time — implement, test, review by parallel subagents, fix, then commit. Use ONLY when the developer explicitly asks — /implement-prd, or asking in their own words to execute, continue, or resume a PRD that already exists in prd/backlog/. A request to build, ship, or implement a feature is not on its own an invocation: do that work directly unless the developer names the PRD flow. § Invocation refuses PRDs still in prd/_to_refine/.
+description: "Execute a refined PRD from prd/backlog/ on its own feature branch, one task at a time — implement, test, review by parallel subagents, fix, then commit. Use ONLY when the developer explicitly asks — /implement-prd, or asking in their own words to execute, continue, or resume a PRD that already exists in prd/backlog/. A request to build, ship, or implement a feature is not on its own an invocation: do that work directly unless the developer names the PRD flow. § Invocation refuses PRDs still in prd/_to_refine/."
 ---
 
 # Implement PRD
@@ -28,11 +28,12 @@ is not an instruction to start it, and neither is a request to build the feature
 
 `docs/agent-rules.md` § Git carves this skill out. That authorization is narrow:
 
-- Authorized, for the duration of this run, on the current branch: `git add` of files this run touched,
-  `git commit` — one per completed task plus the final completion commit — and `git mv` within `prd/` at
-  § Completion.
-- Not authorized: everything else. Not `git push`, not `--amend`, not a new branch, not a PR. Each needs
-  its own request from the user.
+- Authorized, for the duration of this run: create `feature/<feature-name>` from clean `main` with
+  `git switch -c`, then `git add` files this run touched, `git commit` — one per completed task plus the
+  final completion commit — and `git mv` within `prd/` at § Completion. A resume may continue only when
+  already checked out on that exact feature branch.
+- Not authorized: everything else. Not `git push`, not `--amend`, not switching to an existing branch,
+  not a PR. Each needs its own request from the user.
 
 Everything else in `docs/agent-rules.md` § Git stands, including its absolutes: never `--no-verify`, never
 force-push, never change git config.
@@ -44,14 +45,20 @@ force-push, never change git config.
    `prd/backlog/<name>/project.md` is this skill's own step-9 bookkeeping — report it and continue; the
    next commit sweeps it in. `progress.md` is git-ignored and never appears here at all. Any other dirty
    tracked file: stop and ask. Do not stash, do not commit it.
-2. `git branch --show-current` and `git rev-parse --short HEAD` — report both. All work stays on that
-   branch; that sha is the run's **baseline** for the completion report.
+2. Derive the branch as `feature/<feature-name>` from the PRD directory name and validate it with
+   `git check-ref-format --branch`. Then enforce one of these two states:
+   - Fresh run: current branch is `main` and the feature branch does not exist. Record
+     `git rev-parse --short HEAD` as the **baseline**, then run `git switch -c feature/<feature-name>`.
+   - Resume: current branch is already that exact feature branch. Use
+     `git merge-base main HEAD` as the **baseline** and remain there.
+   If the feature branch exists but is not checked out, or the current branch is anything else, stop and
+   ask. Never overwrite, delete, reset, or silently switch to an existing branch.
 3. `bin/rails test` — green **before** the first edit. Red: stop (§ Stop conditions). A pre-existing
    failure must never be blamed on this PRD.
 4. Read `project.md`. No `## Implementation Tasks` list → stop and ask. Do not invent tasks.
 5. Read `progress.md` for the resume point; the ticked boxes in `project.md` are the authority. Create
    `progress.md` from § progress.md if the directory has none.
-6. Report branch, baseline sha, task count, and the first unchecked task. Then start.
+6. Report feature branch, baseline sha, task count, and the first unchecked task. Then start.
 
 ## The loop
 
