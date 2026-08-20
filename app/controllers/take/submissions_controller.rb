@@ -16,7 +16,15 @@ module Take
     end
 
     def show
-      @latest = @assignment.attempts.where(status: %i[submitted expired]).order(attempt_no: :desc).first
+      @latest = @assignment.latest_finished_attempt
+      return if @assignment.revoked? || !@exam.show_results_to_students? || @latest.nil?
+
+      @grade = @latest.grade
+      return unless @grade&.finalized_by_teacher?
+
+      @results_visible = true
+      @questions = @exam.questions.with_attached_photo
+      @answers = @latest.answers.index_by(&:question_id)
     end
 
     private

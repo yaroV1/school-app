@@ -61,7 +61,7 @@
     <% else %>
       <p class="flash flash-muted"><%= t("take.cannot_start") %></p>
     <% end %>
-    <% if @assignment.attempts.where(status: %i[submitted expired]).exists? %>
+    <% if @assignment.latest_finished_attempt %>
       <%= link_to t("take.view_done"), student_done_path(token: @assignment.access_token), class: "link text-sm" %>
     <% end %>
   <% end %>

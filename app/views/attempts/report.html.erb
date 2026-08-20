@@ -76,7 +76,7 @@
 
         <p class="mt-3 font-medium whitespace-pre-wrap text-ink"><%= question.prompt %></p>
 
-        <%= render "attempts/report_answer", question: question, answer: answer %>
+        <%= render "shared/student_answer", question: question, answer: answer %>
 
         <% if answer&.teacher_comment.present? %>
           <p class="mt-3 text-xs font-medium text-ink-muted"><%= t("attempts.report.teacher_comment") %></p>
