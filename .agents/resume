@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# This app uses local SQLite databases and has no external services to reconnect.
+printf 'school-app: no orb services need to be resumed.\n'

@@ -30,6 +30,9 @@
 
 /public/assets
 
+# Amp orb portal metadata is local to each sandbox.
+/.amp/portals/*
+
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
