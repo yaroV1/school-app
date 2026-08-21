@@ -17,10 +17,10 @@ Tool entry points add mechanics only, and point here:
 - `.cursor/rules/conventions.mdc` — Cursor frontmatter.
 
 The PRD workflow is **Claude Code-native**: `/prd` and `/implement-prd` live in
-`.claude/skills/prd/SKILL.md` and `.claude/skills/implement-prd/SKILL.md`; `prd/README.md` owns the stage
-lifecycle. Cursor may discover those skills through its Claude compatibility path. In either tool they run
-only when the developer invokes them — see § When to ask vs inspect. This repo does not expose them as
-Codex skills; do not improvise the flow by hand.
+`.claude/skills/prd/SKILL.md` and `.claude/skills/implement-prd/SKILL.md`. PRDs live locally under the
+git-ignored `prd/` directory with no stage directories. Cursor may discover those skills through its
+Claude compatibility path. In either tool they run only when the developer invokes them — see § When to
+ask vs inspect. This repo does not expose them as Codex skills; do not improvise the flow by hand.
 
 **A new rule goes in this file.** If it must live anywhere else, this file names it here.
 
@@ -168,16 +168,23 @@ retry, so these are invariants, not preferences.
 
 ## Quality
 
-After changing behavior, in this order:
+During implementation, keep feedback targeted and cheap:
 
 1. Add or update Minitest coverage in the file that already owns the behavior (see § Where things are).
 2. `bin/rubocop -A <files you touched>` **first** — it rewrites source, unsafe cops included, so running it
-   after the tests invalidates them. Only files you touched: repo-wide lint is deferred to `bin/ci`, which
-   runs `bin/rubocop` unscoped.
-3. `bin/rails test`
-4. `bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error` when the diff touches `app/`.
-5. `bin/bundler-audit` when the diff touches `Gemfile` or `Gemfile.lock`.
-6. `bin/importmap audit` only when JS dependencies change. There is no JS style linter.
+   after tests invalidates them. Run it only on touched Ruby files.
+3. Run the targeted test files that prove the change. Re-run checks only when subsequent edits can affect
+   their result.
+
+Before reporting an implementation complete, run broader checks once:
+
+1. `bin/rails test` for any application behavior change.
+2. `bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error` when the finished diff touches `app/`.
+3. `bin/bundler-audit` when the finished diff touches `Gemfile` or `Gemfile.lock`.
+4. `bin/importmap audit` only when JS dependencies change. There is no JS style linter.
+
+Documentation and agent-harness-only changes need their own syntax, reference, or configuration checks,
+not the Rails suite.
 
 No coverage %. Never report a check as passing without running it.
 
@@ -196,9 +203,10 @@ the first system test, not before.
 
 - Never `git commit` or `git push` unless the user explicitly asks in that message.
 - Exception, and the only one: invoking `/implement-prd` **is** that explicit request, for that run, on the
-  current branch — `git add` of files the run touched, `git commit` (one per task plus the completion
-  commit), and the `prd/backlog → prd/complete` `git mv`. Nothing else: no push, no `--amend`, no new
-  branch, no PR. Scope and limits: `.claude/skills/implement-prd/SKILL.md` § Git authorization.
+  current branch — `git add` of implementation files the run touched and one or more coherent
+  implementation commits. Nothing under the git-ignored `prd/` directory is staged or committed. Nothing
+  else: no push, no `--amend`, no new branch, no PR. Scope and limits:
+  `.claude/skills/implement-prd/SKILL.md` § Git authorization.
 - Never `--no-verify`, never force-push, never change git config.
 - Never `git add -A`, `git add --all`, or `git add .` — stage the files you touched, by name.
 - Never run a command that throws away uncommitted work: `git stash`, `git clean`, `git reset --hard`,
@@ -224,14 +232,14 @@ the first system test, not before.
   - `test/integration/` — request-level flows: `mvp_flow_test.rb` (the teacher→student spine),
     `n_plus_one_test.rb` (query counts), `grade_integrity_test.rb`, `live_board_test.rb`, tab/filter tests.
   - `test/models/`, `test/controllers/`
-- PRDs: `prd/` — `prd/README.md` owns the stage lifecycle
+- PRDs: `prd/<kebab-name>/project.md` — local and git-ignored; no lifecycle stages
 
 ## Review tests
 
-Four checks on the finished diff, run after `bin/rails test` is green and before reporting the change done.
-Answer each in one line naming the evidence; if you cannot write the line, the diff is not done. On the
-`/implement-prd` path the implementing agent answers the first three itself at § The loop step 4, and the
-review fan-out owns Security.
+Four checks on the finished diff, run after the applicable quality checks are green and before reporting
+the change done. Answer each in one line naming the evidence; if you cannot write the line, the diff is not
+done. On the `/implement-prd` path the implementing agent owns all four; risk-based reviewers supplement
+that review when the diff warrants it.
 
 - **KISS.** A new class, module, or service needs a second caller, a security boundary, or nontrivial
   domain logic. None of the three: inline it. A new option or flag needs the caller that passes it.

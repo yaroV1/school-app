@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+
+step() {
+  printf '\n==> %s\n' "$1"
+  SECONDS=0
+}
+
+finish_step() {
+  printf '    completed in %ss\n' "$SECONDS"
+}
+
+step "Installing mise"
+if command -v mise >/dev/null 2>&1; then
+  mise_bin="$(command -v mise)"
+elif [[ -x "$HOME/.local/bin/mise" ]]; then
+  mise_bin="$HOME/.local/bin/mise"
+else
+  curl -fsSL https://mise.run | sh
+  mise_bin="$HOME/.local/bin/mise"
+fi
+finish_step
+
+ruby_version="$(tr -d '[:space:]' < .ruby-version)"
+bundler_version="$(awk '/^BUNDLED WITH$/ { getline; gsub(/^[[:space:]]+/, ""); print; exit }' Gemfile.lock)"
+
+step "Installing Ruby $ruby_version"
+"$mise_bin" install "ruby@$ruby_version"
+ruby_bin="$("$mise_bin" where "ruby@$ruby_version")/bin"
+export PATH="$ruby_bin:$PATH"
+finish_step
+
+step "Persisting the Ruby toolchain for login shells"
+mkdir -p "$HOME/.config/amp"
+cat > "$HOME/.config/amp/school-app-orb.sh" <<EOF
+if [[ "\${PWD}" == "$repo_root" ]]; then
+  export PATH="$ruby_bin:\${PATH}"
+fi
+EOF
+
+profile_marker="# school-app orb toolchain"
+touch "$HOME/.bash_profile"
+if ! grep -Fqx "$profile_marker" "$HOME/.bash_profile"; then
+  cat >> "$HOME/.bash_profile" <<'EOF'
+
+# school-app orb toolchain
+if [[ -f "$HOME/.config/amp/school-app-orb.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "$HOME/.config/amp/school-app-orb.sh"
+fi
+EOF
+fi
+finish_step
+
+step "Installing Bundler $bundler_version and locked dependencies"
+if ! gem list --installed --exact bundler --version "$bundler_version" >/dev/null 2>&1; then
+  gem install bundler --version "$bundler_version" --no-document
+fi
+if [[ "$(bundle --version)" != "Bundler version $bundler_version" ]]; then
+  printf 'Expected Bundler %s, found %s\n' "$bundler_version" "$(bundle --version)" >&2
+  exit 1
+fi
+bundle install --jobs 4 --retry 3
+finish_step
+
+step "Preparing the development database"
+bin/rails db:migrate
+finish_step
+
+printf '\nOrb setup complete.\n'
