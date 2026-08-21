@@ -1,6 +1,6 @@
 ---
 name: implement-prd
-description: "Executes a local school-app PRD from prd/<name>/ with targeted tests, risk-based review, and coherent implementation commits. Use only when the developer explicitly asks to execute, continue, or resume an existing PRD."
+description: "Executes a local school-app PRD from prd/<name>/ on its own feature branch with targeted tests, risk-based review, and coherent implementation commits. Use only when the developer explicitly asks to execute, continue, or resume an existing PRD."
 ---
 
 # Implement PRD
@@ -20,19 +20,26 @@ Never infer this workflow from a normal implementation request. The developer mu
 
 ## Git authorization
 
-Invocation authorizes explicit staging and one or more coherent implementation commits on the current
-branch. Never stage or commit anything under `prd/`. It does not authorize push, amend, a new branch, a PR,
-history rewriting, or any other exception to `docs/agent-rules.md` § Git.
+Invocation authorizes creating `feature/<name>` from clean `main`, then explicit staging and one or more
+coherent implementation commits on that branch. A resume may continue only when already checked out on
+that exact feature branch. Never stage or commit anything under `prd/`. It does not authorize push, amend,
+switching to an existing branch, a PR, history rewriting, or any other exception to
+`docs/agent-rules.md` § Git.
 
 ## Start
 
 1. Read `project.md`. Require a goal, acceptance criteria, and at least one task; ask only if a missing or
    unresolved decision would change the implementation.
-2. Inspect `git status`, the current branch, and the baseline SHA. Continue around unrelated user or agent
-   changes. If they overlap files this PRD must edit, ask before touching them; never stash or discard them.
-3. Read the ownership path and the tests named as proof. Run an existing proof test before editing only
+2. Inspect `git status`. A fresh run requires clean tracked and staged state on `main`; untracked files may
+   remain and must not be added. Never stash or discard changes.
+3. Derive `feature/<name>` from the PRD directory name and validate it with
+   `git check-ref-format --branch`. For a fresh run, require that the branch does not exist, record HEAD as
+   the baseline, and run `git switch -c feature/<name>`. For a resume, require the exact feature branch and
+   use `git merge-base main HEAD` as the baseline. Any other branch state is a reason to stop and ask;
+   never overwrite, delete, reset, or silently switch to an existing branch.
+4. Read the ownership path and the tests named as proof. Run an existing proof test before editing only
    when distinguishing a pre-existing failure matters; do not run the whole suite as preflight.
-4. Report the branch, baseline, task count, and first unchecked task, then begin.
+5. Report the feature branch, baseline, task count, and first unchecked task, then begin.
 
 ## Implementation loop
 

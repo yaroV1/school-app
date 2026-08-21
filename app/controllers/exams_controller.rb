@@ -120,7 +120,7 @@ class ExamsController < ApplicationController
   def exam_params
     permitted = params.require(:exam).permit(
       :title, :description, :time_limit_sec, :max_attempts,
-      :available_from, :available_until
+      :available_from, :available_until, :show_results_to_students
     )
     permitted[:available_from] = nil if permitted[:available_from].blank?
     permitted[:available_until] = nil if permitted[:available_until].blank?

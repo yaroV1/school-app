@@ -1,8 +1,9 @@
 require "test_helper"
 
-# The student run page is the answer-key boundary: it calls the Question student-facing
-# readers directly, and nothing sits between it and the response. These tests render the
-# real page as an unauthenticated student and assert the keys never reach the body.
+# Student pages call the Question student-facing readers directly, and nothing sits between
+# them and the response. These tests render the real pages as an unauthenticated student:
+# the run page must carry no key, while a published finalized result carries only the
+# explicitly allowed auto-scored answers.
 #
 # Sentinel strings rather than realistic copy, so a match cannot be a coincidence.
 class AnswerKeyLeakTest < ActionDispatch::IntegrationTest
@@ -97,6 +98,31 @@ class AnswerKeyLeakTest < ActionDispatch::IntegrationTest
                  "ordering items did not render through display_items_for"
   end
 
+  test "a published finalized result carries only allowlisted auto-scored answers" do
+    answer_wrongly_and_submit!
+    @attempt.answers.find_by!(question: @source).update!(teacher_score: 1)
+    @attempt.answers.find_by!(question: @open).update!(teacher_score: 1)
+    @attempt.grade.finalize!
+    @exam.update!(show_results_to_students: true)
+
+    get student_done_url(token: @token)
+    assert_response :success
+    body = response.body
+
+    assert_select "#correct_answer_question_#{@mcq.id}", text: /Kyiv/
+    assert_equal %w[First Second Third Fourth],
+                 css_select("#correct_answer_question_#{@ordering.id} ol li").map { |node| node.text.strip }
+    assert_equal [ "Alpha → Two", "Beta → One" ],
+                 css_select("#correct_answer_question_#{@matching.id} ul li").map { |node| node.text.squish }
+    assert_match "My open answer", body
+    assert_match "My source answer", body
+
+    refute_match(/is_correct/, body, "MCQ correctness flag reached the result")
+    refute_match(/"pairs"|&quot;pairs&quot;/, body, "raw matching pairs reached the result")
+    refute_match RUBRIC, body, "source rubric reached the result"
+    refute_match MODEL_ANSWER, body, "model answer reached the result"
+  end
+
   test "a revoked link cannot reach the run page at all" do
     @assignment.update!(revoked_at: Time.current)
 
@@ -188,9 +214,9 @@ class AnswerKeyLeakTest < ActionDispatch::IntegrationTest
                  "the ordering block is not what the unaligned reader returned"
   end
 
-  # The parent report is the third answer-key boundary: it leaves the building in a
+  # The parent report is another answer-key boundary: it leaves the building in a
   # schoolbag and cannot be recalled. It renders the student's own payload through the
-  # student-facing readers, never attempts/_student_answer, which prints the key by design.
+  # shared student-facing partial, never attempts/_student_answer, which prints the key by design.
   test "the parent report carries no answer key" do
     answer_wrongly_and_submit!
     sign_in_as @teacher

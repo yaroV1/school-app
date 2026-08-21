@@ -54,6 +54,14 @@ class Assignment < ApplicationRecord
     end
   end
 
+  def latest_finished_attempt
+    if attempts.loaded?
+      attempts.select { |attempt| attempt.submitted? || attempt.expired? }.max_by(&:attempt_no)
+    else
+      attempts.where(status: %i[submitted expired]).order(attempt_no: :desc).first
+    end
+  end
+
   def can_start?
     return false if revoked?
     return false unless exam.published?
