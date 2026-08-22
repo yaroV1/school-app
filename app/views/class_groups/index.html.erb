@@ -1,7 +1,13 @@
 <% content_for :title, t("classes.index.title") %>
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-  <h1 class="page-title"><%= t("classes.index.title") %></h1>
-  <%= link_to t("classes.index.new"), new_class_group_path, class: btn_primary %>
+  <div class="flex items-center gap-3">
+    <span class="page-icon" aria-hidden="true"><%= ui_icon("classes") %></span>
+    <h1 class="page-title"><%= t("classes.index.title") %></h1>
+  </div>
+  <%= link_to new_class_group_path, class: btn_primary do %>
+    <%= ui_icon("plus", class_name: "size-4") %>
+    <%= t("classes.index.new") %>
+  <% end %>
 </div>
 
 <% if @class_groups.any? %>
@@ -21,5 +27,5 @@
     <% end %>
   </ul>
 <% else %>
-  <p class="empty-state"><%= t("classes.index.empty") %></p>
+  <%= render "shared/empty_state", icon: "classes", message: t("classes.index.empty"), action_text: t("classes.index.new"), action_path: new_class_group_path %>
 <% end %>

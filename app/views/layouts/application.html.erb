@@ -17,12 +17,7 @@
       <header class="app-header">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5">
           <%= link_to class_groups_path, class: "brand" do %>
-            <span class="brand-mark" aria-hidden="true">
-              <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 5.5h5M4 10h4M4 14.5h5" />
-                <path d="m11.5 9.75 2 2 4-4.5" />
-              </svg>
-            </span>
+            <%= render "shared/brand_mark" %>
             <%= t("app_name") %>
           <% end %>
           <div class="flex items-center gap-2">

@@ -43,8 +43,8 @@
       <% end %>
     </ul>
   <% elsif @query.present? %>
-    <p class="empty-state"><%= t("subjects.show.no_matches", query: @query) %></p>
+    <%= render "shared/empty_state", icon: "search", message: t("subjects.show.no_matches", query: @query) %>
   <% else %>
-    <p class="empty-state"><%= t("subjects.show.empty_tests") %></p>
+    <%= render "shared/empty_state", icon: "tests", message: t("subjects.show.empty_tests"), action_text: t("subjects.show.new_test"), action_path: new_subject_exam_path(@subject) %>
   <% end %>
 </section>

@@ -28,6 +28,10 @@ module ApplicationHelper
     "field"
   end
 
+  def ui_icon(name, class_name: "size-5")
+    render "shared/icon", name: name.to_s, class_name: class_name
+  end
+
   # `aria-current` carries the active state, so highlighting is not tied to a
   # particular colour class.
   def nav_link_to(text, path)
