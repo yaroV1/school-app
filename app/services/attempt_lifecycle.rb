@@ -4,6 +4,8 @@ class AttemptLifecycle
   class Expired < Error; end
   class Conflict < Error; end
 
+  FOCUS_LOSS_CAP = 200
+
   def self.start!(assignment)
     new(assignment).start!
   end
@@ -18,6 +20,18 @@ class AttemptLifecycle
 
   def self.expire_if_needed!(attempt)
     new(attempt.assignment).expire_if_needed!(attempt)
+  end
+
+  # A tab switch is a soft teacher-facing signal, not status and not answers, so the lock-and-re-check
+  # rule the rest of this class follows does not reach it: both guards live in the WHERE, which leaves
+  # no read-then-write window to lose. Deliberately not `update!` — that bumps `lock_version`, and
+  # `expire!` is the one path that reads outside a transaction, so the churn would only make it lose
+  # that race more often and defer expiries to the next sweep. It leaves `last_activity_at` alone
+  # because leaving the tab is not activity and must not postpone a deadline.
+  def self.record_focus_loss!(attempt)
+    Attempt.where(id: attempt.id, status: :in_progress)
+           .where(focus_loss_count: ...FOCUS_LOSS_CAP)
+           .update_all("focus_loss_count = focus_loss_count + 1")
   end
 
   # Expires a whole scope and refreshes each affected board once. The board

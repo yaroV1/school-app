@@ -81,7 +81,41 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
     assert_match(/\A\d+:\d{2}\z/, cell.text.strip)
   end
 
+  test "a student reporting a tab switch moves the counter and is answered without a body" do
+    assignment = @exam.assignments.find_by!(student: @in_group)
+    attempt = started_attempt_for(assignment)
+
+    # focus_guard_controller.js posts JSON, so the proof goes through the same parser.
+    post student_focus_events_path(token: assignment.access_token),
+         params: { attempt_id: attempt.id }, as: :json
+
+    assert_response :no_content
+    assert_equal 1, attempt.reload.focus_loss_count
+  end
+
+  test "a tab switch reported after the attempt finished changes nothing" do
+    assignment = @exam.assignments.find_by!(student: @in_group)
+    attempt = started_attempt_for(assignment)
+    attempt.update!(status: :submitted, submitted_at: Time.current)
+
+    post student_focus_events_path(token: assignment.access_token),
+         params: { attempt_id: attempt.id }, as: :json
+
+    assert_response :no_content
+    assert_equal 0, attempt.reload.focus_loss_count
+  end
+
   private
+
+  def started_attempt_for(assignment)
+    started = Time.current
+    assignment.attempts.create!(
+      attempt_no: assignment.attempts.count + 1,
+      status: :in_progress,
+      started_at: started,
+      last_activity_at: started
+    )
+  end
 
   def overdue_attempt_for(exam)
     assignment = exam.assignments.find_or_create_by!(student: @in_group)

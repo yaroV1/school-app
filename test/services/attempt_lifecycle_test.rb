@@ -20,6 +20,48 @@ class AttemptLifecycleTest < ActiveSupport::TestCase
     @assignment = @exam.assignments.create!(student: @student)
   end
 
+  test "focus loss increments while the attempt is in progress" do
+    attempt = AttemptLifecycle.start!(@assignment)
+
+    AttemptLifecycle.record_focus_loss!(attempt)
+    AttemptLifecycle.record_focus_loss!(attempt)
+
+    assert_equal 2, attempt.reload.focus_loss_count
+  end
+
+  test "focus loss leaves the columns other writers race on untouched" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    lock_version = attempt.lock_version
+    last_activity = attempt.last_activity_at
+
+    AttemptLifecycle.record_focus_loss!(attempt)
+
+    attempt.reload
+    assert_equal lock_version, attempt.lock_version
+    assert_equal last_activity.to_i, attempt.last_activity_at.to_i
+  end
+
+  test "focus loss is ignored once the attempt is no longer in progress" do
+    submitted = AttemptLifecycle.start!(@assignment)
+    AttemptLifecycle.submit!(submitted)
+    AttemptLifecycle.record_focus_loss!(submitted)
+    assert_equal 0, submitted.reload.focus_loss_count
+
+    expired = AttemptLifecycle.start!(@assignment)
+    expired.update!(status: :expired)
+    AttemptLifecycle.record_focus_loss!(expired)
+    assert_equal 0, expired.reload.focus_loss_count
+  end
+
+  test "focus loss stops at the cap" do
+    attempt = AttemptLifecycle.start!(@assignment)
+    attempt.update!(focus_loss_count: AttemptLifecycle::FOCUS_LOSS_CAP)
+
+    AttemptLifecycle.record_focus_loss!(attempt)
+
+    assert_equal AttemptLifecycle::FOCUS_LOSS_CAP, attempt.reload.focus_loss_count
+  end
+
   test "start creates in-progress attempt with deadline" do
     attempt = AttemptLifecycle.start!(@assignment)
     assert attempt.in_progress?
