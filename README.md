@@ -45,6 +45,12 @@ Seed loads demo **Classes**, **Students**, **Subjects**, and **Tests** (with sam
 bin/rails test
 ```
 
+## Deploy
+
+Production is one Docker container on a DigitalOcean droplet, deployed by Kamal from a GitHub Actions
+job that runs only on a green `main`. Setup, secrets, backups, and the steps to add a domain are in
+[`docs/deploy.md`](docs/deploy.md).
+
 ## Notes
 
 - Domain model uses `Exam` (table `exams`) to avoid clashing with Minitest’s `Test`; UI and routes still say **Tests** (`/tests`).
