@@ -3,6 +3,13 @@
 #   # or fresh:
 #   bin/rails db:reset
 
+# bin/docker-entrypoint runs db:prepare on every container boot, and db:prepare seeds any database
+# it had to create. Without this guard the first production deploy would publish the demo teacher
+# whose password sits in the public README, and print live /t/ access tokens to the container log —
+# the one place docs/agent-rules.md § Tokens says they must never reach. Create the first real
+# teacher through bin/kamal console instead; there is no registration route.
+return if Rails.env.production?
+
 teacher = User.find_or_create_by!(email_address: "teacher@example.com") do |user|
   user.password = "password123"
 end

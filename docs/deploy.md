@@ -86,6 +86,16 @@ Then merge to `main`. The `deploy` job builds the image on an amd64 runner, push
 `ghcr.io/yarov1/school-app`, boots `kamal-proxy`, and starts the app. `bin/docker-entrypoint` runs
 `bin/rails db:prepare` on boot, which creates and migrates all four databases on the mounted volume.
 
+`db:prepare` also seeds any database it had to create, so `db/seeds.rb` returns early in production —
+otherwise the first deploy would publish the demo teacher whose password is in the public README and
+log the demo `/t/` tokens. That leaves no account to sign in with, and there is no registration
+route, so create the first teacher by hand:
+
+```bash
+bin/kamal console
+User.create!(email_address: "you@example.com", password: "…")
+```
+
 The `Dockerfile` carries `LABEL org.opencontainers.image.source`, which is what attaches the published
 package to this repository. Without that link GHCR creates the package unattached, and `GITHUB_TOKEN`
 loses push access after the first deploy.
