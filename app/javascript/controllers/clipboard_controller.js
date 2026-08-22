@@ -5,9 +5,22 @@ export default class extends Controller {
 
   copy() {
     navigator.clipboard.writeText(this.textValue).then(() => {
-      const original = this.element.textContent
+      this.originalText ||= this.element.textContent
       this.element.textContent = this.copiedValue || "Copied"
-      setTimeout(() => { this.element.textContent = original }, 1200)
+      this.element.classList.add("is-copied")
+      clearTimeout(this.resetTimer)
+      this.resetTimer = setTimeout(() => {
+        this.element.textContent = this.originalText
+        this.element.classList.remove("is-copied")
+      }, 1200)
     })
+  }
+
+  disconnect() {
+    clearTimeout(this.resetTimer)
+    if (!this.originalText) return
+
+    this.element.textContent = this.originalText
+    this.element.classList.remove("is-copied")
   }
 }

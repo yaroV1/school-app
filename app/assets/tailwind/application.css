@@ -34,7 +34,7 @@
   --color-ink-muted: oklch(0.502 0.045 257);
   --color-ink-subtle: oklch(0.64 0.043 257);
 
-  /* One accent, reserved for focus, current state and links */
+  /* One accent, reserved for focus, current state, links and brand artwork */
   --color-accent: oklch(0.511 0.262 276);
   --color-accent-strong: oklch(0.457 0.24 277);
   --color-accent-line: oklch(0.785 0.115 274);
@@ -94,6 +94,10 @@
     @apply inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5
       rounded-control border border-transparent px-3.5 py-2 text-sm font-medium
       whitespace-nowrap transition-colors;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: translateY(1px);
   }
 
   .btn:disabled {
@@ -250,8 +254,27 @@
   }
 
   .brand-mark {
-    @apply inline-flex size-7 items-center justify-center rounded-control bg-ink
-      text-xs font-bold text-white;
+    @apply inline-flex size-8 shrink-0 items-center justify-center rounded-control
+      text-white shadow-card;
+    background: linear-gradient(145deg, var(--color-accent), var(--color-ink));
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+
+  .brand-mark svg {
+    @apply size-full;
+  }
+
+  .brand:hover .brand-mark {
+    @apply shadow-raised;
+    transform: rotate(-2deg) translateY(-1px);
+  }
+
+  .student-brand {
+    @apply inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-ink-muted;
+  }
+
+  .student-brand .brand-mark {
+    @apply size-7;
   }
 
   .nav-link {
@@ -300,6 +323,11 @@
     @apply text-2xl font-semibold tracking-tight text-ink;
   }
 
+  .page-icon {
+    @apply inline-flex size-10 shrink-0 items-center justify-center rounded-card
+      border border-accent-line bg-accent-soft text-accent;
+  }
+
   .page-subtitle {
     @apply mt-1 text-sm text-ink-muted;
   }
@@ -331,7 +359,36 @@
   }
 
   .empty-state {
-    @apply rounded-card border border-dashed border-line px-4 py-8 text-center text-sm text-ink-muted;
+    @apply overflow-hidden rounded-card border border-dashed border-line bg-surface-raised
+      px-4 py-8 text-center text-sm text-ink-muted;
+    background-image: radial-gradient(circle at 50% 0%, var(--color-accent-soft), transparent 45%);
+  }
+
+  .empty-state-illustration {
+    @apply relative mx-auto mb-3 flex h-16 w-28 items-center justify-center;
+    animation: empty-state-arrive 360ms ease-out both;
+  }
+
+  .empty-state-icon {
+    @apply relative z-10 inline-flex size-14 items-center justify-center rounded-card
+      border border-accent-line bg-surface-raised text-accent shadow-raised;
+    transform: rotate(-3deg);
+  }
+
+  .empty-state-dot {
+    @apply absolute rounded-chip;
+  }
+
+  .empty-state-dot-left {
+    @apply left-1 bottom-2 size-4 bg-warning-soft ring-1 ring-warning-line;
+  }
+
+  .empty-state-dot-right {
+    @apply top-1 right-0 size-6 bg-info-soft ring-1 ring-info-line;
+  }
+
+  .empty-state-message {
+    @apply font-medium text-ink-muted;
   }
 
   /* ------------------------------- flashes ------------------------------ */
@@ -391,6 +448,45 @@
 
   .qcard-legend {
     @apply flex flex-wrap items-center gap-2 text-xs font-medium text-ink-muted;
+  }
+
+  .completion-card {
+    @apply relative overflow-hidden;
+    background-image: radial-gradient(circle at 50% -15%, var(--color-success-soft), transparent 55%);
+  }
+
+  .completion-illustration {
+    @apply relative mx-auto h-16 w-24;
+  }
+
+  .completion-check {
+    @apply absolute top-1 left-1/2 flex size-14 -translate-x-1/2 items-center justify-center
+      rounded-chip border border-success-line bg-success-soft text-success shadow-raised;
+    animation: completion-pop 420ms cubic-bezier(.2, .8, .2, 1.15) both;
+  }
+
+  .completion-spark {
+    @apply absolute size-2 rounded-chip bg-warning-line;
+    animation: spark-arrive 480ms ease-out both;
+  }
+
+  .completion-spark-one {
+    @apply top-2 left-1;
+  }
+
+  .completion-spark-two {
+    @apply top-0 right-2 size-1.5 bg-info-line;
+    animation-delay: 80ms;
+  }
+
+  .completion-spark-three {
+    @apply right-0 bottom-2 size-2.5 bg-accent-line;
+    animation-delay: 140ms;
+  }
+
+  .btn.is-copied {
+    @apply border-success-line bg-success-soft text-success;
+    animation: copied-pulse 260ms ease-out;
   }
 
   /* Full-width tappable rows, so a phone user is not aiming at a radio dot. */
@@ -485,10 +581,35 @@
   }
 }
 
+.student-shell {
+  background-image:
+    radial-gradient(circle at 8% 10%, var(--color-accent-soft), transparent 24rem),
+    radial-gradient(circle at 92% 90%, var(--color-warning-soft), transparent 22rem);
+}
+
 @keyframes autosave-check-pop {
   0% { transform: scale(0.5); opacity: 0; }
   70% { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes empty-state-arrive {
+  from { transform: translateY(6px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes completion-pop {
+  from { transform: translateX(-50%) scale(0.65) rotate(-8deg); opacity: 0; }
+  to { transform: translateX(-50%) scale(1) rotate(0); opacity: 1; }
+}
+
+@keyframes spark-arrive {
+  from { transform: translateY(8px) scale(0); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes copied-pulse {
+  50% { transform: scale(1.04); }
 }
 
 .autosave-check-pop {
@@ -504,6 +625,8 @@
   *::before,
   *::after {
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
   }
 }
 

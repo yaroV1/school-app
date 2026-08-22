@@ -31,6 +31,7 @@ class SubjectTestsFilterTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_empty listed_titles
     assert_match I18n.t("subjects.show.no_matches", query: "хімія"), response.body
+    assert_select ".empty-state .empty-state-illustration svg[aria-hidden=true]"
   end
 
   test "defaults to newest created first" do

@@ -1,12 +1,7 @@
 <% content_for :title, t("auth.sign_in") %>
 <div class="mx-auto w-full max-w-sm">
   <div class="mb-6 text-center">
-    <span class="brand-mark mx-auto mb-3 flex size-10 rounded-card" aria-hidden="true">
-      <svg class="size-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 5.5h5M4 10h4M4 14.5h5" />
-        <path d="m11.5 9.75 2 2 4-4.5" />
-      </svg>
-    </span>
+    <%= render "shared/brand_mark", class_name: "mx-auto mb-3 size-11 rounded-card" %>
     <h1 class="page-title"><%= t("auth.sign_in") %></h1>
     <p class="page-subtitle"><%= t("app_name") %></p>
   </div>

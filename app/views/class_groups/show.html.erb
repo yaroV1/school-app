@@ -17,7 +17,7 @@
       <% end %>
     </ul>
   <% else %>
-    <p class="empty-state"><%= t("classes.show.empty_subjects") %></p>
+    <%= render "shared/empty_state", icon: "subjects", message: t("classes.show.empty_subjects") %>
   <% end %>
 
   <div class="card card-pad">

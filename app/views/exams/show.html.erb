@@ -72,7 +72,7 @@
       <% end %>
     </ol>
   <% else %>
-    <p class="empty-state"><%= t("exams.show.no_questions") %></p>
+    <%= render "shared/empty_state", icon: "tests", message: t("exams.show.no_questions") %>
   <% end %>
 </section>
 

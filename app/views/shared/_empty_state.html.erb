@@ -1,0 +1,11 @@
+<div class="empty-state">
+  <div class="empty-state-illustration" aria-hidden="true">
+    <span class="empty-state-dot empty-state-dot-left"></span>
+    <span class="empty-state-icon"><%= ui_icon(icon, class_name: "size-8") %></span>
+    <span class="empty-state-dot empty-state-dot-right"></span>
+  </div>
+  <p class="empty-state-message"><%= message %></p>
+  <% if local_assigns[:action_text] && local_assigns[:action_path] %>
+    <%= link_to action_text, action_path, class: "link mt-2 inline-block" %>
+  <% end %>
+</div>
