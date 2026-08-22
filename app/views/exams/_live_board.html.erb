@@ -25,6 +25,7 @@
               <th><%= t("exams.live.last_activity") %></th>
               <th><%= t("exams.results.submitted") %></th>
               <th><%= t("exams.live.time_left") %></th>
+              <th><%= t("exams.live.tab_switches") %></th>
               <th></th>
             </tr>
           </thead>
@@ -45,6 +46,13 @@
                           data-countdown-server-time-value="<%= server_time.iso8601 %>">
                       <span data-countdown-target="display"><%= countdown_display(attempt.seconds_remaining(server_time)) %></span>
                     </span>
+                  <% else %>
+                    <span class="text-ink-muted"><%= t("common.dash") %></span>
+                  <% end %>
+                </td>
+                <td class="num">
+                  <% if attempt && attempt.focus_loss_count.positive? %>
+                    <span class="focus-losses font-medium text-ink"><%= attempt.focus_loss_count %></span>
                   <% else %>
                     <span class="text-ink-muted"><%= t("common.dash") %></span>
                   <% end %>

@@ -105,6 +105,22 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
     assert_equal 0, attempt.reload.focus_loss_count
   end
 
+  test "the board marks only the students who left the tab" do
+    switched = @exam.assignments.find_by!(student: @in_group)
+    steady = @exam.assignments.find_by!(student: @out_group)
+    started_attempt_for(switched).update!(focus_loss_count: 3)
+    started_attempt_for(steady)
+
+    get live_test_path(@exam), headers: { "Turbo-Frame" => "live_board" }
+    assert_response :success
+    assert_match I18n.t("exams.live.tab_switches"), response.body
+
+    marks = css_select(".focus-losses")
+    assert_equal 1, marks.size, "only the student who left the tab should carry a count"
+    assert_equal "3", marks.first.text.strip
+    assert_equal 2, css_select("tbody tr").size
+  end
+
   private
 
   def started_attempt_for(assignment)
