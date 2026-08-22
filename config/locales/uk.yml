@@ -16,6 +16,11 @@ uk:
     now: "зараз"
     open_ended: "без обмеження"
     export_csv: "Завантажити CSV"
+    credits:
+      one: "%{count} кредит"
+      few: "%{count} кредити"
+      many: "%{count} кредитів"
+      other: "%{count} кредита"
 
   statuses:
     draft: "Чернетка"
@@ -86,6 +91,12 @@ uk:
       history: "Історія спроб"
       empty_history: "Ще немає спроб."
       draft_score: "(чернетка)"
+    credits:
+      history: "Історія кредитів"
+      empty: "Ще немає нарахувань."
+      test: "Тест"
+      date: "Дата"
+      change: "Зміна"
     count:
       one: "%{count} учень"
       few: "%{count} учні"

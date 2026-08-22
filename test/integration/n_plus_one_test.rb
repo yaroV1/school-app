@@ -132,6 +132,41 @@ class NPlusOneTest < ActionDispatch::IntegrationTest
     assert_operator exam_loads.size, :<=, 1, exam_loads.join("\n")
   end
 
+  test "student credit history does not load the assignment or exam per entry" do
+    student = @teacher.students.create!(name: "Earner")
+    @group.add_student!(student)
+    now = Time.current
+    3.times do |i|
+      exam = create_exam!(@teacher, title: "Paid #{i}", status: :published, class_group: @group)
+      question = exam.questions.create!(
+        question_type: :open, prompt: "Explain", points: 10, position: 0, config: {}
+      )
+      assignment = exam.assignments.create!(student: student)
+      attempt = assignment.attempts.create!(
+        attempt_no: 1,
+        status: :submitted,
+        started_at: now,
+        last_activity_at: now,
+        submitted_at: now
+      )
+      attempt.answers.create!(question: question, payload: { "text" => "x" }, teacher_score: 7)
+      attempt.create_grade!(max_score: exam.max_score)
+      attempt.grade.finalize!
+    end
+
+    get student_path(student)
+    assert_response :success
+    # Three attempt rows and three credit rows, so a page that rendered neither table
+    # could not pass the query assertions below.
+    assert_select ".data-table tbody tr", 6
+
+    sql = capture_sql { get student_path(student) }
+    assert_no_per_record_loads sql, "assignments", "id"
+    # One preload for the attempts table, one for the credits table.
+    exam_loads = sql.select { |query| query.match?(/FROM "exams"/i) }
+    assert_operator exam_loads.size, :<=, 2, exam_loads.join("\n")
+  end
+
   test "student autosave does not preload all attempts for the assignment" do
     student = @teacher.students.create!(name: "Sam")
     @group.add_student!(student)

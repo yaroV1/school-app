@@ -46,4 +46,21 @@ class AttemptGradeTest < ActionDispatch::IntegrationTest
     # them should not leave a websocket open per page.
     assert_select "turbo-cable-stream-source", false
   end
+
+  # Credits hang off Grade#finalize!, so saving a score without finalizing must pay nothing:
+  # a draft total is still moving.
+  test "credits are awarded when the teacher finalizes, not when a score is saved" do
+    AttemptLifecycle.submit!(@attempt)
+
+    patch attempt_path(@attempt), params: {
+      answers: [ { question_id: @question.id, teacher_score: "1" } ]
+    }
+    assert_equal 0, @student.credit_balance
+
+    patch attempt_path(@attempt), params: {
+      answers: [ { question_id: @question.id, teacher_score: "1" } ], finalize: "1"
+    }
+    assert_equal I18n.t("attempts.flash.finalized"), flash[:notice]
+    assert_equal Credits::PER_TEST, @student.credit_balance
+  end
 end

@@ -10,6 +10,7 @@
     <div>
       <h1 class="page-title"><%= @student.name %></h1>
       <% if @student.email.present? %><p class="page-subtitle"><%= @student.email %></p><% end %>
+      <p class="mt-2"><span class="chip"><%= t("common.credits", count: @student.credit_balance) %></span></p>
     </div>
     <%= link_to t("common.edit"), edit_student_path(@student), class: btn_secondary %>
   </div>
@@ -54,4 +55,30 @@
   </div>
 <% else %>
   <p class="empty-state"><%= t("students.show.empty_history") %></p>
+<% end %>
+
+<h2 class="section-title mt-8 mb-3"><%= t("students.credits.history") %></h2>
+<% if @credit_entries.any? %>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th><%= t("students.credits.test") %></th>
+          <th><%= t("students.credits.date") %></th>
+          <th><%= t("students.credits.change") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @credit_entries.each do |entry| %>
+          <tr>
+            <td class="font-medium"><%= entry.assignment.exam.title %></td>
+            <td class="text-ink-muted"><%= l(entry.created_at, format: :short) %></td>
+            <td class="num"><%= format("%+d", entry.amount) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="empty-state"><%= t("students.credits.empty") %></p>
 <% end %>

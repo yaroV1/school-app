@@ -1,7 +1,10 @@
 <% content_for :title, @exam.title %>
 <div class="space-y-5">
   <div>
-    <p class="text-sm text-ink-muted"><%= t("take.hello", name: @student.name) %></p>
+    <p class="text-sm text-ink-muted">
+      <%= t("take.hello", name: @student.name) %>
+      <span class="chip ml-2"><%= t("common.credits", count: @student.credit_balance) %></span>
+    </p>
     <h1 class="mt-2 text-3xl font-semibold tracking-tight text-ink"><%= @exam.title %></h1>
     <p class="mt-1 text-sm text-ink-muted"><%= @exam.subject.name %></p>
   </div>

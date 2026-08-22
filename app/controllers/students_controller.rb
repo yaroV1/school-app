@@ -4,6 +4,9 @@ class StudentsController < ApplicationController
 
   def show
     @attempts = @student.attempts.includes(:exam, :grade).order(started_at: :desc)
+    @credit_entries = @student.credit_entries
+                              .includes(assignment: :exam)
+                              .order(created_at: :desc, id: :desc)
   end
 
   def create
