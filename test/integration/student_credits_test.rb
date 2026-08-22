@@ -60,18 +60,58 @@ class StudentCreditsTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "the portal shows the running balance, never what one test paid" do
+    finalize!(score: 7)
+    finalize!(score: 4, assignment: second_assignment!)
+
+    get student_portal_url(token: @assignment.access_token)
+    assert_response :success
+
+    assert_match I18n.t("common.credits", count: 11), response.body
+    refute_match I18n.t("common.credits", count: 7), response.body,
+                 "the portal named one test's award instead of the balance"
+    refute_match I18n.t("common.credits", count: 4), response.body
+  end
+
+  # A student sees credits as one running number on purpose. Naming what a single test paid
+  # would restate that test's score, and `show_results_to_students` is the teacher's call on
+  # whether the student may see it at all.
+  test "the finished-test page never states what this test paid" do
+    finalize!(score: 7)
+    @exam.update!(show_results_to_students: true)
+
+    get student_done_url(token: @assignment.access_token)
+    assert_response :success
+
+    # The result really rendered, so the refute below cannot pass on an empty page.
+    assert_match I18n.t("take.results.total"), response.body
+    refute_match I18n.t("common.credits", count: 7), response.body,
+                 "the credits this one test paid reached the student"
+  end
+
   private
 
-  def finalize!(score:)
-    attempt = @assignment.attempts.create!(
+  def second_assignment!
+    exam = create_exam!(@teacher, title: "Кути", status: :published)
+    exam.questions.create!(
+      question_type: :open, prompt: "Explain", points: 10, position: 0, config: {}
+    )
+    exam.assignments.create!(student: @student)
+  end
+
+  def finalize!(score:, assignment: @assignment)
+    exam = assignment.exam
+    attempt = assignment.attempts.create!(
       status: :submitted,
-      attempt_no: @assignment.attempts.count + 1,
+      attempt_no: assignment.attempts.count + 1,
       started_at: Time.current,
       last_activity_at: Time.current,
       submitted_at: Time.current
     )
-    attempt.answers.create!(question: @question, payload: { "text" => "x" }, teacher_score: score)
-    attempt.create_grade!(max_score: @exam.max_score)
+    attempt.answers.create!(
+      question: exam.questions.first, payload: { "text" => "x" }, teacher_score: score
+    )
+    attempt.create_grade!(max_score: exam.max_score)
     attempt.grade.finalize!
     attempt
   end
