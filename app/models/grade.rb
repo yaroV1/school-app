@@ -8,10 +8,13 @@ class Grade < ApplicationRecord
   end
 
   def finalize!
-    update!(
-      finalized_by_teacher: true,
-      finalized_at: Time.current,
-      total_score: Scoring.total_for(attempt)
-    )
+    transaction do
+      update!(
+        finalized_by_teacher: true,
+        finalized_at: Time.current,
+        total_score: Scoring.total_for(attempt)
+      )
+      Credits.record_award!(self)
+    end
   end
 end

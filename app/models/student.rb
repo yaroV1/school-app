@@ -4,11 +4,16 @@ class Student < ApplicationRecord
   has_many :class_groups, through: :class_memberships
   has_many :assignments, dependent: :destroy
   has_many :attempts, through: :assignments
+  has_many :credit_entries, dependent: :destroy
 
   validates :name, presence: true
 
   scope :active, -> { where(archived_at: nil) }
   scope :archived, -> { where.not(archived_at: nil) }
+
+  def credit_balance
+    credit_entries.sum(:amount)
+  end
 
   def archived?
     archived_at.present?

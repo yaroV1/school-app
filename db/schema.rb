@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_010000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -100,6 +100,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_000000) do
     t.index ["student_id"], name: "index_class_memberships_on_student_id"
   end
 
+  create_table "credit_entries", force: :cascade do |t|
+    t.integer "amount", null: false
+    t.integer "assignment_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "student_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assignment_id"], name: "index_credit_entries_on_assignment_id"
+    t.index ["student_id"], name: "index_credit_entries_on_student_id"
+  end
+
   create_table "exams", force: :cascade do |t|
     t.datetime "available_from"
     t.datetime "available_until"
@@ -187,6 +197,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_000000) do
   add_foreign_key "class_groups", "users", column: "teacher_id"
   add_foreign_key "class_memberships", "class_groups"
   add_foreign_key "class_memberships", "students"
+  add_foreign_key "credit_entries", "assignments"
+  add_foreign_key "credit_entries", "students"
   add_foreign_key "exams", "subjects"
   add_foreign_key "exams", "users", column: "teacher_id"
   add_foreign_key "grades", "attempts"

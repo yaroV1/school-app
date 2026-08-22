@@ -2,6 +2,7 @@ class Assignment < ApplicationRecord
   belongs_to :exam
   belongs_to :student
   has_many :attempts, dependent: :destroy
+  has_many :credit_entries, dependent: :destroy
 
   validates :access_token, presence: true, uniqueness: true
   validates :student_id, uniqueness: { scope: :exam_id }
