@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_20_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_000000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -71,6 +71,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_000000) do
     t.integer "attempt_no", null: false
     t.datetime "created_at", null: false
     t.datetime "deadline_at"
+    t.integer "focus_loss_count", default: 0, null: false
     t.datetime "last_activity_at", null: false
     t.integer "lock_version", default: 0, null: false
     t.datetime "started_at", null: false

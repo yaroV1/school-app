@@ -64,6 +64,7 @@ Rails.application.routes.draw do
     get "run", to: "runs#show", as: :run
     put "answers", to: "answers#upsert", as: :answers
     post "submit", to: "submissions#create", as: :submit
+    post "focus_events", to: "focus_events#create", as: :focus_events
     get "done", to: "submissions#show", as: :done
   end
 

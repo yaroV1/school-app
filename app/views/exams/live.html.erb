@@ -8,7 +8,8 @@
      data-live-board-toast-other-value="<%= t("exams.live.toast_other", count: "__COUNT__") %>">
   <%= render "exams/header", exam: @exam %>
 
-  <p class="mb-4 text-sm text-ink-muted"><%= t("exams.live.hint") %></p>
+  <p class="mb-1 text-sm text-ink-muted"><%= t("exams.live.hint") %></p>
+  <p class="mb-4 text-sm text-ink-muted"><%= t("exams.live.focus_hint") %></p>
 
   <%# The controller writes textContent here, so keep it text-only. %>
   <p id="live-toast" class="flash flash-notice hidden" role="status"></p>

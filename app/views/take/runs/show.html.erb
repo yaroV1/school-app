@@ -8,7 +8,9 @@
 
 <%= form_with url: student_submit_path(token: @assignment.access_token), method: :post,
       data: {
-        controller: "autosave",
+        controller: "autosave focus-guard",
+        focus_guard_url_value: student_focus_events_path(token: @assignment.access_token),
+        focus_guard_attempt_id_value: @attempt.id,
         autosave_url_value: student_answers_path(token: @assignment.access_token),
         autosave_attempt_id_value: @attempt.id,
         autosave_interval_value: 5000,
