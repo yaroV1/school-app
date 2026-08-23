@@ -42,11 +42,14 @@ class BrandTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "the sign-in page carries the mark before a teacher has a session" do
+  # The scribe appears here and nowhere else: the sign-in page is the only screen with the
+  # room to read him at illustration size.
+  test "the sign-in page carries the scribe and the app name before a teacher has a session" do
     get new_session_url
 
     assert_response :success
-    assert_select ".brand-mark svg path", minimum: 3
+    assert_select "svg circle", minimum: 1, message: "the scribe's head"
+    assert_select "svg path", minimum: 6, message: "the scribe, his tablet and his reed"
     assert_select "p", text: I18n.t("app_name")
   end
 end

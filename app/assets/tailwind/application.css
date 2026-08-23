@@ -437,30 +437,30 @@
   .empty-state {
     @apply overflow-hidden rounded-card border border-dashed border-line bg-surface-raised
       px-4 py-10 text-center text-base text-ink-muted;
-    background-image: radial-gradient(circle at 50% 0%, var(--color-accent-soft), transparent 45%);
   }
 
   .empty-state-illustration {
-    @apply relative mx-auto mb-3 flex h-16 w-28 items-center justify-center;
+    @apply relative mx-auto mb-4 flex h-20 w-28 items-center justify-center;
     animation: empty-state-arrive 360ms ease-out both;
   }
 
-  .empty-state-icon {
-    @apply relative z-10 inline-flex size-14 items-center justify-center rounded-card
-      border border-accent-line bg-surface-raised text-accent shadow-raised;
-    transform: rotate(-3deg);
+  /* A blank tablet waiting to be written on, which is what an empty list is. The soft
+     corner radius stands in for the pillow shape the brand mark draws properly; a card
+     radius here would just read as another card. */
+  .empty-state-tablet {
+    @apply relative flex size-20 flex-col items-center justify-center gap-2
+      border-2 border-line-strong bg-surface-sunken text-ink-light shadow-raised;
+    border-radius: 30% / 24%;
+    transform: rotate(-2deg);
   }
 
-  .empty-state-dot {
-    @apply absolute rounded-chip;
+  .empty-state-marks {
+    @apply flex items-center gap-1;
   }
 
-  .empty-state-dot-left {
-    @apply left-1 bottom-2 size-4 bg-warning-soft ring-1 ring-warning-line;
-  }
-
-  .empty-state-dot-right {
-    @apply top-1 right-0 size-6 bg-info-soft ring-1 ring-info-line;
+  .empty-state-marks span {
+    @apply block h-1.5 w-2.5 bg-ink-subtle;
+    clip-path: var(--wedge);
   }
 
   .empty-state-message {
@@ -541,32 +541,41 @@
     background-image: radial-gradient(circle at 50% -15%, var(--color-success-soft), transparent 55%);
   }
 
+  /* No absolute positioning: marks placed around the disc kept landing behind it, and one
+     in the disc's own colour fused into it and read as a speech-bubble tail. A row under
+     the disc is the same shape the empty state uses and cannot collide. */
   .completion-illustration {
-    @apply relative mx-auto h-16 w-24;
+    @apply relative mx-auto flex w-40 flex-col items-center gap-2.5;
   }
 
   .completion-check {
-    @apply absolute top-1 left-1/2 flex size-14 -translate-x-1/2 items-center justify-center
-      rounded-chip border border-success-line bg-success-soft text-success shadow-raised;
+    @apply flex size-14 items-center justify-center rounded-chip bg-success text-white shadow-raised;
     animation: completion-pop 420ms cubic-bezier(.2, .8, .2, 1.15) both;
   }
 
-  .completion-spark {
-    @apply absolute size-2 rounded-chip bg-warning-line;
+  .completion-marks {
+    @apply flex items-center gap-1.5;
+  }
+
+  /* Three wedges rather than three sparks: what a finished tablet carries is writing,
+     and the shape is the one the rest of the app already uses. */
+  .completion-wedge {
+    @apply block h-2 w-3;
+    clip-path: var(--wedge);
     animation: spark-arrive 480ms ease-out both;
   }
 
-  .completion-spark-one {
-    @apply top-2 left-1;
+  .completion-wedge-one {
+    @apply bg-warning;
   }
 
-  .completion-spark-two {
-    @apply top-0 right-2 size-1.5 bg-info-line;
+  .completion-wedge-two {
+    @apply bg-accent;
     animation-delay: 80ms;
   }
 
-  .completion-spark-three {
-    @apply right-0 bottom-2 size-2.5 bg-accent-line;
+  .completion-wedge-three {
+    @apply bg-success;
     animation-delay: 140ms;
   }
 
@@ -685,8 +694,8 @@
 }
 
 @keyframes completion-pop {
-  from { transform: translateX(-50%) scale(0.65) rotate(-8deg); opacity: 0; }
-  to { transform: translateX(-50%) scale(1) rotate(0); opacity: 1; }
+  from { transform: scale(0.65) rotate(-8deg); opacity: 0; }
+  to { transform: scale(1) rotate(0); opacity: 1; }
 }
 
 @keyframes spark-arrive {
