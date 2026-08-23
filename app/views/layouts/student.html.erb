@@ -14,7 +14,7 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body class="student-shell min-h-screen bg-surface text-ink antialiased">
+  <body class="min-h-screen bg-surface text-ink antialiased <%= yield :shell_class %>">
     <main class="relative mx-auto max-w-3xl px-4 py-6 sm:py-8">
       <div class="student-brand mb-6">
         <%= render "shared/brand_mark" %>
