@@ -94,6 +94,13 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_select "h1.page-title", text: "Unit 1"
     assert_select ".card", false
     assert_select "ul svg", false
+    assert_match I18n.t("take.brief",
+      name: "Sam",
+      questions: I18n.t("exams.questions_count", count: 6),
+      time: I18n.t("take.brief_time", count: 5),
+      used: 0,
+      max: 1), response.body
+    assert_select ".chip", text: I18n.t("common.credits", count: 0)
 
     post student_start_url(token: token)
     follow_redirect!
@@ -105,6 +112,14 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
 
     attempt = assignment.attempts.last
     mcq, short_q, open_q, ordering, matching, source = exam.questions.order(:position)
+    left_id = matching.student_facing_left.first.fetch("id")
+
+    assert_select ".run-progress-mark", 6
+    assert_select ".qcard-num", 6
+    assert_select ".qcard .chip", false
+    assert_select "select", false
+    assert_select "[data-controller=matching]"
+    assert_select "input[type=hidden][name=?]", "answers[#{matching.id}][pairs][#{left_id}]"
 
     put student_answers_url(token: token), params: {
       attempt_id: attempt.id,

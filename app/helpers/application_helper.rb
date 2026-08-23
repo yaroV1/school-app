@@ -67,4 +67,29 @@ module ApplicationHelper
     variant = STATUS_BADGES.fetch(status.to_s, "badge-neutral")
     content_tag(:span, t("statuses.#{status}"), class: "badge #{variant}")
   end
+
+  def take_brief(exam, student, attempts_used)
+    t("take.brief",
+      name: student.name,
+      questions: t("exams.questions_count", count: exam.questions.size),
+      time: exam.time_limit_sec ? t("take.brief_time", count: exam.time_limit_sec / 60) : t("take.brief_untimed"),
+      used: attempts_used,
+      max: exam.max_attempts)
+  end
+
+  # Ordering stores a full permutation as soon as the first autosave lands, so a
+  # saved row counts as started even if the student never reordered.
+  def answer_started?(question, answer)
+    return false if answer.nil?
+
+    if question.mcq?
+      answer.option_id.present?
+    elsif question.ordering?
+      answer.order_ids.any?
+    elsif question.matching?
+      answer.pairs.values.any?(&:present?)
+    else
+      answer.text_response.present?
+    end
+  end
 end

@@ -8,7 +8,7 @@
 
 <%= form_with url: student_submit_path(token: @assignment.access_token), method: :post,
       data: {
-        controller: "autosave focus-guard",
+        controller: "autosave focus-guard run-progress",
         focus_guard_url_value: student_focus_events_path(token: @assignment.access_token),
         focus_guard_attempt_id_value: @attempt.id,
         autosave_url_value: student_answers_path(token: @assignment.access_token),
@@ -17,7 +17,9 @@
         autosave_saving_value: t("take.saving"),
         autosave_saved_value: t("take.saved"),
         autosave_failed_value: t("take.save_failed"),
-        action: "countdown:ended@window->autosave#save ordering:changed->autosave#save"
+        run_progress_answered_value: t("take.progress_answered", n: "%{n}"),
+        run_progress_empty_value: t("take.progress_empty", n: "%{n}"),
+        action: "countdown:ended@window->autosave#save input->run-progress#refresh change->run-progress#refresh ordering:changed->autosave#save ordering:changed->run-progress#orderingChanged matching:changed->autosave#save matching:changed->run-progress#refresh"
       },
       class: "space-y-8" do %>
   <%= hidden_field_tag :attempt_id, @attempt.id %>
@@ -25,7 +27,7 @@
   <%# Status enters the flow before the questions, then stays at the top while the
       student works. A bottom-sticky bar covered the next question on a phone. %>
   <div class="run-bar">
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
       <div class="flex flex-wrap items-center gap-3">
         <% if @attempt.deadline_at %>
           <div data-controller="countdown"
@@ -49,20 +51,42 @@
           <p class="autosave-status" data-autosave-target="status"><%= t("take.autosave") %></p>
         </div>
       </div>
+      <nav class="run-progress" aria-label="<%= t("take.progress") %>">
+        <% @questions.each_with_index do |question, index| %>
+          <% started = answer_started?(question, @answers[question.id]) %>
+          <%= link_to "##{dom_id(question)}",
+                class: "run-progress-mark",
+                data: {
+                  run_progress_target: "mark",
+                  question_id: question.id,
+                  answered: started
+                },
+                aria: { label: t(started ? "take.progress_answered" : "take.progress_empty", n: index + 1) } do %>
+            <span class="sr-only"><%= index + 1 %></span>
+          <% end %>
+        <% end %>
+      </nav>
     </div>
   </div>
 
   <% @questions.each_with_index do |question, index| %>
     <% answer = @answers[question.id] %>
-    <fieldset class="qcard" data-qtype="<%= question.question_type %>">
-      <legend class="qcard-legend px-1">
-        <%= t("take.question_legend", n: index + 1) %>
-        <span class="text-ink-subtle" aria-hidden="true">·</span>
+    <fieldset class="qcard" id="<%= dom_id(question) %>"
+              data-qtype="<%= question.question_type %>"
+              data-question-id="<%= question.id %>"
+              data-run-progress-target="card"
+              data-answered="<%= answer_started?(question, answer) %>">
+      <legend class="sr-only">
+        <%= t("take.question_legend", n: index + 1) %>,
         <%= t("exams.points", count: question.points) %>
       </legend>
-      <div class="mt-1 mb-3 flex flex-wrap items-center gap-2">
-        <span class="chip"><%= t("question_types.#{question.question_type}") %></span>
-        <span class="text-xs text-ink-muted"><%= t("take.type_hint.#{question.question_type}") %></span>
+      <div class="mb-4 flex items-baseline gap-4">
+        <p class="qcard-num" aria-hidden="true"><%= index + 1 %></p>
+        <p class="text-sm text-ink-muted">
+          <%= t("take.type_hint.#{question.question_type}") %>
+          <span aria-hidden="true"> · </span>
+          <%= t("exams.points", count: question.points) %>
+        </p>
       </div>
       <%= render "questions/photo", question: question %>
       <% unless question.source? %>
@@ -80,7 +104,7 @@
         </div>
       <% elsif question.ordering? %>
         <div data-controller="ordering" class="space-y-2">
-          <p class="text-xs text-ink-muted"><%= t("take.ordering.hint") %></p>
+          <p class="text-sm text-ink-muted"><%= t("take.ordering.hint") %></p>
           <div class="space-y-2" role="list">
             <% question.display_items_for(answer, @attempt.id).each_with_index do |item, item_index| %>
               <div data-ordering-target="item"
@@ -108,17 +132,45 @@
       <% elsif question.matching? %>
         <% given = answer&.pairs || {} %>
         <% rights = question.shuffled_right_items(@attempt.id) %>
-        <div class="space-y-2.5">
+        <div data-controller="matching" class="space-y-3">
+          <p class="text-sm text-ink-muted"><%= t("take.matching.hint") %></p>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <ul class="space-y-2">
+              <% question.student_facing_left.each do |left| %>
+                <% paired_right = rights.find { |item| item["id"] == given[left["id"]] } %>
+                <li>
+                  <button type="button"
+                          class="match-item"
+                          data-matching-target="left"
+                          data-id="<%= left["id"] %>"
+                          data-paired="<%= paired_right ? "true" : "false" %>"
+                          data-action="click->matching#pickLeft keydown.esc->matching#clearLeftSelection"
+                          aria-selected="false">
+                    <span><%= left["text"] %></span>
+                    <span data-matching-pair class="block text-sm font-normal text-ink-muted"><%= paired_right&.fetch("text") %></span>
+                  </button>
+                </li>
+              <% end %>
+            </ul>
+            <ul class="space-y-2">
+              <% rights.each do |right| %>
+                <li>
+                  <button type="button"
+                          class="match-item"
+                          data-matching-target="right"
+                          data-id="<%= right["id"] %>"
+                          data-paired="<%= given.value?(right["id"]) ? "true" : "false" %>"
+                          data-action="click->matching#pickRight">
+                    <%= right["text"] %>
+                  </button>
+                </li>
+              <% end %>
+            </ul>
+          </div>
           <% question.student_facing_left.each do |left| %>
-            <div class="grid items-center gap-2 sm:grid-cols-2">
-              <p class="text-sm"><%= left["text"] %></p>
-              <%= select_tag "answers[#{question.id}][pairs][#{left["id"]}]",
-                    options_for_select(
-                      [ [ t("take.matching.choose"), "" ] ] + rights.map { |right| [ right["text"], right["id"] ] },
-                      given[left["id"]]
-                    ),
-                    class: "#{field_class} mt-0" %>
-            </div>
+            <%= hidden_field_tag "answers[#{question.id}][pairs][#{left["id"]}]", given[left["id"]],
+                  id: nil,
+                  data: { matching_target: "input", left_id: left["id"] } %>
           <% end %>
         </div>
       <% elsif question.short_text? %>

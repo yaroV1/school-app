@@ -36,9 +36,16 @@ class ChromeTest < ActiveSupport::TestCase
     refute_includes rule(".qcard"), "border-l-[3px]"
   end
 
-  test "the current tab and the question legend mark themselves with the wedge" do
+  test "catalog numbers on the runner are large serif" do
+    body = rule(".qcard-num")
+
+    assert_includes body, "font-serif"
+    assert_match(/\btext-4xl\b/, body)
+  end
+
+  test "the current tab and the run progress mark themselves with the wedge" do
     assert_includes rule('.tab[aria-current="page"]::before'), "var(--wedge)"
-    assert_includes rule(".qcard-legend::before"), "var(--wedge)"
+    assert_includes rule(".run-progress-mark"), "var(--wedge)"
   end
 
   test "cuneiform grain is not a body background" do

@@ -15,26 +15,38 @@ class ClassGroupTabsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "Алгебра", response.body
     assert_no_match(/Ada Lovelace/, response.body)
+    assert_select "details.reveal:not([open])" do
+      assert_select "summary", text: I18n.t("classes.show.add_subject")
+      assert_select "form[action=?]", class_group_subjects_path(@group)
+    end
   end
 
   test "students tab lists the roster" do
     get students_class_group_path(@group)
     assert_response :success
     assert_match "Ada Lovelace", response.body
+    assert_select "details.reveal:not([open])" do
+      assert_select "summary", text: I18n.t("classes.show.add_student")
+      assert_select "form[action=?]", class_group_students_path(@group)
+    end
   end
 
   test "a failed student create re-renders the students tab with the error" do
     post class_group_students_path(@group), params: { student: { name: "" } }
     assert_response :unprocessable_entity
     assert_match "Ada Lovelace", response.body
-    assert_select "form[action=?]", class_group_students_path(@group)
+    assert_select "details.reveal[open]" do
+      assert_select "form[action=?]", class_group_students_path(@group)
+    end
   end
 
   test "a failed subject create re-renders the subjects tab with the error" do
     post class_group_subjects_path(@group), params: { subject: { name: "" } }
     assert_response :unprocessable_entity
     assert_match "Алгебра", response.body
-    assert_select "form[action=?]", class_group_subjects_path(@group)
+    assert_select "details.reveal[open]" do
+      assert_select "form[action=?]", class_group_subjects_path(@group)
+    end
   end
 
   test "adding a student lands back on the students tab" do
