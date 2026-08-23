@@ -19,7 +19,7 @@
   <body class="min-h-screen bg-surface text-ink antialiased">
     <% if authenticated? %>
       <header class="app-header">
-        <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5">
+        <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <%= link_to class_groups_path, class: "brand" do %>
             <%= render "shared/brand_mark" %>
             <%= t("app_name") %>
@@ -32,7 +32,7 @@
       </header>
     <% end %>
 
-    <main class="mx-auto max-w-6xl px-4 py-8">
+    <main class="mx-auto max-w-6xl px-4 py-10">
       <%= render "shared/flash" %>
       <%= yield %>
     </main>

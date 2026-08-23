@@ -162,8 +162,8 @@
 @layer components {
   /* ------------------------------- buttons ------------------------------- */
   .btn {
-    @apply inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5
-      rounded-control border border-transparent px-3.5 py-2 text-sm font-medium
+    @apply inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5
+      rounded-control border border-transparent px-4 py-2.5 text-base font-medium
       whitespace-nowrap transition-colors;
   }
 
@@ -192,7 +192,7 @@
   }
 
   .btn-sm {
-    @apply min-h-8 gap-1 px-2.5 py-1 text-xs;
+    @apply min-h-9 gap-1 px-3 py-1.5 text-sm;
   }
 
   .btn-lg {
@@ -201,17 +201,17 @@
 
   /* ------------------------------- forms -------------------------------- */
   .field-label {
-    @apply block text-sm font-medium text-ink;
+    @apply block text-sm font-semibold text-ink;
   }
 
   .field {
     @apply mt-1.5 block w-full rounded-control border border-line bg-surface-raised
-      px-3 py-2 text-sm text-ink transition-colors
+      px-3.5 py-2.5 text-base text-ink transition-colors
       placeholder:text-ink-muted hover:border-line-strong focus:border-accent;
   }
 
   .field-hint {
-    @apply mt-1.5 text-xs text-ink-muted;
+    @apply mt-1.5 text-sm text-ink-muted;
   }
 
   .field-error {
@@ -224,41 +224,40 @@
 
   /* --------------------------- surfaces & lists ------------------------- */
   .card {
-    @apply rounded-card border border-line bg-surface-raised shadow-card;
+    @apply rounded-card bg-surface-raised shadow-card;
   }
 
   .card-pad {
-    @apply p-4 sm:p-5;
+    @apply p-5 sm:p-6;
   }
 
   .card-title {
-    @apply font-serif text-sm font-semibold text-ink;
+    @apply font-serif text-base font-semibold text-ink;
   }
 
   .list {
-    @apply divide-y divide-line overflow-hidden rounded-card border border-line
-      bg-surface-raised shadow-card;
+    @apply divide-y divide-line overflow-hidden rounded-card bg-surface-raised shadow-card;
   }
 
   .list-row {
-    @apply flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-surface;
+    @apply flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-surface;
   }
 
   .list-row-title {
-    @apply font-medium text-ink hover:text-accent;
+    @apply text-base font-medium text-ink hover:text-accent;
   }
 
   .list-row-meta {
-    @apply mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted;
+    @apply mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted;
   }
 
   /* ------------------------------- tables ------------------------------- */
   .table-wrap {
-    @apply overflow-x-auto rounded-card border border-line bg-surface-raised shadow-card;
+    @apply overflow-x-auto rounded-card bg-surface-raised shadow-card;
   }
 
   .data-table {
-    @apply min-w-full text-sm;
+    @apply min-w-full text-base;
   }
 
   .data-table thead {
@@ -266,7 +265,7 @@
   }
 
   .data-table th {
-    @apply px-3.5 py-2.5 text-xs font-semibold text-ink-muted;
+    @apply px-4 py-3 text-sm font-semibold text-ink-muted;
   }
 
   .data-table tbody {
@@ -278,7 +277,7 @@
   }
 
   .data-table td {
-    @apply px-3.5 py-2.5 align-middle text-ink;
+    @apply px-4 py-3.5 align-middle text-ink;
   }
 
   .num {
@@ -349,7 +348,7 @@
   }
 
   .nav-link {
-    @apply rounded-control px-2 py-1 text-sm font-medium text-ink-muted transition-colors
+    @apply rounded-control px-2.5 py-1.5 text-base font-medium text-ink-muted transition-colors
       hover:bg-surface-sunken hover:text-ink;
   }
 
@@ -363,7 +362,7 @@
 
   .tab {
     @apply -mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-0.5
-      pt-1 pb-2.5 text-sm font-medium text-ink-muted transition-colors
+      pt-1 pb-3 text-base font-medium text-ink-muted transition-colors
       hover:border-line-strong hover:text-ink;
   }
 
@@ -379,7 +378,7 @@
 
   /* A real count, so it reads at AA rather than as decoration. */
   .tab-count {
-    @apply text-xs text-ink-muted;
+    @apply text-sm text-ink-muted;
   }
 
   .breadcrumbs {
@@ -406,11 +405,11 @@
   }
 
   .page-subtitle {
-    @apply mt-1 text-sm text-ink-muted;
+    @apply mt-1 text-base text-ink-muted;
   }
 
   .section-title {
-    @apply font-serif text-base font-semibold text-ink;
+    @apply font-serif text-lg font-semibold text-ink;
   }
 
   .link {
@@ -437,7 +436,7 @@
 
   .empty-state {
     @apply overflow-hidden rounded-card border border-dashed border-line bg-surface-raised
-      px-4 py-8 text-center text-sm text-ink-muted;
+      px-4 py-10 text-center text-base text-ink-muted;
     background-image: radial-gradient(circle at 50% 0%, var(--color-accent-soft), transparent 45%);
   }
 
@@ -498,7 +497,7 @@
      is marked twice by the same colour and adding a question type is one line. */
   .qcard {
     --qtype: var(--color-line-strong);
-    @apply rounded-card border border-line border-l-[3px] bg-surface-raised p-4 shadow-card sm:p-5;
+    @apply rounded-card border-l-[3px] bg-surface-raised p-5 shadow-card sm:p-6;
     border-left-color: var(--qtype);
   }
 
@@ -579,7 +578,7 @@
   /* Full-width tappable rows, so a phone user is not aiming at a radio dot. */
   .option {
     @apply flex cursor-pointer items-start gap-3 rounded-control border border-line
-      bg-surface-raised px-3.5 py-3 text-sm text-ink transition-colors
+      bg-surface-raised px-4 py-3.5 text-base text-ink transition-colors
       hover:border-accent-line hover:bg-accent-soft;
   }
 
@@ -588,8 +587,8 @@
   }
 
   .source-text {
-    @apply overflow-y-auto rounded-control border border-line bg-surface px-3.5 py-3
-      text-sm leading-relaxed whitespace-pre-wrap text-ink;
+    @apply overflow-y-auto rounded-control border border-line bg-surface px-4 py-3.5
+      text-base leading-relaxed whitespace-pre-wrap text-ink;
   }
 
   .run-bar {
@@ -598,8 +597,8 @@
   }
 
   .countdown {
-    @apply inline-flex items-center gap-1.5 rounded-control bg-ink px-3 py-1.5
-      font-mono text-sm tabular-nums text-white;
+    @apply inline-flex items-center gap-1.5 rounded-control bg-ink px-3.5 py-2
+      font-mono text-base tabular-nums text-white;
   }
 
   .countdown[data-urgency="urgent"] {
@@ -759,6 +758,14 @@
 
   .print-sheet {
     color: #000;
+  }
+
+  /* The sheet shares `.page-title` with the screen, and the screen moved to a serif.
+     Paper is a deliverable that was signed off as it stands, so it keeps the face it
+     had; drop this rule to let Literata onto the printed title. */
+  .print-sheet,
+  .print-sheet .page-title {
+    font-family: var(--font-sans);
   }
 
   .answer-line,
