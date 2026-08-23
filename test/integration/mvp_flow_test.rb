@@ -89,6 +89,7 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_match "History of Ukraine", response.body
     assert_select ".student-brand .brand-mark svg"
     assert_select ".student-brand", text: /#{I18n.t('app_name')}/
+    assert_font_self_hosted
 
     post student_start_url(token: token)
     follow_redirect!

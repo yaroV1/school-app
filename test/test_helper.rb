@@ -21,6 +21,13 @@ module ActiveSupport
       teacher.exams.create!({ title: "Quiz", max_attempts: 1, subject: subject }.merge(attrs))
     end
 
+    # Both layouts preload the heading face, and neither may reach a font CDN: that is a
+    # second origin on a school network, and a hole in the CSP the day one is switched on.
+    def assert_font_self_hosted
+      assert_select "link[rel=preload][as=font][type='font/woff2'][href^='/assets/literata-']", 1
+      refute_match(/fonts\.(googleapis|gstatic)\.com/, response.body, "the page reaches a font CDN")
+    end
+
     # Swap a module method for the duration of a block. Minitest 6 ships no `minitest/mock`,
     # so there is no Object#stub; used to raise conditions a real race would produce flakily.
     def replacing(mod, name, replacement)
