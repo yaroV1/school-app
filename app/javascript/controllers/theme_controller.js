@@ -1,0 +1,21 @@
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static values = {
+    lightColor: { type: String, default: "#f3eee4" },
+    darkColor: { type: String, default: "#2a2620" }
+  }
+
+  toggle() {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark"
+    document.documentElement.dataset.theme = next
+    document.documentElement.style.colorScheme = next
+    localStorage.setItem("theme", next)
+    this.syncMeta(next)
+  }
+
+  syncMeta(theme) {
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute("content", theme === "dark" ? this.darkColorValue : this.lightColorValue)
+  }
+}

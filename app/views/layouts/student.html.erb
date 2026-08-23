@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="uk">
   <head>
+    <%= render "shared/theme_boot" %>
     <title><%= content_for(:title) || t("nav.tests") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#f3eee4">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
   <body class="min-h-screen bg-surface text-ink antialiased">
+    <div class="mx-auto flex max-w-3xl justify-end px-4 pt-4">
+      <%= render "shared/theme_toggle" %>
+    </div>
     <main class="mx-auto max-w-3xl px-4 py-8">
       <%= render "shared/flash" %>
       <%= yield %>

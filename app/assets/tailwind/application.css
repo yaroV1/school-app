@@ -1,55 +1,117 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 /* ---------------------------------------------------------------------------
    Design tokens
 
-   Semantic names only. Templates should reach for `bg-surface`, `text-ink-muted`
-   or `border-line` instead of a raw `slate-*`, so a palette change happens here
-   and nowhere else. Values mirror the Tailwind slate / indigo / red ramps.
+   Warm paper + ink, in the 37signals register: cream page, almost-black text,
+   gold used on primary actions (not just the focus ring). Templates should
+   reach for `bg-surface`, `text-ink-muted` or `border-line` — a palette
+   change happens here. Dark mode remaps the same names on [data-theme=dark].
 --------------------------------------------------------------------------- */
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji";
 
-  /* Neutral surfaces, from the page backdrop up to raised panels */
-  --color-surface: oklch(0.984 0.003 247);
-  --color-surface-raised: #fff;
-  --color-surface-sunken: oklch(0.968 0.007 247);
+  --color-surface: oklch(0.955 0.02 85);
+  --color-surface-raised: oklch(0.992 0.008 85);
+  --color-surface-sunken: oklch(0.93 0.024 85);
 
-  /* Hairlines */
-  --color-line: oklch(0.929 0.013 255);
-  --color-line-strong: oklch(0.869 0.022 252);
+  --color-line: oklch(0.82 0.032 80);
+  --color-line-strong: oklch(0.7 0.04 75);
 
-  /* Text, darkest to lightest. `ink-light` is the hover for solid ink fills. */
-  --color-ink: oklch(0.208 0.042 265);
-  --color-ink-light: oklch(0.372 0.044 257);
-  --color-ink-muted: oklch(0.502 0.045 257);
-  --color-ink-subtle: oklch(0.704 0.04 257);
+  --color-ink: oklch(0.175 0.028 55);
+  --color-ink-light: oklch(0.28 0.03 55);
+  --color-ink-muted: oklch(0.36 0.028 55);
+  --color-ink-subtle: oklch(0.52 0.022 60);
+  --color-on-ink: oklch(0.992 0.008 85);
 
-  /* One accent, reserved for focus, current state and links */
-  --color-accent: oklch(0.511 0.262 276);
-  --color-accent-strong: oklch(0.457 0.24 277);
-  --color-accent-line: oklch(0.785 0.115 274);
-  --color-accent-soft: oklch(0.962 0.018 272);
+  --color-accent: oklch(0.79 0.155 85);
+  --color-accent-strong: oklch(0.72 0.165 82);
+  --color-accent-line: oklch(0.68 0.12 85);
+  --color-accent-soft: oklch(0.93 0.055 90);
+  --color-accent-ink: oklch(0.38 0.1 65);
+  --color-on-accent: oklch(0.175 0.028 55);
 
-  --color-danger: oklch(0.505 0.213 27);
-  --color-danger-line: oklch(0.885 0.062 18);
-  --color-danger-soft: oklch(0.971 0.013 17);
+  --color-danger: oklch(0.48 0.19 27);
+  --color-danger-line: oklch(0.82 0.07 20);
+  --color-danger-soft: oklch(0.95 0.025 20);
 
-  --radius-control: 0.5rem;
-  --radius-card: 0.75rem;
+  --color-success: oklch(0.42 0.11 155);
+  --color-success-line: oklch(0.82 0.055 155);
+  --color-success-soft: oklch(0.95 0.025 155);
+
+  --color-warning: oklch(0.45 0.11 55);
+  --color-warning-line: oklch(0.84 0.07 75);
+  --color-warning-soft: oklch(0.95 0.04 85);
+
+  --color-info: oklch(0.42 0.09 230);
+  --color-info-line: oklch(0.82 0.05 230);
+  --color-info-soft: oklch(0.95 0.02 230);
+
+  --radius-control: 0.4rem;
+  --radius-card: 0.55rem;
   --radius-chip: 9999px;
 
-  --shadow-card: 0 1px 2px 0 oklch(0.208 0.042 265 / 0.04);
-  --shadow-raised: 0 4px 12px -2px oklch(0.208 0.042 265 / 0.08),
-    0 2px 4px -3px oklch(0.208 0.042 265 / 0.06);
-  --shadow-bar: 0 -1px 3px 0 oklch(0.208 0.042 265 / 0.05);
+  --shadow-card: 0 1px 2px 0 oklch(0.175 0.028 55 / 0.06);
+  --shadow-raised: 0 6px 16px -4px oklch(0.175 0.028 55 / 0.12),
+    0 2px 4px -2px oklch(0.175 0.028 55 / 0.08);
+  --shadow-bar: 0 -1px 4px 0 oklch(0.175 0.028 55 / 0.08);
+}
+
+[data-theme="dark"] {
+  --color-surface: oklch(0.2 0.016 65);
+  --color-surface-raised: oklch(0.26 0.018 65);
+  --color-surface-sunken: oklch(0.17 0.014 65);
+
+  --color-line: oklch(0.34 0.022 70);
+  --color-line-strong: oklch(0.44 0.028 70);
+
+  --color-ink: oklch(0.94 0.02 85);
+  --color-ink-light: oklch(0.86 0.02 85);
+  --color-ink-muted: oklch(0.78 0.022 80);
+  --color-ink-subtle: oklch(0.6 0.02 75);
+  --color-on-ink: oklch(0.175 0.028 55);
+
+  --color-accent: oklch(0.8 0.155 85);
+  --color-accent-strong: oklch(0.74 0.16 82);
+  --color-accent-line: oklch(0.5 0.08 80);
+  --color-accent-soft: oklch(0.32 0.045 75);
+  --color-accent-ink: oklch(0.86 0.1 85);
+  --color-on-accent: oklch(0.175 0.028 55);
+
+  --color-danger: oklch(0.74 0.15 25);
+  --color-danger-line: oklch(0.4 0.08 25);
+  --color-danger-soft: oklch(0.28 0.05 25);
+
+  --color-success: oklch(0.78 0.12 155);
+  --color-success-line: oklch(0.4 0.06 155);
+  --color-success-soft: oklch(0.28 0.04 155);
+
+  --color-warning: oklch(0.82 0.12 75);
+  --color-warning-line: oklch(0.42 0.06 75);
+  --color-warning-soft: oklch(0.3 0.04 75);
+
+  --color-info: oklch(0.78 0.08 230);
+  --color-info-line: oklch(0.4 0.05 230);
+  --color-info-soft: oklch(0.28 0.03 230);
+
+  --shadow-card: 0 1px 2px 0 oklch(0 0 0 / 0.35);
+  --shadow-raised: 0 8px 20px -6px oklch(0 0 0 / 0.45);
+  --shadow-bar: 0 -1px 4px 0 oklch(0 0 0 / 0.4);
 }
 
 @layer base {
-  /* One visible focus treatment for every interactive element. Replaces the
-     `focus:outline-none` that used to leave inputs with no keyboard cue. */
+  html {
+    color-scheme: light;
+  }
+
+  [data-theme="dark"] {
+    color-scheme: dark;
+  }
+
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
@@ -79,7 +141,7 @@
   }
 
   .btn-primary {
-    @apply bg-ink text-white hover:bg-ink-light;
+    @apply border-accent-line bg-accent text-on-accent hover:bg-accent-strong;
   }
 
   .btn-secondary {
@@ -148,7 +210,7 @@
   }
 
   .list-row-title {
-    @apply font-medium text-ink hover:text-accent;
+    @apply font-medium text-ink hover:text-accent-ink;
   }
 
   .list-row-meta {
@@ -198,15 +260,15 @@
   }
 
   .badge-success {
-    @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+    @apply border-success-line bg-success-soft text-success;
   }
 
   .badge-warning {
-    @apply border-amber-200 bg-amber-50 text-amber-800;
+    @apply border-warning-line bg-warning-soft text-warning;
   }
 
   .badge-info {
-    @apply border-sky-200 bg-sky-50 text-sky-700;
+    @apply border-info-line bg-info-soft text-info;
   }
 
   .badge-danger {
@@ -220,7 +282,7 @@
 
   /* -------------------------- navigation & tabs ------------------------- */
   .app-header {
-    @apply sticky top-0 z-30 border-b border-line bg-surface-raised/85 backdrop-blur;
+    @apply sticky top-0 z-30 border-b border-line bg-surface;
   }
 
   .brand {
@@ -228,8 +290,8 @@
   }
 
   .brand-mark {
-    @apply inline-flex size-7 items-center justify-center rounded-control bg-ink
-      text-xs font-bold text-white;
+    @apply inline-flex size-7 items-center justify-center rounded-control bg-accent
+      text-xs font-bold text-on-accent;
   }
 
   .nav-link {
@@ -239,6 +301,23 @@
 
   .nav-link[aria-current="page"] {
     @apply bg-surface-sunken text-ink;
+  }
+
+  .theme-toggle {
+    @apply inline-flex size-9 shrink-0 cursor-pointer items-center justify-center
+      rounded-control text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink;
+  }
+
+  .theme-icon-sun {
+    display: none;
+  }
+
+  [data-theme="dark"] .theme-icon-sun {
+    display: block;
+  }
+
+  [data-theme="dark"] .theme-icon-moon {
+    display: none;
   }
 
   .tab-bar {
@@ -286,8 +365,8 @@
   }
 
   .link {
-    @apply font-medium text-accent underline decoration-accent-line underline-offset-2
-      transition-colors hover:decoration-accent;
+    @apply font-medium text-accent-ink underline decoration-accent-line underline-offset-2
+      transition-colors hover:decoration-accent-ink;
   }
 
   .link-muted {
@@ -300,7 +379,7 @@
   }
 
   .empty-state {
-    @apply rounded-card border border-dashed border-line px-4 py-8 text-center text-sm text-ink-muted;
+    @apply rounded-card border border-dashed border-line-strong px-4 py-8 text-center text-sm text-ink-muted;
   }
 
   /* ------------------------------- flashes ------------------------------ */
@@ -309,7 +388,7 @@
   }
 
   .flash-notice {
-    @apply border-emerald-200 bg-emerald-50 text-emerald-800;
+    @apply border-success-line bg-success-soft text-success;
   }
 
   .flash-alert {
@@ -317,15 +396,19 @@
   }
 
   .flash-info {
-    @apply border-accent-line bg-accent-soft text-accent-strong;
+    @apply border-accent-line bg-accent-soft text-accent-ink;
   }
 
   .flash-warning {
-    @apply border-amber-200 bg-amber-50 text-amber-800;
+    @apply border-warning-line bg-warning-soft text-warning;
   }
 
   .flash-muted {
     @apply border-line bg-surface-sunken text-ink-muted;
+  }
+
+  .done-mark {
+    @apply bg-success-soft text-success;
   }
 
   /* ------------------------- taking a test (Take::) --------------------- */
@@ -362,7 +445,6 @@
     @apply flex flex-wrap items-center gap-2 text-xs font-medium text-ink-muted;
   }
 
-  /* Full-width tappable rows, so a phone user is not aiming at a radio dot. */
   .option {
     @apply flex cursor-pointer items-start gap-3 rounded-control border border-line
       bg-surface-raised px-3.5 py-3 text-sm text-ink transition-colors
@@ -379,35 +461,37 @@
   }
 
   .run-bar {
-    @apply sticky bottom-0 z-20 -mx-4 border-t border-line bg-surface-raised/95 px-4 py-3
-      shadow-bar backdrop-blur;
+    @apply sticky bottom-0 z-20 -mx-4 border-t border-line bg-surface-raised px-4 py-3
+      shadow-bar;
   }
 
   .countdown {
     @apply inline-flex items-center gap-1.5 rounded-control bg-ink px-3 py-1.5
-      font-mono text-sm tabular-nums text-white;
+      font-mono text-sm tabular-nums text-on-ink;
   }
 
   .countdown[data-urgency="urgent"] {
-    @apply bg-danger;
+    @apply bg-danger text-on-ink;
   }
 
   .countdown-cell[data-urgency="urgent"] {
     @apply font-semibold text-danger;
   }
 
-  /* Colour lives here rather than on the element, so the state rules below are
-     not outranked by a utility class in the template. */
   .autosave-status {
     @apply text-ink-muted transition-colors;
   }
 
   .autosave-status[data-state="saved"] {
-    @apply text-emerald-700;
+    @apply text-success;
   }
 
   .autosave-status[data-state="failed"] {
     @apply text-danger;
+  }
+
+  .autosave-check {
+    @apply text-success;
   }
 
   /* ----------------------------- ordering ------------------------------- */
@@ -424,7 +508,7 @@
   }
 
   .order-item[aria-selected="true"] .order-position {
-    @apply bg-accent text-white;
+    @apply bg-accent text-on-accent;
   }
 
   .order-handle {
