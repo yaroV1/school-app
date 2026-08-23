@@ -113,10 +113,8 @@
   --color-info-line: oklch(0.875 0.01 74);
   --color-info-soft: oklch(0.978 0.006 78);
 
-  /* The six question-type wedges on the student runner. With one hue left they
-     become a lightness ramp, which orders them but no longer names them — so the
-     chip beside the wedge in `take/runs/show.html.erb` is now the whole signal,
-     not the backup. Keep it. */
+  /* Kept as a lightness ramp for any future type-coloured mark. The runner names
+     the type in words now, so these tokens no longer have a component. */
   --color-qtype-mcq: oklch(0.42 0.011 64);
   --color-qtype-short-text: oklch(0.51 0.01 66);
   --color-qtype-open: oklch(0.60 0.01 68);
@@ -136,9 +134,9 @@
 
 @layer base {
   :root {
-    /* The cuneiform wedge — current tab, question-type legend, empty tablet and
-       completion marks. A clip-path rather than a glyph, so it inherits size
-       and colour from whatever it marks. */
+    /* The cuneiform wedge — current tab, run progress, empty tablet, disclosure
+       marker and completion marks. A clip-path rather than a glyph, so it
+       inherits size and colour from whatever it marks. */
     --wedge: polygon(0 0, 100% 50%, 0 100%);
   }
 
@@ -273,6 +271,25 @@
 
   .list-row-meta {
     @apply mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted;
+  }
+
+  .reveal summary {
+    @apply cursor-pointer font-serif text-lg font-semibold text-ink;
+    list-style: none;
+  }
+
+  .reveal summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .reveal summary::before {
+    content: "";
+    @apply mr-2 inline-block size-2 bg-ink-subtle;
+    clip-path: var(--wedge);
+  }
+
+  .reveal[open] summary::before {
+    @apply bg-accent;
   }
 
   /* ------------------------------- tables ------------------------------- */
@@ -516,46 +533,35 @@
   }
 
   /* ------------------------- taking a test (Take::) --------------------- */
-  /* The chip names the type. The legend wedge repeats `--qtype` so a long run
-     still scans as a sequence without a box or a stripe. */
   .qcard {
-    --qtype: var(--color-line-strong);
     @apply py-2;
   }
 
-  .qcard[data-qtype="mcq"] {
-    --qtype: var(--color-qtype-mcq);
+  .qcard-num {
+    @apply font-serif text-4xl font-semibold leading-none tracking-tight text-ink;
   }
 
-  .qcard[data-qtype="short_text"] {
-    --qtype: var(--color-qtype-short-text);
+  .run-progress {
+    @apply flex flex-wrap items-center gap-1.5;
   }
 
-  .qcard[data-qtype="open"] {
-    --qtype: var(--color-qtype-open);
-  }
-
-  .qcard[data-qtype="ordering"] {
-    --qtype: var(--color-qtype-ordering);
-  }
-
-  .qcard[data-qtype="matching"] {
-    --qtype: var(--color-qtype-matching);
-  }
-
-  .qcard[data-qtype="source"] {
-    --qtype: var(--color-qtype-source);
-  }
-
-  .qcard-legend {
-    @apply flex flex-wrap items-center gap-2 text-xs font-medium text-ink-muted;
-  }
-
-  .qcard-legend::before {
-    content: "";
-    @apply h-2 w-3.5 shrink-0;
-    background: var(--qtype);
+  /* Filled vs empty is a fill, not a second hue: the wedge is already the brand
+     mark, and colour-alone would fail the same WCAG rule the palette documents. */
+  .run-progress-mark {
+    @apply block h-2.5 w-3.5 shrink-0 bg-ink-subtle;
     clip-path: var(--wedge);
+  }
+
+  .run-progress-mark[data-answered="true"] {
+    @apply bg-accent;
+  }
+
+  .match-item {
+    @apply flex w-full min-h-11 cursor-pointer flex-col items-start gap-0.5 rounded-control
+      px-4 py-3 text-left text-base text-ink transition-colors
+      hover:bg-accent-soft
+      aria-selected:bg-accent-soft aria-selected:font-medium
+      data-[paired=true]:bg-accent-soft;
   }
 
   .completion-card {

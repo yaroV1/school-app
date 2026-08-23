@@ -2,12 +2,12 @@
 <% content_for :shell_class, "student-shell" %>
 <div class="space-y-5">
   <div>
-    <p class="text-sm text-ink-muted">
-      <%= t("take.hello", name: @student.name) %>
-      <span class="chip ml-2"><%= t("common.credits", count: @student.credit_balance) %></span>
+    <h1 class="page-title"><%= @exam.title %></h1>
+    <p class="page-subtitle"><%= @exam.subject.name %></p>
+    <p class="mt-4 text-lg leading-relaxed text-ink"><%= take_brief(@exam, @student, @attempts_used) %></p>
+    <p class="mt-2">
+      <span class="chip"><%= t("common.credits", count: @student.credit_balance) %></span>
     </p>
-    <h1 class="page-title mt-2"><%= @exam.title %></h1>
-    <p class="mt-1 text-base text-ink-muted"><%= @exam.subject.name %></p>
   </div>
 
   <div class="space-y-4">
@@ -15,18 +15,13 @@
       <p class="text-base leading-relaxed whitespace-pre-wrap text-ink"><%= @exam.description %></p>
     <% end %>
 
-    <ul class="space-y-2 text-base text-ink">
-      <li><%= t("take.time_limit", value: @exam.time_limit_sec ? t("take.minutes", count: @exam.time_limit_sec / 60) : t("take.none")) %></li>
-      <li><%= t("take.attempts_used", used: @attempts_used, max: @exam.max_attempts) %></li>
-      <li><%= t("take.questions", count: @exam.questions.count) %></li>
-      <% if @exam.available_from || @exam.available_until %>
-        <li>
-          <% if @exam.available_from %><%= t("take.opens", time: l(@exam.available_from, format: :short)) %><% end %>
-          <% if @exam.available_from && @exam.available_until %><br><% end %>
-          <% if @exam.available_until %><%= t("take.closes", time: l(@exam.available_until, format: :short)) %><% end %>
-        </li>
-      <% end %>
-    </ul>
+    <% if @exam.available_from || @exam.available_until %>
+      <p class="text-base text-ink-muted">
+        <% if @exam.available_from %><%= t("take.opens", time: l(@exam.available_from, format: :short)) %><% end %>
+        <% if @exam.available_from && @exam.available_until %><br><% end %>
+        <% if @exam.available_until %><%= t("take.closes", time: l(@exam.available_until, format: :short)) %><% end %>
+      </p>
+    <% end %>
   </div>
 
   <% if @assignment.revoked? %>

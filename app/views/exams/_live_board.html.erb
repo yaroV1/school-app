@@ -5,11 +5,11 @@
   <div id="live-board-data"
        data-submitted-ids="<%= submitted_ids.join(",") %>"
        data-server-time="<%= server_time.iso8601(3) %>">
-    <div class="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+    <div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
       <% %w[in_progress not_started submitted expired revoked].each do |status| %>
-        <div class="card px-3 py-2">
+        <div class="px-1 py-1">
           <p class="text-xs text-ink-muted"><%= t("statuses.#{status}") %></p>
-          <p class="num mt-0.5 text-lg font-semibold text-ink"><%= counts[status].to_i %></p>
+          <p class="num mt-0.5 font-serif text-3xl font-semibold text-ink"><%= counts[status].to_i %></p>
         </div>
       <% end %>
     </div>
@@ -21,9 +21,9 @@
             <tr>
               <th><%= t("exams.assign.student") %></th>
               <th><%= t("exams.assign.status") %></th>
-              <th><%= t("attempts.history.started") %></th>
-              <th><%= t("exams.live.last_activity") %></th>
-              <th><%= t("exams.results.submitted") %></th>
+              <th class="hidden md:table-cell"><%= t("attempts.history.started") %></th>
+              <th class="hidden md:table-cell"><%= t("exams.live.last_activity") %></th>
+              <th class="hidden md:table-cell"><%= t("exams.results.submitted") %></th>
               <th><%= t("exams.live.time_left") %></th>
               <th><%= t("exams.live.tab_switches") %></th>
               <th></th>
@@ -35,9 +35,9 @@
               <tr>
                 <td class="font-medium"><%= assignment.student.name %></td>
                 <td><%= status_badge(assignment.board_status) %></td>
-                <td class="text-ink-muted"><%= attempt ? l(attempt.started_at, format: :short) : t("common.dash") %></td>
-                <td class="text-ink-muted"><%= attempt ? l(attempt.last_activity_at, format: :short) : t("common.dash") %></td>
-                <td class="text-ink-muted"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : t("common.dash") %></td>
+                <td class="hidden text-ink-muted md:table-cell"><%= attempt ? l(attempt.started_at, format: :short) : t("common.dash") %></td>
+                <td class="hidden text-ink-muted md:table-cell"><%= attempt ? l(attempt.last_activity_at, format: :short) : t("common.dash") %></td>
+                <td class="hidden text-ink-muted md:table-cell"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : t("common.dash") %></td>
                 <td class="num">
                   <% if attempt&.in_progress? && attempt.deadline_at %>
                     <span class="countdown-cell"

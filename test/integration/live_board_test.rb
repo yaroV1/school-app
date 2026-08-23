@@ -32,6 +32,9 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
     assert_match(/In Group/, response.body)
     assert_match(/Out Group/, response.body)
     assert_match I18n.t("statuses.not_started"), response.body
+    assert_select ".num.font-serif", 5
+    assert_select "th.hidden", 3
+    assert_select "td.hidden", 6
   end
 
   test "revoke broadcasts live board" do

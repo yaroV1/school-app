@@ -23,8 +23,8 @@
     <%= render "shared/empty_state", icon: "students", message: t("classes.show.empty_students") %>
   <% end %>
 
-  <div class="pt-2">
-    <h2 class="card-title mb-3"><%= t("classes.show.add_student") %></h2>
+  <details class="reveal pt-2" <% if @student.errors.any? %>open<% end %>>
+    <summary class="mb-3"><%= t("classes.show.add_student") %></summary>
     <%= form_with model: @student, url: class_group_students_path(@class_group), class: "grid gap-3 sm:grid-cols-2" do |f| %>
       <%= render "shared/form_errors", record: @student, span: "sm:col-span-2" %>
       <div>
@@ -39,5 +39,5 @@
         <%= f.submit t("classes.show.add_student"), class: btn_primary %>
       </div>
     <% end %>
-  </div>
+  </details>
 </section>

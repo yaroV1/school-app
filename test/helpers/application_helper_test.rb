@@ -26,6 +26,43 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_match "no-such-icon", error.message
   end
 
+  test "take_brief names the student, the count, the time and the attempt" do
+    teacher = users(:one)
+    exam = create_exam!(teacher, title: "Unit", time_limit_sec: 300, max_attempts: 2)
+    exam.questions.create!(question_type: :short_text, prompt: "Sky?", points: 1, position: 0, config: {})
+    student = teacher.students.create!(name: "Sam")
+
+    assert_equal I18n.t("take.brief",
+      name: "Sam",
+      questions: I18n.t("exams.questions_count", count: 1),
+      time: I18n.t("take.brief_time", count: 5),
+      used: 0,
+      max: 2), take_brief(exam, student, 0)
+  end
+
+  test "take_brief says untimed when there is no clock" do
+    teacher = users(:one)
+    exam = create_exam!(teacher, title: "Unit")
+    student = teacher.students.create!(name: "Sam")
+
+    assert_includes take_brief(exam, student, 1), I18n.t("take.brief_untimed")
+  end
+
+  test "answer_started? follows each question type's payload" do
+    assert_not answer_started?(Question.new(question_type: :mcq), nil)
+    assert_not answer_started?(Question.new(question_type: :mcq), Answer.new(payload: {}))
+    assert answer_started?(Question.new(question_type: :mcq), Answer.new(payload: { "option_id" => "a" }))
+
+    assert_not answer_started?(Question.new(question_type: :ordering), Answer.new(payload: { "order" => [] }))
+    assert answer_started?(Question.new(question_type: :ordering), Answer.new(payload: { "order" => [ "e1" ] }))
+
+    assert_not answer_started?(Question.new(question_type: :matching), Answer.new(payload: { "pairs" => { "l1" => "" } }))
+    assert answer_started?(Question.new(question_type: :matching), Answer.new(payload: { "pairs" => { "l1" => "r2" } }))
+
+    assert_not answer_started?(Question.new(question_type: :open), Answer.new(payload: { "text" => "  " }))
+    assert answer_started?(Question.new(question_type: :open), Answer.new(payload: { "text" => "x" }))
+  end
+
   private
 
   def icon_names

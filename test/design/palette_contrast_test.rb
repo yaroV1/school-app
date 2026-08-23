@@ -59,8 +59,8 @@ class PaletteContrastTest < ActiveSupport::TestCase
     [ "surface-raised", "success", AA_TEXT, ".badge-success, the live state" ]
   ].freeze
 
-  # The six type tokens colour the legend wedge on the student runner. They are a
-  # lightness ramp, so the chip names the type; the bar for the wedges is that they
+  # The six type tokens remain in the palette for any type-coloured mark. The
+  # runner names the type in words now, so the bar for the tokens is that they
   # stay visible and stay apart — not that they stay readable.
   QTYPE_TOKENS = %w[
     qtype-mcq qtype-short-text qtype-open qtype-ordering qtype-matching qtype-source

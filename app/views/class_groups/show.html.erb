@@ -19,8 +19,8 @@
     <%= render "shared/empty_state", icon: "subjects", message: t("classes.show.empty_subjects") %>
   <% end %>
 
-  <div class="pt-2">
-    <h2 class="card-title mb-3"><%= t("classes.show.add_subject") %></h2>
+  <details class="reveal pt-2" <% if @subject.errors.any? %>open<% end %>>
+    <summary class="mb-3"><%= t("classes.show.add_subject") %></summary>
     <%= form_with model: @subject, url: class_group_subjects_path(@class_group), class: "flex flex-wrap items-end gap-3" do |f| %>
       <%= render "shared/form_errors", record: @subject, span: "w-full" %>
       <div class="min-w-56 flex-1">
@@ -29,5 +29,5 @@
       </div>
       <%= f.submit t("classes.show.add_subject"), class: btn_primary %>
     <% end %>
-  </div>
+  </details>
 </section>
