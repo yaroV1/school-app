@@ -95,6 +95,13 @@
 }
 
 @layer base {
+  :root {
+    /* The cuneiform wedge — the one shape the brand repeats, on the current tab
+       and on the question-type legend. A clip-path rather than a glyph or an
+       SVG, so it inherits its size and colour from whatever it marks. */
+    --wedge: polygon(0 0, 100% 50%, 0 100%);
+  }
+
   /* One visible focus treatment for every interactive element. Replaces the
      `focus:outline-none` that used to leave inputs with no keyboard cue. */
   :focus-visible {
@@ -325,6 +332,12 @@
     @apply border-accent text-ink;
   }
 
+  .tab[aria-current="page"]::before {
+    content: "";
+    @apply size-2 shrink-0 bg-accent;
+    clip-path: var(--wedge);
+  }
+
   /* A real count, so it reads at AA rather than as decoration. */
   .tab-count {
     @apply text-xs text-ink-muted;
@@ -442,37 +455,47 @@
   }
 
   /* ------------------------- taking a test (Take::) --------------------- */
+  /* One variable feeds both the 3px edge and the wedge on the legend, so a type
+     is marked twice by the same colour and adding a question type is one line. */
   .qcard {
-    @apply rounded-card border border-line border-l-[3px] border-l-line-strong
-      bg-surface-raised p-4 shadow-card sm:p-5;
+    --qtype: var(--color-line-strong);
+    @apply rounded-card border border-line border-l-[3px] bg-surface-raised p-4 shadow-card sm:p-5;
+    border-left-color: var(--qtype);
   }
 
   .qcard[data-qtype="mcq"] {
-    border-left-color: var(--color-qtype-mcq);
+    --qtype: var(--color-qtype-mcq);
   }
 
   .qcard[data-qtype="short_text"] {
-    border-left-color: var(--color-qtype-short-text);
+    --qtype: var(--color-qtype-short-text);
   }
 
   .qcard[data-qtype="open"] {
-    border-left-color: var(--color-qtype-open);
+    --qtype: var(--color-qtype-open);
   }
 
   .qcard[data-qtype="ordering"] {
-    border-left-color: var(--color-qtype-ordering);
+    --qtype: var(--color-qtype-ordering);
   }
 
   .qcard[data-qtype="matching"] {
-    border-left-color: var(--color-qtype-matching);
+    --qtype: var(--color-qtype-matching);
   }
 
   .qcard[data-qtype="source"] {
-    border-left-color: var(--color-qtype-source);
+    --qtype: var(--color-qtype-source);
   }
 
   .qcard-legend {
     @apply flex flex-wrap items-center gap-2 text-xs font-medium text-ink-muted;
+  }
+
+  .qcard-legend::before {
+    content: "";
+    @apply h-2 w-3.5 shrink-0;
+    background: var(--qtype);
+    clip-path: var(--wedge);
   }
 
   .completion-card {
