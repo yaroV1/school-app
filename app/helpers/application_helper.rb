@@ -63,6 +63,14 @@ module ApplicationHelper
     number.frac.zero? ? number.to_i.to_s : number.to_s("F")
   end
 
+  # Wet clay is a draft total; fired clay is the teacher-finalized stamp.
+  # The two states are fill vs outline so hue never has to carry the meaning.
+  def score_seal(grade, size: :md)
+    return content_tag(:span, t("common.dash"), class: "text-ink-muted") if grade.nil?
+
+    render "shared/score_seal", grade: grade, size: size.to_sym == :lg ? :lg : :md
+  end
+
   def status_badge(status)
     variant = STATUS_BADGES.fetch(status.to_s, "badge-neutral")
     content_tag(:span, t("statuses.#{status}"), class: "badge #{variant}")

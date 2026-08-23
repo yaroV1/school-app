@@ -1,0 +1,15 @@
+<% fired = grade.finalized_by_teacher? %>
+<% score = score_text(grade.total_score) %>
+<% max = score_text(grade.max_score) %>
+<% label = t(fired ? "common.score_seal_fired" : "common.score_seal_wet", score: score, max: max) %>
+<span class="seal <%= fired ? "seal-fired" : "seal-wet" %><%= " seal-lg" if size == :lg %>"
+      role="img"
+      aria-label="<%= label %>"
+      title="<%= label %>">
+  <span class="seal-face" aria-hidden="true">
+    <span class="seal-score"><%= score %></span>
+    <span class="seal-rule"></span>
+    <span class="seal-max"><%= max %></span>
+  </span>
+  <span class="seal-wedge" aria-hidden="true"></span>
+</span>

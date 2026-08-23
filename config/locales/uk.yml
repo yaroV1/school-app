@@ -18,6 +18,8 @@ uk:
     now: "зараз"
     open_ended: "без обмеження"
     export_csv: "Завантажити CSV"
+    score_seal_fired: "%{score} з %{max}, затверджено"
+    score_seal_wet: "%{score} з %{max}, чернетка"
     credits:
       one: "%{count} кредит"
       few: "%{count} кредити"
@@ -50,6 +52,7 @@ uk:
     classes: "Класи"
     sign_out: "Вийти"
     breadcrumbs: "Навігація"
+    toggle_theme: "Перемкнути тему"
 
   auth:
     sign_in: "Увійти"

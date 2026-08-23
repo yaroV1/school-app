@@ -14,8 +14,6 @@ class PaletteContrastTest < ActiveSupport::TestCase
   # `ink-subtle` is not a text colour: hairlines, list markers and icon strokes only.
   AA_NON_TEXT = 3.0
 
-  WHITE = "#fff".freeze
-
   # [foreground, background, minimum ratio, the component that forms the pair]
   PAIRS = [
     # Body text on each of the three surfaces.
@@ -31,32 +29,29 @@ class PaletteContrastTest < ActiveSupport::TestCase
     [ "ink-subtle", "surface-raised", AA_NON_TEXT, ".order-handle, marker:text-ink-subtle" ],
     [ "ink-subtle", "surface", AA_NON_TEXT, ".breadcrumb-sep" ],
 
-    # Solid fills: the label is white, so the fill carries the contrast.
-    [ WHITE, "ink", AA_TEXT, ".countdown" ],
-    [ WHITE, "accent", AA_TEXT, ".btn-primary, .order-item[aria-selected] .order-position" ],
-    [ WHITE, "accent-strong", AA_TEXT, ".btn-primary:hover" ],
-    [ WHITE, "danger", AA_TEXT, ".countdown[data-urgency=urgent]" ],
+    # Solid fills: the label is `--color-on-fill`, the chip is `--color-solid`
+    # or clay. Those names exist so dark mode can invert running text without
+    # turning the countdown into a cream-on-cream slab.
+    [ "on-fill", "solid", AA_TEXT, ".countdown, .seal-fired" ],
+    [ "on-fill", "accent", AA_TEXT, ".btn-primary, .order-item[aria-selected] .order-position" ],
+    [ "on-fill", "accent-strong", AA_TEXT, ".btn-primary:hover" ],
+    [ "on-fill", "success-strong", AA_TEXT, ".badge-success, .completion-check" ],
 
     # Accent: links, focus, the current state.
-    [ "accent", "surface", AA_TEXT, ".link on the page background" ],
-    [ "accent", "surface-raised", AA_TEXT, ".link in a card, .list-row-title:hover" ],
-    [ "accent", "accent-soft", AA_TEXT, ".option:has(input:checked)" ],
-    [ "accent-strong", "accent-soft", AA_TEXT, ".flash-info" ],
+    [ "accent-ink", "surface", AA_TEXT, ".link on the page background" ],
+    [ "accent-ink", "surface-raised", AA_TEXT, ".link in a card, .list-row-title:hover" ],
+    [ "accent-ink", "accent-soft", AA_TEXT, ".flash-info, .link-quiet:hover, .seal-wet" ],
     [ "ink", "accent-soft", AA_TEXT, ".option text on the checked row" ],
 
     # Status colours, each on its own -soft and on a raised surface.
-    [ "success", "success-soft", AA_TEXT, ".badge-success, .btn.is-copied" ],
-    [ "success-strong", "success-soft", AA_TEXT, ".flash-notice" ],
+    [ "success", "success-soft", AA_TEXT, ".flash-notice, .btn.is-copied" ],
     [ "success", "surface-raised", AA_TEXT, ".autosave-status[data-state=saved]" ],
     [ "danger", "danger-soft", AA_TEXT, ".badge-danger, .flash-alert, .field-error" ],
     [ "danger", "surface-raised", AA_TEXT, ".btn-danger, .countdown-cell[data-urgency=urgent]" ],
     [ "warning", "warning-soft", AA_TEXT, ".badge-warning, .flash-warning" ],
     [ "warning", "surface-raised", AA_TEXT, "a warning badge lifted onto a card" ],
     [ "info", "info-soft", AA_TEXT, ".badge-info" ],
-    [ "info", "surface-raised", AA_TEXT, "an info badge lifted onto a card" ],
-
-    # The one solid status fill in the palette; its label is the page's own paper colour.
-    [ "surface-raised", "success", AA_TEXT, ".badge-success, the live state" ]
+    [ "info", "surface-raised", AA_TEXT, "an info badge lifted onto a card" ]
   ].freeze
 
   # The six type tokens remain in the palette for any type-coloured mark. The
@@ -71,7 +66,7 @@ class PaletteContrastTest < ActiveSupport::TestCase
   WARM_HUE_RANGE = (40.0..90.0)
   MAX_CHROMA = 0.05
   CLAY_HUE_RANGE = (30.0..65.0)
-  CLAY_TOKENS = %w[accent accent-strong accent-line accent-soft].freeze
+  CLAY_TOKENS = %w[accent accent-strong accent-line accent-soft accent-ink].freeze
 
   # Hairlines are exempt from the 3:1 bar — they divide content, they do not identify a
   # control, and the printed sheet restates them as #000 anyway. The floor here only catches
@@ -159,6 +154,46 @@ class PaletteContrastTest < ActiveSupport::TestCase
     assert_empty strays, "the palette has an unplanned hue:\n#{strays.join("\n")}"
   end
 
+  test "the dark page stays near-black" do
+    surface = parse_dark_tokens.fetch("surface")
+    value = surface[/\Aoklch\(\s*([\d.]+)/, 1].to_f
+
+    assert_operator value, :<=, 0.16, "dark surface is #{surface} — that is charcoal, not black"
+  end
+
+  test "the dark remap covers every colour token a pair names" do
+    named = PAIRS.flat_map { |fg, bg, _, _| [ fg, bg ] }.uniq
+    missing = named - parse_dark_tokens.keys
+
+    assert_empty missing, "dark remap is missing: #{missing.join(', ')}"
+  end
+
+  test "dark theme text tokens clear their WCAG minimum" do
+    @tokens = parse_theme_tokens.merge(parse_dark_tokens)
+
+    failures = PAIRS.filter_map do |foreground, background, minimum, component|
+      ratio = contrast(foreground, background)
+      next if ratio >= minimum
+
+      format("%s on %s is %.2f:1, needs %.1f:1 — %s", foreground, background, ratio, minimum, component)
+    end
+
+    assert_empty failures, "dark contrast regressions:\n#{failures.join("\n")}"
+  end
+
+  test "dark theme hairlines stay visible" do
+    @tokens = parse_theme_tokens.merge(parse_dark_tokens)
+
+    failures = HAIRLINE_TOKENS.filter_map do |token|
+      ratio = contrast(token, "surface-raised")
+      next if ratio >= VISIBLE_HAIRLINE
+
+      format("%s is %.2f:1 against a dark card, the border has washed out", token, ratio)
+    end
+
+    assert_empty failures, failures.join("\n")
+  end
+
   private
 
   def parse_theme_tokens
@@ -168,6 +203,15 @@ class PaletteContrastTest < ActiveSupport::TestCase
     assert theme, "could not find the @theme block in #{STYLESHEET}"
 
     theme.scan(/--color-([a-z0-9-]+):\s*([^;]+);/).to_h { |name, value| [ name, value.strip ] }
+  end
+
+  def parse_dark_tokens
+    css = STYLESHEET.read
+    block = css[%r{/\* Dark remap.*?\*/\s*\[data-theme="dark"\]\s*\{(.*?)\n\}}m, 1]
+
+    assert block, "could not find the dark remap block in #{STYLESHEET}"
+
+    block.scan(/--color-([a-z0-9-]+):\s*([^;]+);/).to_h { |name, value| [ name, value.strip ] }
   end
 
   def contrast(foreground, background)

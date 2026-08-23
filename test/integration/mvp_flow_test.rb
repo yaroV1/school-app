@@ -163,6 +163,8 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_select ".completion-card .completion-check svg[aria-hidden=true]"
     assert_select ".completion-wedge", 3
     assert_select "#student_result"
+    assert_select "#student_result .seal-fired.seal-lg .seal-score", text: "11"
+    assert_select "#student_result .seal-fired.seal-lg .seal-max", text: "11"
     assert_match I18n.t("attempts.report.earned", score: "11", max: "11"), response.body
     assert_select "#correct_answer_question_#{mcq.id}", text: /4/
     assert_match "Добре", response.body
