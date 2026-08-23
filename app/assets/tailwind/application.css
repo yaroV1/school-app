@@ -41,21 +41,24 @@
    or `border-line` instead of a raw `stone-*`, so a palette change happens here
    and nowhere else.
 
-   The palette is Mesopotamian: unfired clay and papyrus for the neutrals, lapis
-   for the accent, ochre and red ochre for warning and danger, verdigris for
-   success. `edubba` is the Sumerian tablet house, and this is the pigment set
-   that room actually had.
+   The palette is Mesopotamian and monochromatic. Surfaces are unfired clay and
+   the text is a crisp dark brown; every accent, every status and every control
+   is Bitumen — the warm charcoal the region caulked its boats and set its
+   mosaics with. There is no second hue anywhere in the interface.
+
+   That has a consequence the components have to answer for: hue can no longer
+   carry meaning. `success` and `danger` are the same colour family, separated
+   only by lightness, so any state a reader must not miss is marked by FORM as
+   well — a solid fill against an outline, a heavier border, an icon. Relying on
+   colour alone was a WCAG 1.4.1 failure in the previous palette anyway; this one
+   cannot make that mistake because it has no colour to lean on.
 
    Every text token is at or above the 4.5:1 WCAG AA ratio on the surface it is
    meant to sit on. `ink-subtle` is the one exception: it clears 3:1, so it is
    for hairline separators, list markers and icon strokes only — never for text
-   a reader has to make out.
-
-   These are oklch, and the earlier cool palette was already AA. Each token here
-   holds that palette's L and moves only C and H, which is what keeps the ratios
-   intact through a hue rotation — an earth palette fails by drifting L into
-   brown-on-beige. `test/design/palette_contrast_test.rb` is the proof, and it
-   parses this block directly, so a new colour token belongs in its pair table.
+   a reader has to make out. `test/design/palette_contrast_test.rb` is the proof,
+   and it parses this block directly, so a new colour token belongs in its pair
+   table.
 --------------------------------------------------------------------------- */
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
@@ -67,70 +70,68 @@
      end to end, and a serif at 13px on a classroom phone is a worse read. */
   --font-serif: "Literata", ui-serif, Georgia, "Times New Roman", serif;
 
-  /* Neutral surfaces, from the page backdrop up to raised panels. Unfired clay,
-     warm enough to read as material rather than as grey. */
-  --color-surface: oklch(0.984 0.006 83);
-  --color-surface-raised: #fff;
-  --color-surface-sunken: oklch(0.968 0.011 83);
+  /* Cream paper, warmer than the clay it replaced. */
+  --color-surface: oklch(0.978 0.009 84);
+  --color-surface-raised: oklch(0.995 0.004 84);
+  --color-surface-sunken: oklch(0.955 0.013 82);
 
   /* Hairlines */
-  --color-line: oklch(0.929 0.014 80);
-  --color-line-strong: oklch(0.869 0.024 76);
+  --color-line: oklch(0.915 0.014 78);
+  --color-line-strong: oklch(0.845 0.02 74);
 
-  /* Text, darkest to lightest. `ink-light` is the hover for solid ink fills.
-     `ink-subtle` is not a text colour — see the note above. */
-  --color-ink: oklch(0.208 0.028 58);
-  --color-ink-light: oklch(0.372 0.032 56);
-  --color-ink-muted: oklch(0.502 0.032 58);
-  --color-ink-subtle: oklch(0.64 0.03 60);
+  /* Text: dark brown, and deliberately browner than anything else here, so the
+     charcoal of a link reads as a different material rather than a shade. */
+  --color-ink: oklch(0.215 0.042 55);
+  --color-ink-light: oklch(0.375 0.038 54);
+  --color-ink-muted: oklch(0.495 0.032 56);
+  --color-ink-subtle: oklch(0.635 0.026 58);
 
-  /* One accent, reserved for focus, current state, links and brand artwork.
-     Lapis: the prestige pigment of the region, and a lower chroma than the
-     indigo it replaces, so it reads as ground stone rather than as a screen. */
-  --color-accent: oklch(0.511 0.17 262);
-  --color-accent-strong: oklch(0.457 0.16 262);
-  --color-accent-line: oklch(0.785 0.085 262);
-  --color-accent-soft: oklch(0.962 0.017 262);
+  /* Bitumen. The only accent in the interface: links, focus, current state,
+     controls, brand artwork. Greyer than the text on purpose. */
+  --color-accent: oklch(0.355 0.008 66);
+  --color-accent-strong: oklch(0.275 0.009 62);
+  --color-accent-line: oklch(0.79 0.012 70);
+  --color-accent-soft: oklch(0.955 0.008 74);
 
-  /* Red ochre */
-  --color-danger: oklch(0.505 0.15 32);
-  --color-danger-line: oklch(0.885 0.055 32);
-  --color-danger-soft: oklch(0.971 0.013 32);
+  /* Status, as a lightness ladder in the same Bitumen family rather than as
+     four hues. Darkest carries the most weight; the components pair each of
+     these with a fill or an outline so the tone is never the only signal. */
+  --color-danger: oklch(0.285 0.011 60);
+  --color-danger-line: oklch(0.76 0.014 64);
+  --color-danger-soft: oklch(0.947 0.01 70);
 
-  /* Status hues. Same three-step shape as `danger`, so a badge and a flash can
-     be built from tokens rather than from a raw ramp. */
-  --color-success: oklch(0.508 0.085 176);
-  --color-success-strong: oklch(0.432 0.072 176);
-  --color-success-line: oklch(0.905 0.058 176);
-  --color-success-soft: oklch(0.979 0.018 176);
+  --color-success: oklch(0.375 0.009 66);
+  --color-success-strong: oklch(0.295 0.01 62);
+  --color-success-line: oklch(0.81 0.012 70);
+  --color-success-soft: oklch(0.962 0.008 74);
 
-  --color-warning: oklch(0.473 0.115 62);
-  --color-warning-line: oklch(0.924 0.09 78);
-  --color-warning-soft: oklch(0.987 0.02 78);
+  --color-warning: oklch(0.45 0.009 68);
+  --color-warning-line: oklch(0.845 0.012 72);
+  --color-warning-soft: oklch(0.972 0.007 76);
 
-  --color-info: oklch(0.5 0.1 232);
-  --color-info-line: oklch(0.901 0.055 232);
-  --color-info-soft: oklch(0.977 0.013 232);
+  --color-info: oklch(0.525 0.008 70);
+  --color-info-line: oklch(0.875 0.01 74);
+  --color-info-soft: oklch(0.978 0.006 78);
 
-  /* The six question-type stripes on the student runner, mixed at one lightness
-     so they read as a set rather than as six warning colours. Hue is a second
-     signal only: `take/runs/show.html.erb` names the type in a chip beside the
-     stripe, which is what a colour-blind student reads. */
-  --color-qtype-mcq: oklch(0.72 0.1 262);
-  --color-qtype-short-text: oklch(0.72 0.11 80);
-  --color-qtype-open: oklch(0.72 0.11 35);
-  --color-qtype-ordering: oklch(0.72 0.08 172);
-  --color-qtype-matching: oklch(0.72 0.08 310);
-  --color-qtype-source: oklch(0.72 0.02 70);
+  /* The six question-type stripes on the student runner. With one hue left they
+     become a lightness ramp, which orders them but no longer names them — so the
+     chip beside the stripe in `take/runs/show.html.erb` is now the whole signal,
+     not the backup. Keep it. */
+  --color-qtype-mcq: oklch(0.42 0.011 64);
+  --color-qtype-short-text: oklch(0.51 0.01 66);
+  --color-qtype-open: oklch(0.60 0.01 68);
+  --color-qtype-ordering: oklch(0.68 0.009 70);
+  --color-qtype-matching: oklch(0.76 0.008 72);
+  --color-qtype-source: oklch(0.84 0.007 74);
 
   --radius-control: 0.5rem;
   --radius-card: 0.75rem;
   --radius-chip: 9999px;
 
-  --shadow-card: 0 1px 2px 0 oklch(0.208 0.028 58 /0.04);
-  --shadow-raised: 0 4px 12px -2px oklch(0.208 0.028 58 /0.08),
-    0 2px 4px -3px oklch(0.208 0.028 58 /0.06);
-  --shadow-bar: 0 -1px 3px 0 oklch(0.208 0.028 58 /0.05);
+  --shadow-card: 0 1px 2px 0 oklch(0.215 0.042 55 /0.04);
+  --shadow-raised: 0 4px 12px -2px oklch(0.215 0.042 55 /0.08),
+    0 2px 4px -3px oklch(0.215 0.042 55 /0.06);
+  --shadow-bar: 0 -1px 3px 0 oklch(0.215 0.042 55 /0.05);
 }
 
 @layer base {
@@ -150,6 +151,8 @@
 
   body {
     -webkit-tap-highlight-color: transparent;
+    background-image: url("cuneiform.svg");
+    background-size: 200px;
   }
 }
 
@@ -187,8 +190,12 @@
     @apply text-ink-muted hover:bg-surface-sunken hover:text-ink;
   }
 
+  /* Destructive stays an outline — the solid fill belongs to the primary action, and a
+     delete button that outweighs it is how a class gets removed by accident. What marks it
+     instead is the full-strength border and the heavier label, which is all the separation
+     left once there is no red. */
   .btn-danger {
-    @apply border-danger-line bg-surface-raised text-danger hover:bg-danger-soft;
+    @apply border-danger bg-surface-raised font-semibold text-danger hover:bg-danger-soft;
   }
 
   .btn-sm {
@@ -293,8 +300,11 @@
     @apply border-line bg-surface-sunken text-ink-muted;
   }
 
+  /* The solid fill is the whole emphasis budget of a monochrome palette, so it goes to
+     the one state that is live right now — published, active, submitted. Every other
+     status is an outline and lets its own word do the work. */
   .badge-success {
-    @apply border-success-line bg-success-soft text-success;
+    @apply border-transparent bg-success text-surface-raised;
   }
 
   .badge-warning {
@@ -305,8 +315,10 @@
     @apply border-info-line bg-info-soft text-info;
   }
 
+  /* Not a fill, because a revoked link is not the live state — but the darkest tone,
+     a full-strength border and the heavier weight, so it is never mistaken for a draft. */
   .badge-danger {
-    @apply border-danger-line bg-danger-soft text-danger;
+    @apply border-danger bg-surface-raised font-semibold text-danger;
   }
 
   .chip {
@@ -449,7 +461,7 @@
      radius here would just read as another card. */
   .empty-state-tablet {
     @apply relative flex size-20 flex-col items-center justify-center gap-2
-      border-2 border-line-strong bg-surface-sunken text-ink-light shadow-raised;
+      border-2 border-ink-subtle bg-surface-sunken text-ink-light shadow-raised;
     border-radius: 30% / 24%;
     transform: rotate(-2deg);
   }
@@ -610,12 +622,15 @@
       font-mono text-base tabular-nums text-white;
   }
 
+  /* `ink` and `danger` are two steps of the same ramp now, so the last minute cannot
+     announce itself by colour. The ring and the weight are what a student actually
+     catches out of the corner of an eye. */
   .countdown[data-urgency="urgent"] {
-    @apply bg-danger;
+    @apply bg-danger font-bold ring-2 ring-danger ring-offset-2 ring-offset-surface;
   }
 
   .countdown-cell[data-urgency="urgent"] {
-    @apply font-semibold text-danger;
+    @apply font-bold text-danger underline decoration-2 underline-offset-2;
   }
 
   /* Colour lives here rather than on the element, so the state rules below are
@@ -628,8 +643,10 @@
     @apply text-success;
   }
 
+  /* Saved and failed are within a shade of each other now. The status text already says
+     which is which — this makes sure the failed one is not read as decoration. */
   .autosave-status[data-state="failed"] {
-    @apply text-danger;
+    @apply font-bold text-danger underline decoration-2 underline-offset-2;
   }
 
   /* ----------------------------- ordering ------------------------------- */

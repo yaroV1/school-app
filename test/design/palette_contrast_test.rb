@@ -1,13 +1,13 @@
 require "test_helper"
 
-# The `@theme` block claims every text token clears AA on the surface it sits on. Nothing
-# enforced that until this file, and the Mesopotamian palette is exactly the kind of change
-# that quietly breaks it: earth tones fail by drifting into brown-on-beige at 3:1.
+# The `@theme` block claims every text token clears AA on the surface it sits on, and that
+# the palette is one hue. Nothing enforced either until this file, and a monochrome earth
+# palette is exactly the kind that breaks the first quietly: with no hue left to separate
+# anything, every distinction is a lightness step, and lightness steps are what contrast is
+# made of. Squeeze the ramp to make the tones agree and the text stops being readable.
 #
-# The palette is rotated by moving hue and chroma while holding each token's oklch lightness,
-# so the ladder that was already AA stays AA. These pairs are the ones the components in
-# application.css actually form — a pair with no component behind it would be a ratio nobody
-# can see.
+# The pairs below are the ones the components in application.css actually form — a pair with
+# no component behind it would be a ratio nobody can see.
 class PaletteContrastTest < ActiveSupport::TestCase
   STYLESHEET = Rails.root.join("app/assets/tailwind/application.css")
 
@@ -54,25 +54,33 @@ class PaletteContrastTest < ActiveSupport::TestCase
     [ "warning", "warning-soft", AA_TEXT, ".badge-warning, .flash-warning" ],
     [ "warning", "surface-raised", AA_TEXT, "a warning badge lifted onto a card" ],
     [ "info", "info-soft", AA_TEXT, ".badge-info" ],
-    [ "info", "surface-raised", AA_TEXT, "an info badge lifted onto a card" ]
+    [ "info", "surface-raised", AA_TEXT, "an info badge lifted onto a card" ],
+
+    # The one solid status fill in the palette; its label is the page's own paper colour.
+    [ "surface-raised", "success", AA_TEXT, ".badge-success, the live state" ]
   ].freeze
 
-  # The six type stripes are 3px of border on the student runner. Hue is a second signal
-  # there — `take/runs/show.html.erb` names the type in a chip beside it — so the bar is
-  # visibility against the card, not AA.
+  # The six type stripes are 3px of border on the student runner, and in a one-hue palette
+  # they are a lightness ramp. The chip beside them names the type, so the bar for the
+  # stripes is that they stay visible and stay apart — not that they stay readable.
   QTYPE_TOKENS = %w[
     qtype-mcq qtype-short-text qtype-open qtype-ordering qtype-matching qtype-source
   ].freeze
 
+  # Everything in the palette sits in warm charcoal-to-brown. Anything outside this arc, or
+  # more saturated than this, is a hue creeping back in.
+  WARM_HUE_RANGE = (40.0..90.0)
+  MAX_CHROMA = 0.05
+
   # Hairlines are exempt from the 3:1 bar — they divide content, they do not identify a
   # control, and the printed sheet restates them as #000 anyway. The floor here only catches
-  # a rotation that washed the borders off the page entirely.
+  # a change that washed the borders off the page entirely.
   HAIRLINE_TOKENS = %w[line line-strong].freeze
   VISIBLE_HAIRLINE = 1.15
 
-  # Roughly the gap between two mid-chroma tokens 25° apart — close enough to catch a real
-  # collision, loose enough that the set is not forced onto a colour wheel.
-  DISTINCT_STRIPE = 0.04
+  # Two steps of oklch lightness that a reader can still tell apart side by side. The ramp
+  # is cut at 0.08 intervals, so this catches a collapse without pinning the exact values.
+  DISTINCT_STRIPE = 0.06
 
   setup do
     @tokens = parse_theme_tokens
@@ -120,13 +128,29 @@ class PaletteContrastTest < ActiveSupport::TestCase
 
   test "question-type stripes are distinguishable from one another" do
     collisions = QTYPE_TOKENS.combination(2).filter_map do |left, right|
-      distance = perceptual_distance(left, right)
+      distance = (lightness(left) - lightness(right)).abs
       next if distance >= DISTINCT_STRIPE
 
-      format("%s and %s are %.3f apart in OKLab, too close to tell apart at 3px", left, right, distance)
+      format("%s and %s are %.3f apart in lightness, too close to tell apart at 3px", left, right, distance)
     end
 
     assert_empty collisions, collisions.join("\n")
+  end
+
+  # The palette's whole premise. A stray hue would not fail any ratio above, so nothing
+  # else here would notice one arriving.
+  test "no token carries a second hue" do
+    strays = @tokens.filter_map do |name, value|
+      match = value.match(/\Aoklch\(\s*[\d.]+\s+([\d.]+)\s+([\d.]+)\s*\)\z/)
+      next unless match
+
+      chroma, hue = match.captures.map(&:to_f)
+      next if chroma < 0.005 || (WARM_HUE_RANGE.cover?(hue) && chroma <= MAX_CHROMA)
+
+      format("%s is %s — outside the Bitumen family", name, value)
+    end
+
+    assert_empty strays, "the palette is monochromatic:\n#{strays.join("\n")}"
   end
 
   private
@@ -152,21 +176,8 @@ class PaletteContrastTest < ActiveSupport::TestCase
     (0.2126 * red) + (0.7152 * green) + (0.0722 * blue)
   end
 
-  # The stripes are mixed at one lightness, so everything separating them lives in the OKLab
-  # a/b plane. Measuring the plane rather than the hue angle is what lets a near-neutral sit
-  # next to a saturated token at the same hue: `qtype-source` is clay at chroma 0.02 and
-  # `qtype-short-text` is gold at 0.11, ten degrees apart and in no danger of being confused.
-  def perceptual_distance(left, right)
-    (a1, b1), (a2, b2) = [ left, right ].map { |token| oklab_ab(resolve(token)) }
-
-    Math.hypot(a1 - a2, b1 - b2)
-  end
-
-  def oklab_ab(value)
-    _, chroma, hue = value.match(/\Aoklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*\)\z/).captures.map(&:to_f)
-    radians = hue * Math::PI / 180
-
-    [ chroma * Math.cos(radians), chroma * Math.sin(radians) ]
+  def lightness(token)
+    resolve(token)[/\Aoklch\(\s*([\d.]+)/, 1].to_f
   end
 
   def resolve(name)
