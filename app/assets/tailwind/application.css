@@ -240,11 +240,27 @@
   }
 
   .list-row {
-    @apply flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-surface;
+    @apply relative flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-surface;
   }
 
   .list-row-title {
     @apply text-base font-medium text-ink hover:text-accent;
+  }
+
+  /* The whole row opens the record. The title keeps the real href — so it stays what a
+     screen reader announces, what Tab focuses and what a middle click opens — and this
+     overlay only stretches its hit area across the row. It costs text selection inside
+     the row, which is a fair trade for a row whose one job is to be opened.
+
+     Anything else interactive in the row has to be lifted above the overlay, which is
+     what `.list-row-actions` is for. */
+  .list-row-title::after {
+    content: "";
+    @apply absolute inset-0;
+  }
+
+  .list-row-actions {
+    @apply relative z-10 flex flex-wrap items-center gap-2;
   }
 
   .list-row-meta {
