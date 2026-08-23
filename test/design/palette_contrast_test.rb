@@ -154,6 +154,13 @@ class PaletteContrastTest < ActiveSupport::TestCase
     assert_empty strays, "the palette has an unplanned hue:\n#{strays.join("\n")}"
   end
 
+  test "the dark page stays near-black" do
+    surface = parse_dark_tokens.fetch("surface")
+    value = surface[/\Aoklch\(\s*([\d.]+)/, 1].to_f
+
+    assert_operator value, :<=, 0.16, "dark surface is #{surface} — that is charcoal, not black"
+  end
+
   test "the dark remap covers every colour token a pair names" do
     named = PAIRS.flat_map { |fg, bg, _, _| [ fg, bg ] }.uniq
     missing = named - parse_dark_tokens.keys
