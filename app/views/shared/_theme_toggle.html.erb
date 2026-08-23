@@ -1,0 +1,10 @@
+<button type="button"
+        class="theme-toggle"
+        data-controller="theme"
+        data-action="theme#toggle"
+        data-theme-light-color-value="#fbf7f1"
+        data-theme-dark-color-value="#40362c"
+        aria-label="<%= t("nav.toggle_theme") %>">
+  <%= ui_icon("moon", class_name: "theme-icon-moon size-5") %>
+  <%= ui_icon("sun", class_name: "theme-icon-sun size-5") %>
+</button>

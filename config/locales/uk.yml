@@ -50,6 +50,7 @@ uk:
     classes: "Класи"
     sign_out: "Вийти"
     breadcrumbs: "Навігація"
+    toggle_theme: "Перемкнути тему"
 
   auth:
     sign_in: "Увійти"
