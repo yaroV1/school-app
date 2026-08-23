@@ -200,12 +200,16 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
 
-    # The clock and the save state ride along while scrolling; submitting ends
-    # the attempt for good, so that button must not sit under a reader's thumb.
+    # The clock and save state enter the flow before the questions and ride
+    # along from the top; the old bottom bar covered the next card on a phone.
     assert_select ".run-bar [data-countdown-target=display]"
     assert_select ".run-bar [data-autosave-target=status]"
     assert_select ".run-bar input[type=submit]", false
     assert_select "form input[type=submit][value=?]", I18n.t("take.submit")
+
+    form_children = css_select("form").first.element_children
+    assert_operator form_children.index(css_select(".run-bar").first), :<,
+                    form_children.index(css_select(".qcard").first)
   end
 
   test "class tabs split subjects and students; subject tabs split tests and stats" do

@@ -41,10 +41,10 @@
    or `border-line` instead of a raw `stone-*`, so a palette change happens here
    and nowhere else.
 
-   The palette is Mesopotamian and monochromatic. Surfaces are unfired clay and
-   the text is a crisp dark brown; every accent, every status and every control
-   is Bitumen — the warm charcoal the region caulked its boats and set its
-   mosaics with. There is no second hue anywhere in the interface.
+   The palette is Mesopotamian and restrained. Surfaces are warm cream, text and
+   statuses stay in a Bitumen-to-brown ramp, and fired clay is the one interaction
+   accent. The clay appears only where the interface needs attention: links,
+   focus, current state, selected controls, and primary actions.
 
    That has a consequence the components have to answer for: hue can no longer
    carry meaning. `success` and `danger` are the same colour family, separated
@@ -86,12 +86,12 @@
   --color-ink-muted: oklch(0.495 0.032 56);
   --color-ink-subtle: oklch(0.635 0.026 58);
 
-  /* Bitumen. The only accent in the interface: links, focus, current state,
-     controls, brand artwork. Greyer than the text on purpose. */
-  --color-accent: oklch(0.355 0.008 66);
-  --color-accent-strong: oklch(0.275 0.009 62);
-  --color-accent-line: oklch(0.79 0.012 70);
-  --color-accent-soft: oklch(0.955 0.008 74);
+  /* Fired clay. Saturated enough to establish the brand, dark enough for AA
+     text and white labels on the cream surfaces. */
+  --color-accent: oklch(0.43 0.12 42);
+  --color-accent-strong: oklch(0.35 0.1 40);
+  --color-accent-line: oklch(0.76 0.06 50);
+  --color-accent-soft: oklch(0.95 0.025 60);
 
   /* Status, as a lightness ladder in the same Bitumen family rather than as
      four hues. Darkest carries the most weight; the components pair each of
@@ -136,9 +136,8 @@
 
 @layer base {
   :root {
-    /* The cuneiform wedge — the one shape the brand repeats, on the current tab
-       and on the question-type legend. A clip-path rather than a glyph or an
-       SVG, so it inherits its size and colour from whatever it marks. */
+    /* The wedge belongs to the shared empty and completion illustrations. A
+       clip-path keeps it decorative and independent of font support. */
     --wedge: polygon(0 0, 100% 50%, 0 100%);
   }
 
@@ -151,8 +150,6 @@
 
   body {
     -webkit-tap-highlight-color: transparent;
-    background-image: url("cuneiform.svg");
-    background-size: 200px;
   }
 }
 
@@ -165,7 +162,7 @@
 @layer components {
   /* ------------------------------- buttons ------------------------------- */
   .btn {
-    @apply inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5
+    @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-1.5
       rounded-control border border-transparent px-4 py-2.5 text-base font-medium
       whitespace-nowrap transition-colors;
   }
@@ -179,7 +176,7 @@
   }
 
   .btn-primary {
-    @apply bg-ink text-white hover:bg-ink-light;
+    @apply bg-accent text-white hover:bg-accent-strong;
   }
 
   .btn-secondary {
@@ -231,7 +228,7 @@
 
   /* --------------------------- surfaces & lists ------------------------- */
   .card {
-    @apply rounded-card bg-surface-raised shadow-card;
+    @apply rounded-card bg-surface-raised;
   }
 
   .card-pad {
@@ -239,11 +236,11 @@
   }
 
   .card-title {
-    @apply font-serif text-base font-semibold text-ink;
+    @apply font-serif text-lg font-semibold text-ink;
   }
 
   .list {
-    @apply divide-y divide-line overflow-hidden rounded-card bg-surface-raised shadow-card;
+    @apply divide-y divide-line overflow-hidden rounded-card bg-surface-raised;
   }
 
   .list-row {
@@ -260,7 +257,7 @@
 
   /* ------------------------------- tables ------------------------------- */
   .table-wrap {
-    @apply overflow-x-auto rounded-card bg-surface-raised shadow-card;
+    @apply overflow-x-auto rounded-card bg-surface-raised;
   }
 
   .data-table {
@@ -382,12 +379,6 @@
     @apply border-accent text-ink;
   }
 
-  .tab[aria-current="page"]::before {
-    content: "";
-    @apply size-2 shrink-0 bg-accent;
-    clip-path: var(--wedge);
-  }
-
   /* A real count, so it reads at AA rather than as decoration. */
   .tab-count {
     @apply text-sm text-ink-muted;
@@ -408,7 +399,7 @@
 
   /* -------------------------------- text -------------------------------- */
   .page-title {
-    @apply font-serif text-2xl font-semibold tracking-tight text-ink;
+    @apply font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl;
   }
 
   .page-icon {
@@ -421,7 +412,7 @@
   }
 
   .section-title {
-    @apply font-serif text-lg font-semibold text-ink;
+    @apply font-serif text-xl font-semibold text-ink;
   }
 
   .link {
@@ -447,7 +438,7 @@
   }
 
   .empty-state {
-    @apply overflow-hidden rounded-card border border-dashed border-line bg-surface-raised
+    @apply overflow-hidden rounded-card bg-surface-raised
       px-4 py-10 text-center text-base text-ink-muted;
   }
 
@@ -505,11 +496,11 @@
   }
 
   /* ------------------------- taking a test (Take::) --------------------- */
-  /* One variable feeds both the 3px edge and the wedge on the legend, so a type
-     is marked twice by the same colour and adding a question type is one line. */
+  /* The type name in the legend carries meaning; this quiet edge only helps a
+     long run page scan as a sequence. */
   .qcard {
     --qtype: var(--color-line-strong);
-    @apply rounded-card border-l-[3px] bg-surface-raised p-5 shadow-card sm:p-6;
+    @apply rounded-card border-l-[3px] bg-surface-raised p-5 sm:p-6;
     border-left-color: var(--qtype);
   }
 
@@ -539,13 +530,6 @@
 
   .qcard-legend {
     @apply flex flex-wrap items-center gap-2 text-xs font-medium text-ink-muted;
-  }
-
-  .qcard-legend::before {
-    content: "";
-    @apply h-2 w-3.5 shrink-0;
-    background: var(--qtype);
-    clip-path: var(--wedge);
   }
 
   .completion-card {
@@ -613,8 +597,8 @@
   }
 
   .run-bar {
-    @apply sticky bottom-0 z-20 -mx-4 border-t border-line bg-surface-raised/95 px-4 py-3
-      shadow-bar backdrop-blur;
+    @apply sticky top-0 z-20 -mx-4 border-b border-line bg-surface-raised/95 px-4 py-3
+      shadow-card backdrop-blur;
   }
 
   .countdown {
@@ -667,7 +651,7 @@
   }
 
   .order-handle {
-    @apply cursor-grab touch-none rounded p-1 text-ink-subtle transition-colors
+    @apply inline-flex min-h-11 min-w-11 cursor-grab touch-none items-center justify-center rounded p-1 text-ink-subtle transition-colors
       hover:bg-surface-sunken hover:text-ink active:cursor-grabbing;
   }
 
