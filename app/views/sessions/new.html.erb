@@ -6,7 +6,7 @@
     <p class="page-subtitle"><%= t("app_name") %></p>
   </div>
 
-  <%= form_with url: session_url, class: "card card-pad space-y-4" do |form| %>
+  <%= form_with url: session_url, class: "space-y-4" do |form| %>
     <div class="fieldset">
       <%= form.label :email_address, t("auth.email"), class: "field-label" %>
       <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", value: params[:email_address], class: field_class %>

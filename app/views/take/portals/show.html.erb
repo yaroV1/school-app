@@ -10,40 +10,20 @@
     <p class="mt-1 text-base text-ink-muted"><%= @exam.subject.name %></p>
   </div>
 
-  <div class="card card-pad space-y-4">
+  <div class="space-y-4">
     <% if @exam.description.present? %>
       <p class="text-base leading-relaxed whitespace-pre-wrap text-ink"><%= @exam.description %></p>
     <% end %>
 
-    <ul class="grid gap-3 text-base text-ink sm:grid-cols-2">
-      <li class="flex items-center gap-2">
-        <svg class="size-4 shrink-0 text-ink-subtle" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="10" cy="10" r="7.25" /><path d="M10 6.25V10l2.5 1.75" />
-        </svg>
-        <%= t("take.time_limit", value: @exam.time_limit_sec ? t("take.minutes", count: @exam.time_limit_sec / 60) : t("take.none")) %>
-      </li>
-      <li class="flex items-center gap-2">
-        <svg class="size-4 shrink-0 text-ink-subtle" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3.5 8.5a6.5 6.5 0 0 1 11-3.25M16.5 11.5a6.5 6.5 0 0 1-11 3.25" /><path d="M14.5 3v2.5H12M5.5 17v-2.5H8" />
-        </svg>
-        <%= t("take.attempts_used", used: @attempts_used, max: @exam.max_attempts) %>
-      </li>
-      <li class="flex items-center gap-2">
-        <svg class="size-4 shrink-0 text-ink-subtle" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M7.25 5.5h8M7.25 10h8M7.25 14.5h8M4.25 5.5h.5M4.25 10h.5M4.25 14.5h.5" />
-        </svg>
-        <%= t("take.questions", count: @exam.questions.count) %>
-      </li>
+    <ul class="space-y-2 text-base text-ink">
+      <li><%= t("take.time_limit", value: @exam.time_limit_sec ? t("take.minutes", count: @exam.time_limit_sec / 60) : t("take.none")) %></li>
+      <li><%= t("take.attempts_used", used: @attempts_used, max: @exam.max_attempts) %></li>
+      <li><%= t("take.questions", count: @exam.questions.count) %></li>
       <% if @exam.available_from || @exam.available_until %>
-        <li class="flex items-center gap-2">
-          <svg class="size-4 shrink-0 text-ink-subtle" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3.25" y="4.75" width="13.5" height="12" rx="2" /><path d="M3.25 8.25h13.5M7 3.25v2.5M13 3.25v2.5" />
-          </svg>
-          <span>
-            <% if @exam.available_from %><%= t("take.opens", time: l(@exam.available_from, format: :short)) %><% end %>
-            <% if @exam.available_from && @exam.available_until %><br><% end %>
-            <% if @exam.available_until %><%= t("take.closes", time: l(@exam.available_until, format: :short)) %><% end %>
-          </span>
+        <li>
+          <% if @exam.available_from %><%= t("take.opens", time: l(@exam.available_from, format: :short)) %><% end %>
+          <% if @exam.available_from && @exam.available_until %><br><% end %>
+          <% if @exam.available_until %><%= t("take.closes", time: l(@exam.available_until, format: :short)) %><% end %>
         </li>
       <% end %>
     </ul>

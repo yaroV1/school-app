@@ -38,6 +38,7 @@ class SubjectTestsFilterTest < ActionDispatch::IntegrationTest
     get subject_path(@subject)
     assert_response :success
     assert_equal [ "Геометрія", "Біологія", "Алгебра" ], listed_titles
+    assert_select "form.card", false
   end
 
   test "sorts by creation date and by title" do
