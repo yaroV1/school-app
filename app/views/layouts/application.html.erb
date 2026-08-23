@@ -9,6 +9,10 @@
     <%= yield :head %>
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%# Only the Cyrillic subset is preloaded: every heading on a Ukrainian page needs it,
+        while the Latin file serves the wordmark alone and can wait its turn. %>
+    <link rel="preload" href="<%= asset_path("literata-cyrillic-wght-normal.woff2") %>"
+          as="font" type="font/woff2" crossorigin>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
