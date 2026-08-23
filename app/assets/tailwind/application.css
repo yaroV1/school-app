@@ -4,69 +4,94 @@
    Design tokens
 
    Semantic names only. Templates should reach for `bg-surface`, `text-ink-muted`
-   or `border-line` instead of a raw `slate-*`, so a palette change happens here
-   and nowhere else. Values mirror the Tailwind slate / indigo / red / emerald /
-   amber / sky ramps.
+   or `border-line` instead of a raw `stone-*`, so a palette change happens here
+   and nowhere else.
+
+   The palette is Mesopotamian: unfired clay and papyrus for the neutrals, lapis
+   for the accent, ochre and red ochre for warning and danger, verdigris for
+   success. `edubba` is the Sumerian tablet house, and this is the pigment set
+   that room actually had.
 
    Every text token is at or above the 4.5:1 WCAG AA ratio on the surface it is
    meant to sit on. `ink-subtle` is the one exception: it clears 3:1, so it is
    for hairline separators, list markers and icon strokes only — never for text
    a reader has to make out.
+
+   These are oklch, and the earlier cool palette was already AA. Each token here
+   holds that palette's L and moves only C and H, which is what keeps the ratios
+   intact through a hue rotation — an earth palette fails by drifting L into
+   brown-on-beige. `test/design/palette_contrast_test.rb` is the proof, and it
+   parses this block directly, so a new colour token belongs in its pair table.
 --------------------------------------------------------------------------- */
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji";
 
-  /* Neutral surfaces, from the page backdrop up to raised panels */
-  --color-surface: oklch(0.984 0.003 247);
+  /* Neutral surfaces, from the page backdrop up to raised panels. Unfired clay,
+     warm enough to read as material rather than as grey. */
+  --color-surface: oklch(0.984 0.006 83);
   --color-surface-raised: #fff;
-  --color-surface-sunken: oklch(0.968 0.007 247);
+  --color-surface-sunken: oklch(0.968 0.011 83);
 
   /* Hairlines */
-  --color-line: oklch(0.929 0.013 255);
-  --color-line-strong: oklch(0.869 0.022 252);
+  --color-line: oklch(0.929 0.014 80);
+  --color-line-strong: oklch(0.869 0.024 76);
 
   /* Text, darkest to lightest. `ink-light` is the hover for solid ink fills.
      `ink-subtle` is not a text colour — see the note above. */
-  --color-ink: oklch(0.208 0.042 265);
-  --color-ink-light: oklch(0.372 0.044 257);
-  --color-ink-muted: oklch(0.502 0.045 257);
-  --color-ink-subtle: oklch(0.64 0.043 257);
+  --color-ink: oklch(0.208 0.028 58);
+  --color-ink-light: oklch(0.372 0.032 56);
+  --color-ink-muted: oklch(0.502 0.032 58);
+  --color-ink-subtle: oklch(0.64 0.03 60);
 
-  /* One accent, reserved for focus, current state, links and brand artwork */
-  --color-accent: oklch(0.511 0.262 276);
-  --color-accent-strong: oklch(0.457 0.24 277);
-  --color-accent-line: oklch(0.785 0.115 274);
-  --color-accent-soft: oklch(0.962 0.018 272);
+  /* One accent, reserved for focus, current state, links and brand artwork.
+     Lapis: the prestige pigment of the region, and a lower chroma than the
+     indigo it replaces, so it reads as ground stone rather than as a screen. */
+  --color-accent: oklch(0.511 0.17 262);
+  --color-accent-strong: oklch(0.457 0.16 262);
+  --color-accent-line: oklch(0.785 0.085 262);
+  --color-accent-soft: oklch(0.962 0.017 262);
 
-  --color-danger: oklch(0.505 0.213 27);
-  --color-danger-line: oklch(0.885 0.062 18);
-  --color-danger-soft: oklch(0.971 0.013 17);
+  /* Red ochre */
+  --color-danger: oklch(0.505 0.15 32);
+  --color-danger-line: oklch(0.885 0.055 32);
+  --color-danger-soft: oklch(0.971 0.013 32);
 
   /* Status hues. Same three-step shape as `danger`, so a badge and a flash can
      be built from tokens rather than from a raw ramp. */
-  --color-success: oklch(0.508 0.118 165.612);
-  --color-success-strong: oklch(0.432 0.095 166.913);
-  --color-success-line: oklch(0.905 0.093 164.15);
-  --color-success-soft: oklch(0.979 0.021 166.113);
+  --color-success: oklch(0.508 0.085 176);
+  --color-success-strong: oklch(0.432 0.072 176);
+  --color-success-line: oklch(0.905 0.058 176);
+  --color-success-soft: oklch(0.979 0.018 176);
 
-  --color-warning: oklch(0.473 0.137 46.201);
-  --color-warning-line: oklch(0.924 0.12 95.746);
-  --color-warning-soft: oklch(0.987 0.022 95.277);
+  --color-warning: oklch(0.473 0.115 62);
+  --color-warning-line: oklch(0.924 0.09 78);
+  --color-warning-soft: oklch(0.987 0.02 78);
 
-  --color-info: oklch(0.5 0.134 242.749);
-  --color-info-line: oklch(0.901 0.058 230.902);
-  --color-info-soft: oklch(0.977 0.013 236.62);
+  --color-info: oklch(0.5 0.1 232);
+  --color-info-line: oklch(0.901 0.055 232);
+  --color-info-soft: oklch(0.977 0.013 232);
+
+  /* The six question-type stripes on the student runner, mixed at one lightness
+     so they read as a set rather than as six warning colours. Hue is a second
+     signal only: `take/runs/show.html.erb` names the type in a chip beside the
+     stripe, which is what a colour-blind student reads. */
+  --color-qtype-mcq: oklch(0.72 0.1 262);
+  --color-qtype-short-text: oklch(0.72 0.11 80);
+  --color-qtype-open: oklch(0.72 0.11 35);
+  --color-qtype-ordering: oklch(0.72 0.08 172);
+  --color-qtype-matching: oklch(0.72 0.08 310);
+  --color-qtype-source: oklch(0.72 0.02 70);
 
   --radius-control: 0.5rem;
   --radius-card: 0.75rem;
   --radius-chip: 9999px;
 
-  --shadow-card: 0 1px 2px 0 oklch(0.208 0.042 265 / 0.04);
-  --shadow-raised: 0 4px 12px -2px oklch(0.208 0.042 265 / 0.08),
-    0 2px 4px -3px oklch(0.208 0.042 265 / 0.06);
-  --shadow-bar: 0 -1px 3px 0 oklch(0.208 0.042 265 / 0.05);
+  --shadow-card: 0 1px 2px 0 oklch(0.208 0.028 58 /0.04);
+  --shadow-raised: 0 4px 12px -2px oklch(0.208 0.028 58 /0.08),
+    0 2px 4px -3px oklch(0.208 0.028 58 /0.06);
+  --shadow-bar: 0 -1px 3px 0 oklch(0.208 0.028 58 /0.05);
 }
 
 @layer base {
@@ -423,27 +448,27 @@
   }
 
   .qcard[data-qtype="mcq"] {
-    @apply border-l-sky-400;
+    border-left-color: var(--color-qtype-mcq);
   }
 
   .qcard[data-qtype="short_text"] {
-    @apply border-l-amber-400;
+    border-left-color: var(--color-qtype-short-text);
   }
 
   .qcard[data-qtype="open"] {
-    @apply border-l-violet-400;
+    border-left-color: var(--color-qtype-open);
   }
 
   .qcard[data-qtype="ordering"] {
-    @apply border-l-emerald-400;
+    border-left-color: var(--color-qtype-ordering);
   }
 
   .qcard[data-qtype="matching"] {
-    @apply border-l-rose-400;
+    border-left-color: var(--color-qtype-matching);
   }
 
   .qcard[data-qtype="source"] {
-    @apply border-l-stone-400;
+    border-left-color: var(--color-qtype-source);
   }
 
   .qcard-legend {
