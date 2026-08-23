@@ -1,10 +1,9 @@
 require "test_helper"
 
 # The `@theme` block claims every text token clears AA on the surface it sits on, and that
-# the palette is one hue. Nothing enforced either until this file, and a monochrome earth
-# palette is exactly the kind that breaks the first quietly: with no hue left to separate
-# anything, every distinction is a lightness step, and lightness steps are what contrast is
-# made of. Squeeze the ramp to make the tones agree and the text stops being readable.
+# fired clay is the only saturated accent. Nothing enforced either until this file, and an
+# earth palette is exactly the kind that breaks the first quietly: squeeze the ramp until
+# the tones agree and the text stops being readable.
 #
 # The pairs below are the ones the components in application.css actually form — a pair with
 # no component behind it would be a ratio nobody can see.
@@ -23,7 +22,7 @@ class PaletteContrastTest < ActiveSupport::TestCase
     [ "ink", "surface", AA_TEXT, ".source-table td on a hovered row" ],
     [ "ink", "surface-raised", AA_TEXT, ".card-title, .field, .data-table td" ],
     [ "ink", "surface-sunken", AA_TEXT, ".btn-secondary:hover, .nav-link:hover" ],
-    [ "ink-light", "surface-raised", AA_TEXT, ".btn-primary:hover fill is ink-light" ],
+    [ "ink-light", "surface-raised", AA_TEXT, "dark supporting text on a raised surface" ],
     [ "ink-muted", "surface", AA_TEXT, ".page-subtitle, .breadcrumbs, .tab" ],
     [ "ink-muted", "surface-raised", AA_TEXT, ".field-hint, .empty-state-message, .nav-link" ],
     [ "ink-muted", "surface-sunken", AA_TEXT, ".badge-neutral, .chip, .data-table th, .order-position" ],
@@ -33,9 +32,9 @@ class PaletteContrastTest < ActiveSupport::TestCase
     [ "ink-subtle", "surface", AA_NON_TEXT, ".breadcrumb-sep" ],
 
     # Solid fills: the label is white, so the fill carries the contrast.
-    [ WHITE, "ink", AA_TEXT, ".btn-primary, .countdown" ],
-    [ WHITE, "ink-light", AA_TEXT, ".btn-primary:hover" ],
-    [ WHITE, "accent", AA_TEXT, ".order-item[aria-selected] .order-position" ],
+    [ WHITE, "ink", AA_TEXT, ".countdown" ],
+    [ WHITE, "accent", AA_TEXT, ".btn-primary, .order-item[aria-selected] .order-position" ],
+    [ WHITE, "accent-strong", AA_TEXT, ".btn-primary:hover" ],
     [ WHITE, "danger", AA_TEXT, ".countdown[data-urgency=urgent]" ],
 
     # Accent: links, focus, the current state.
@@ -67,10 +66,12 @@ class PaletteContrastTest < ActiveSupport::TestCase
     qtype-mcq qtype-short-text qtype-open qtype-ordering qtype-matching qtype-source
   ].freeze
 
-  # Everything in the palette sits in warm charcoal-to-brown. Anything outside this arc, or
-  # more saturated than this, is a hue creeping back in.
+  # Everything except the interaction accent sits in warm charcoal-to-brown. The four
+  # accent steps share one fired-clay hue, with saturation reduced for backgrounds.
   WARM_HUE_RANGE = (40.0..90.0)
   MAX_CHROMA = 0.05
+  CLAY_HUE_RANGE = (30.0..65.0)
+  CLAY_TOKENS = %w[accent accent-strong accent-line accent-soft].freeze
 
   # Hairlines are exempt from the 3:1 bar — they divide content, they do not identify a
   # control, and the printed sheet restates them as #000 anyway. The floor here only catches
@@ -137,20 +138,25 @@ class PaletteContrastTest < ActiveSupport::TestCase
     assert_empty collisions, collisions.join("\n")
   end
 
-  # The palette's whole premise. A stray hue would not fail any ratio above, so nothing
-  # else here would notice one arriving.
-  test "no token carries a second hue" do
+  test "fired clay is the only saturated accent" do
     strays = @tokens.filter_map do |name, value|
       match = value.match(/\Aoklch\(\s*[\d.]+\s+([\d.]+)\s+([\d.]+)\s*\)\z/)
       next unless match
 
       chroma, hue = match.captures.map(&:to_f)
+      if CLAY_TOKENS.include?(name)
+        next if CLAY_HUE_RANGE.cover?(hue)
+
+        next format("%s is %s — outside the fired-clay family", name, value)
+      end
       next if chroma < 0.005 || (WARM_HUE_RANGE.cover?(hue) && chroma <= MAX_CHROMA)
 
       format("%s is %s — outside the Bitumen family", name, value)
     end
 
-    assert_empty strays, "the palette is monochromatic:\n#{strays.join("\n")}"
+    assert_operator chroma("accent"), :>=, 0.08, "the primary accent must read as fired clay"
+    assert_operator chroma("accent-strong"), :>=, 0.08, "the hover accent must stay in the clay family"
+    assert_empty strays, "the palette has an unplanned hue:\n#{strays.join("\n")}"
   end
 
   private
@@ -178,6 +184,10 @@ class PaletteContrastTest < ActiveSupport::TestCase
 
   def lightness(token)
     resolve(token)[/\Aoklch\(\s*([\d.]+)/, 1].to_f
+  end
+
+  def chroma(token)
+    resolve(token)[/\Aoklch\(\s*[\d.]+\s+([\d.]+)/, 1].to_f
   end
 
   def resolve(name)

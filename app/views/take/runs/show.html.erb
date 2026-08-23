@@ -22,6 +22,36 @@
       class: "space-y-4" do %>
   <%= hidden_field_tag :attempt_id, @attempt.id %>
 
+  <%# Status enters the flow before the questions, then stays at the top while the
+      student works. A bottom-sticky bar covered the next question on a phone. %>
+  <div class="run-bar">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div class="flex flex-wrap items-center gap-3">
+        <% if @attempt.deadline_at %>
+          <div data-controller="countdown"
+               data-countdown-deadline-value="<%= @attempt.deadline_at.iso8601 %>"
+               data-countdown-server-time-value="<%= server_now.iso8601 %>"
+               class="countdown">
+            <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="10" cy="10" r="7.25" /><path d="M10 6.25V10l2.5 1.75" />
+            </svg>
+            <span data-countdown-target="display">--:--</span>
+          </div>
+        <% end %>
+        <div class="flex items-center gap-1.5 text-xs">
+          <svg data-autosave-target="spinner" class="hidden size-3.5 animate-spin text-ink-subtle" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" class="opacity-25" />
+            <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <svg data-autosave-target="check" class="hidden size-3.5 text-success" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3.5 8.5 6.5 11.5 12.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <p class="autosave-status" data-autosave-target="status"><%= t("take.autosave") %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <% @questions.each_with_index do |question, index| %>
     <% answer = @answers[question.id] %>
     <fieldset class="qcard" data-qtype="<%= question.question_type %>">
@@ -36,7 +66,7 @@
       </div>
       <%= render "questions/photo", question: question %>
       <% unless question.source? %>
-        <p class="mb-3 font-medium whitespace-pre-wrap text-ink"><%= question.prompt %></p>
+        <p class="mb-4 text-lg leading-relaxed font-medium whitespace-pre-wrap text-ink"><%= question.prompt %></p>
       <% end %>
 
       <% if question.mcq? %>
@@ -101,7 +131,7 @@
           <p class="mb-1.5 text-xs font-medium text-ink-muted"><%= t("take.source.label") %></p>
           <div class="source-text max-h-80"><%= question.source_text %></div>
         </div>
-        <p class="mb-3 font-medium whitespace-pre-wrap text-ink"><%= question.prompt %></p>
+        <p class="mb-4 text-lg leading-relaxed font-medium whitespace-pre-wrap text-ink"><%= question.prompt %></p>
         <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response,
               rows: 8,
               placeholder: t("take.placeholder.source"),
@@ -114,38 +144,6 @@
       <% end %>
     </fieldset>
   <% end %>
-
-  <%# Sticky, so the clock and the save state stay in view while scrolling. The
-      submit deliberately stays below it, in flow: an attempt cannot be taken
-      back, so the button that ends it should not sit under a phone reader's
-      thumb for the whole test. The bar unsticks once the submit scrolls in. %>
-  <div class="run-bar">
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <div class="flex flex-wrap items-center gap-3">
-        <% if @attempt.deadline_at %>
-          <div data-controller="countdown"
-               data-countdown-deadline-value="<%= @attempt.deadline_at.iso8601 %>"
-               data-countdown-server-time-value="<%= server_now.iso8601 %>"
-               class="countdown">
-            <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="10" cy="10" r="7.25" /><path d="M10 6.25V10l2.5 1.75" />
-            </svg>
-            <span data-countdown-target="display">--:--</span>
-          </div>
-        <% end %>
-        <div class="flex items-center gap-1.5 text-xs">
-          <svg data-autosave-target="spinner" class="hidden size-3.5 animate-spin text-ink-subtle" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" class="opacity-25" />
-            <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          </svg>
-          <svg data-autosave-target="check" class="hidden size-3.5 text-success" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M3.5 8.5 6.5 11.5 12.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          <p class="autosave-status" data-autosave-target="status"><%= t("take.autosave") %></p>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <%= submit_tag t("take.submit"), class: "btn btn-primary btn-lg w-full", data: { turbo_confirm: t("take.submit_confirm") } %>
 <% end %>
