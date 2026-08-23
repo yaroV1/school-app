@@ -1,5 +1,8 @@
 uk:
-  app_name: "Платформа тестів"
+  app_name: "Edubba"
+
+  pwa:
+    description: "Платформа тестів для вчителя та його класів."
 
   common:
     edit: "Редагувати"
