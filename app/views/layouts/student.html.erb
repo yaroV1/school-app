@@ -3,14 +3,18 @@
   <head>
     <title><%= content_for(:title) || t("nav.tests") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#fbf7f1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%# Only the Cyrillic subset is preloaded: every heading on a Ukrainian page needs it,
+        while the Latin file serves the wordmark alone and can wait its turn. %>
+    <link rel="preload" href="<%= asset_path("literata-cyrillic-wght-normal.woff2") %>"
+          as="font" type="font/woff2" crossorigin>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body class="student-shell min-h-screen bg-surface text-ink antialiased">
+  <body class="min-h-screen bg-surface text-ink antialiased <%= yield :shell_class %>">
     <main class="relative mx-auto max-w-3xl px-4 py-6 sm:py-8">
       <div class="student-brand mb-6">
         <%= render "shared/brand_mark" %>

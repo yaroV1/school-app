@@ -1,75 +1,147 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
+   Literata, the heading face
+
+   Self-hosted rather than pulled from a CDN: a classroom Wi-Fi is the network
+   this runs on, and it keeps the commented-out CSP initializer to one origin
+   whenever it is switched on. The files come from `@fontsource-variable/literata`
+   and are OFL-1.1 — `app/assets/fonts/Literata-OFL.txt` travels with them.
+
+   One variable file per script, split on `unicode-range` so a page pulls only
+   what it sets. The Cyrillic range is the reason this face was picked at all:
+   most serifs with the right voice have no `і ї є ґ`, and this UI is Ukrainian.
+   `swap` over `block`, because a heading a student cannot read yet is worse
+   than a heading that changes shape once.
+--------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("literata-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("literata-cyrillic-wght-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+/* ---------------------------------------------------------------------------
    Design tokens
 
    Semantic names only. Templates should reach for `bg-surface`, `text-ink-muted`
-   or `border-line` instead of a raw `slate-*`, so a palette change happens here
-   and nowhere else. Values mirror the Tailwind slate / indigo / red / emerald /
-   amber / sky ramps.
+   or `border-line` instead of a raw `stone-*`, so a palette change happens here
+   and nowhere else.
+
+   The palette is Mesopotamian and monochromatic. Surfaces are unfired clay and
+   the text is a crisp dark brown; every accent, every status and every control
+   is Bitumen — the warm charcoal the region caulked its boats and set its
+   mosaics with. There is no second hue anywhere in the interface.
+
+   That has a consequence the components have to answer for: hue can no longer
+   carry meaning. `success` and `danger` are the same colour family, separated
+   only by lightness, so any state a reader must not miss is marked by FORM as
+   well — a solid fill against an outline, a heavier border, an icon. Relying on
+   colour alone was a WCAG 1.4.1 failure in the previous palette anyway; this one
+   cannot make that mistake because it has no colour to lean on.
 
    Every text token is at or above the 4.5:1 WCAG AA ratio on the surface it is
    meant to sit on. `ink-subtle` is the one exception: it clears 3:1, so it is
    for hairline separators, list markers and icon strokes only — never for text
-   a reader has to make out.
+   a reader has to make out. `test/design/palette_contrast_test.rb` is the proof,
+   and it parses this block directly, so a new colour token belongs in its pair
+   table.
 --------------------------------------------------------------------------- */
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji";
 
-  /* Neutral surfaces, from the page backdrop up to raised panels */
-  --color-surface: oklch(0.984 0.003 247);
-  --color-surface-raised: #fff;
-  --color-surface-sunken: oklch(0.968 0.007 247);
+  /* Titles and the wordmark only. Body copy, form labels and table cells stay
+     on the system sans: this is a document the reader scans, not one they read
+     end to end, and a serif at 13px on a classroom phone is a worse read. */
+  --font-serif: "Literata", ui-serif, Georgia, "Times New Roman", serif;
+
+  /* Cream paper, warmer than the clay it replaced. */
+  --color-surface: oklch(0.978 0.009 84);
+  --color-surface-raised: oklch(0.995 0.004 84);
+  --color-surface-sunken: oklch(0.955 0.013 82);
 
   /* Hairlines */
-  --color-line: oklch(0.929 0.013 255);
-  --color-line-strong: oklch(0.869 0.022 252);
+  --color-line: oklch(0.915 0.014 78);
+  --color-line-strong: oklch(0.845 0.02 74);
 
-  /* Text, darkest to lightest. `ink-light` is the hover for solid ink fills.
-     `ink-subtle` is not a text colour — see the note above. */
-  --color-ink: oklch(0.208 0.042 265);
-  --color-ink-light: oklch(0.372 0.044 257);
-  --color-ink-muted: oklch(0.502 0.045 257);
-  --color-ink-subtle: oklch(0.64 0.043 257);
+  /* Text: dark brown, and deliberately browner than anything else here, so the
+     charcoal of a link reads as a different material rather than a shade. */
+  --color-ink: oklch(0.215 0.042 55);
+  --color-ink-light: oklch(0.375 0.038 54);
+  --color-ink-muted: oklch(0.495 0.032 56);
+  --color-ink-subtle: oklch(0.635 0.026 58);
 
-  /* One accent, reserved for focus, current state, links and brand artwork */
-  --color-accent: oklch(0.511 0.262 276);
-  --color-accent-strong: oklch(0.457 0.24 277);
-  --color-accent-line: oklch(0.785 0.115 274);
-  --color-accent-soft: oklch(0.962 0.018 272);
+  /* Bitumen. The only accent in the interface: links, focus, current state,
+     controls, brand artwork. Greyer than the text on purpose. */
+  --color-accent: oklch(0.355 0.008 66);
+  --color-accent-strong: oklch(0.275 0.009 62);
+  --color-accent-line: oklch(0.79 0.012 70);
+  --color-accent-soft: oklch(0.955 0.008 74);
 
-  --color-danger: oklch(0.505 0.213 27);
-  --color-danger-line: oklch(0.885 0.062 18);
-  --color-danger-soft: oklch(0.971 0.013 17);
+  /* Status, as a lightness ladder in the same Bitumen family rather than as
+     four hues. Darkest carries the most weight; the components pair each of
+     these with a fill or an outline so the tone is never the only signal. */
+  --color-danger: oklch(0.285 0.011 60);
+  --color-danger-line: oklch(0.76 0.014 64);
+  --color-danger-soft: oklch(0.947 0.01 70);
 
-  /* Status hues. Same three-step shape as `danger`, so a badge and a flash can
-     be built from tokens rather than from a raw ramp. */
-  --color-success: oklch(0.508 0.118 165.612);
-  --color-success-strong: oklch(0.432 0.095 166.913);
-  --color-success-line: oklch(0.905 0.093 164.15);
-  --color-success-soft: oklch(0.979 0.021 166.113);
+  --color-success: oklch(0.375 0.009 66);
+  --color-success-strong: oklch(0.295 0.01 62);
+  --color-success-line: oklch(0.81 0.012 70);
+  --color-success-soft: oklch(0.962 0.008 74);
 
-  --color-warning: oklch(0.473 0.137 46.201);
-  --color-warning-line: oklch(0.924 0.12 95.746);
-  --color-warning-soft: oklch(0.987 0.022 95.277);
+  --color-warning: oklch(0.45 0.009 68);
+  --color-warning-line: oklch(0.845 0.012 72);
+  --color-warning-soft: oklch(0.972 0.007 76);
 
-  --color-info: oklch(0.5 0.134 242.749);
-  --color-info-line: oklch(0.901 0.058 230.902);
-  --color-info-soft: oklch(0.977 0.013 236.62);
+  --color-info: oklch(0.525 0.008 70);
+  --color-info-line: oklch(0.875 0.01 74);
+  --color-info-soft: oklch(0.978 0.006 78);
+
+  /* The six question-type stripes on the student runner. With one hue left they
+     become a lightness ramp, which orders them but no longer names them — so the
+     chip beside the stripe in `take/runs/show.html.erb` is now the whole signal,
+     not the backup. Keep it. */
+  --color-qtype-mcq: oklch(0.42 0.011 64);
+  --color-qtype-short-text: oklch(0.51 0.01 66);
+  --color-qtype-open: oklch(0.60 0.01 68);
+  --color-qtype-ordering: oklch(0.68 0.009 70);
+  --color-qtype-matching: oklch(0.76 0.008 72);
+  --color-qtype-source: oklch(0.84 0.007 74);
 
   --radius-control: 0.5rem;
   --radius-card: 0.75rem;
   --radius-chip: 9999px;
 
-  --shadow-card: 0 1px 2px 0 oklch(0.208 0.042 265 / 0.04);
-  --shadow-raised: 0 4px 12px -2px oklch(0.208 0.042 265 / 0.08),
-    0 2px 4px -3px oklch(0.208 0.042 265 / 0.06);
-  --shadow-bar: 0 -1px 3px 0 oklch(0.208 0.042 265 / 0.05);
+  --shadow-card: 0 1px 2px 0 oklch(0.215 0.042 55 /0.04);
+  --shadow-raised: 0 4px 12px -2px oklch(0.215 0.042 55 /0.08),
+    0 2px 4px -3px oklch(0.215 0.042 55 /0.06);
+  --shadow-bar: 0 -1px 3px 0 oklch(0.215 0.042 55 /0.05);
 }
 
 @layer base {
+  :root {
+    /* The cuneiform wedge — the one shape the brand repeats, on the current tab
+       and on the question-type legend. A clip-path rather than a glyph or an
+       SVG, so it inherits its size and colour from whatever it marks. */
+    --wedge: polygon(0 0, 100% 50%, 0 100%);
+  }
+
   /* One visible focus treatment for every interactive element. Replaces the
      `focus:outline-none` that used to leave inputs with no keyboard cue. */
   :focus-visible {
@@ -79,6 +151,8 @@
 
   body {
     -webkit-tap-highlight-color: transparent;
+    background-image: url("cuneiform.svg");
+    background-size: 200px;
   }
 }
 
@@ -91,8 +165,8 @@
 @layer components {
   /* ------------------------------- buttons ------------------------------- */
   .btn {
-    @apply inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5
-      rounded-control border border-transparent px-3.5 py-2 text-sm font-medium
+    @apply inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5
+      rounded-control border border-transparent px-4 py-2.5 text-base font-medium
       whitespace-nowrap transition-colors;
   }
 
@@ -116,12 +190,16 @@
     @apply text-ink-muted hover:bg-surface-sunken hover:text-ink;
   }
 
+  /* Destructive stays an outline — the solid fill belongs to the primary action, and a
+     delete button that outweighs it is how a class gets removed by accident. What marks it
+     instead is the full-strength border and the heavier label, which is all the separation
+     left once there is no red. */
   .btn-danger {
-    @apply border-danger-line bg-surface-raised text-danger hover:bg-danger-soft;
+    @apply border-danger bg-surface-raised font-semibold text-danger hover:bg-danger-soft;
   }
 
   .btn-sm {
-    @apply min-h-8 gap-1 px-2.5 py-1 text-xs;
+    @apply min-h-9 gap-1 px-3 py-1.5 text-sm;
   }
 
   .btn-lg {
@@ -130,17 +208,17 @@
 
   /* ------------------------------- forms -------------------------------- */
   .field-label {
-    @apply block text-sm font-medium text-ink;
+    @apply block text-sm font-semibold text-ink;
   }
 
   .field {
     @apply mt-1.5 block w-full rounded-control border border-line bg-surface-raised
-      px-3 py-2 text-sm text-ink transition-colors
+      px-3.5 py-2.5 text-base text-ink transition-colors
       placeholder:text-ink-muted hover:border-line-strong focus:border-accent;
   }
 
   .field-hint {
-    @apply mt-1.5 text-xs text-ink-muted;
+    @apply mt-1.5 text-sm text-ink-muted;
   }
 
   .field-error {
@@ -153,41 +231,56 @@
 
   /* --------------------------- surfaces & lists ------------------------- */
   .card {
-    @apply rounded-card border border-line bg-surface-raised shadow-card;
+    @apply rounded-card bg-surface-raised shadow-card;
   }
 
   .card-pad {
-    @apply p-4 sm:p-5;
+    @apply p-5 sm:p-6;
   }
 
   .card-title {
-    @apply text-sm font-semibold text-ink;
+    @apply font-serif text-base font-semibold text-ink;
   }
 
   .list {
-    @apply divide-y divide-line overflow-hidden rounded-card border border-line
-      bg-surface-raised shadow-card;
+    @apply divide-y divide-line overflow-hidden rounded-card bg-surface-raised shadow-card;
   }
 
   .list-row {
-    @apply flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-surface;
+    @apply relative flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-surface;
   }
 
   .list-row-title {
-    @apply font-medium text-ink hover:text-accent;
+    @apply text-base font-medium text-ink hover:text-accent;
+  }
+
+  /* The whole row opens the record. The title keeps the real href — so it stays what a
+     screen reader announces, what Tab focuses and what a middle click opens — and this
+     overlay only stretches its hit area across the row. It costs text selection inside
+     the row, which is a fair trade for a row whose one job is to be opened.
+
+     Anything else interactive in the row has to be lifted above the overlay, which is
+     what `.list-row-actions` is for. */
+  .list-row-title::after {
+    content: "";
+    @apply absolute inset-0;
+  }
+
+  .list-row-actions {
+    @apply relative z-10 flex flex-wrap items-center gap-2;
   }
 
   .list-row-meta {
-    @apply mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted;
+    @apply mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted;
   }
 
   /* ------------------------------- tables ------------------------------- */
   .table-wrap {
-    @apply overflow-x-auto rounded-card border border-line bg-surface-raised shadow-card;
+    @apply overflow-x-auto rounded-card bg-surface-raised shadow-card;
   }
 
   .data-table {
-    @apply min-w-full text-sm;
+    @apply min-w-full text-base;
   }
 
   .data-table thead {
@@ -195,7 +288,7 @@
   }
 
   .data-table th {
-    @apply px-3.5 py-2.5 text-xs font-semibold text-ink-muted;
+    @apply px-4 py-3 text-sm font-semibold text-ink-muted;
   }
 
   .data-table tbody {
@@ -207,7 +300,7 @@
   }
 
   .data-table td {
-    @apply px-3.5 py-2.5 align-middle text-ink;
+    @apply px-4 py-3.5 align-middle text-ink;
   }
 
   .num {
@@ -223,8 +316,11 @@
     @apply border-line bg-surface-sunken text-ink-muted;
   }
 
+  /* The solid fill is the whole emphasis budget of a monochrome palette, so it goes to
+     the one state that is live right now — published, active, submitted. Every other
+     status is an outline and lets its own word do the work. */
   .badge-success {
-    @apply border-success-line bg-success-soft text-success;
+    @apply border-transparent bg-success text-surface-raised;
   }
 
   .badge-warning {
@@ -235,8 +331,10 @@
     @apply border-info-line bg-info-soft text-info;
   }
 
+  /* Not a fill, because a revoked link is not the live state — but the darkest tone,
+     a full-strength border and the heavier weight, so it is never mistaken for a draft. */
   .badge-danger {
-    @apply border-danger-line bg-danger-soft text-danger;
+    @apply border-danger bg-surface-raised font-semibold text-danger;
   }
 
   .chip {
@@ -250,7 +348,7 @@
   }
 
   .brand {
-    @apply inline-flex items-center gap-2 text-sm font-semibold tracking-tight text-ink;
+    @apply inline-flex items-center gap-2 font-serif text-base font-semibold tracking-tight text-ink;
   }
 
   .brand-mark {
@@ -278,7 +376,7 @@
   }
 
   .nav-link {
-    @apply rounded-control px-2 py-1 text-sm font-medium text-ink-muted transition-colors
+    @apply rounded-control px-2.5 py-1.5 text-base font-medium text-ink-muted transition-colors
       hover:bg-surface-sunken hover:text-ink;
   }
 
@@ -292,7 +390,7 @@
 
   .tab {
     @apply -mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-0.5
-      pt-1 pb-2.5 text-sm font-medium text-ink-muted transition-colors
+      pt-1 pb-3 text-base font-medium text-ink-muted transition-colors
       hover:border-line-strong hover:text-ink;
   }
 
@@ -300,9 +398,15 @@
     @apply border-accent text-ink;
   }
 
+  .tab[aria-current="page"]::before {
+    content: "";
+    @apply size-2 shrink-0 bg-accent;
+    clip-path: var(--wedge);
+  }
+
   /* A real count, so it reads at AA rather than as decoration. */
   .tab-count {
-    @apply text-xs text-ink-muted;
+    @apply text-sm text-ink-muted;
   }
 
   .breadcrumbs {
@@ -320,7 +424,7 @@
 
   /* -------------------------------- text -------------------------------- */
   .page-title {
-    @apply text-2xl font-semibold tracking-tight text-ink;
+    @apply font-serif text-2xl font-semibold tracking-tight text-ink;
   }
 
   .page-icon {
@@ -329,11 +433,11 @@
   }
 
   .page-subtitle {
-    @apply mt-1 text-sm text-ink-muted;
+    @apply mt-1 text-base text-ink-muted;
   }
 
   .section-title {
-    @apply text-base font-semibold text-ink;
+    @apply font-serif text-lg font-semibold text-ink;
   }
 
   .link {
@@ -360,31 +464,31 @@
 
   .empty-state {
     @apply overflow-hidden rounded-card border border-dashed border-line bg-surface-raised
-      px-4 py-8 text-center text-sm text-ink-muted;
-    background-image: radial-gradient(circle at 50% 0%, var(--color-accent-soft), transparent 45%);
+      px-4 py-10 text-center text-base text-ink-muted;
   }
 
   .empty-state-illustration {
-    @apply relative mx-auto mb-3 flex h-16 w-28 items-center justify-center;
+    @apply relative mx-auto mb-4 flex h-20 w-28 items-center justify-center;
     animation: empty-state-arrive 360ms ease-out both;
   }
 
-  .empty-state-icon {
-    @apply relative z-10 inline-flex size-14 items-center justify-center rounded-card
-      border border-accent-line bg-surface-raised text-accent shadow-raised;
-    transform: rotate(-3deg);
+  /* A blank tablet waiting to be written on, which is what an empty list is. The soft
+     corner radius stands in for the pillow shape the brand mark draws properly; a card
+     radius here would just read as another card. */
+  .empty-state-tablet {
+    @apply relative flex size-20 flex-col items-center justify-center gap-2
+      border-2 border-ink-subtle bg-surface-sunken text-ink-light shadow-raised;
+    border-radius: 30% / 24%;
+    transform: rotate(-2deg);
   }
 
-  .empty-state-dot {
-    @apply absolute rounded-chip;
+  .empty-state-marks {
+    @apply flex items-center gap-1;
   }
 
-  .empty-state-dot-left {
-    @apply left-1 bottom-2 size-4 bg-warning-soft ring-1 ring-warning-line;
-  }
-
-  .empty-state-dot-right {
-    @apply top-1 right-0 size-6 bg-info-soft ring-1 ring-info-line;
+  .empty-state-marks span {
+    @apply block h-1.5 w-2.5 bg-ink-subtle;
+    clip-path: var(--wedge);
   }
 
   .empty-state-message {
@@ -417,37 +521,47 @@
   }
 
   /* ------------------------- taking a test (Take::) --------------------- */
+  /* One variable feeds both the 3px edge and the wedge on the legend, so a type
+     is marked twice by the same colour and adding a question type is one line. */
   .qcard {
-    @apply rounded-card border border-line border-l-[3px] border-l-line-strong
-      bg-surface-raised p-4 shadow-card sm:p-5;
+    --qtype: var(--color-line-strong);
+    @apply rounded-card border-l-[3px] bg-surface-raised p-5 shadow-card sm:p-6;
+    border-left-color: var(--qtype);
   }
 
   .qcard[data-qtype="mcq"] {
-    @apply border-l-sky-400;
+    --qtype: var(--color-qtype-mcq);
   }
 
   .qcard[data-qtype="short_text"] {
-    @apply border-l-amber-400;
+    --qtype: var(--color-qtype-short-text);
   }
 
   .qcard[data-qtype="open"] {
-    @apply border-l-violet-400;
+    --qtype: var(--color-qtype-open);
   }
 
   .qcard[data-qtype="ordering"] {
-    @apply border-l-emerald-400;
+    --qtype: var(--color-qtype-ordering);
   }
 
   .qcard[data-qtype="matching"] {
-    @apply border-l-rose-400;
+    --qtype: var(--color-qtype-matching);
   }
 
   .qcard[data-qtype="source"] {
-    @apply border-l-stone-400;
+    --qtype: var(--color-qtype-source);
   }
 
   .qcard-legend {
     @apply flex flex-wrap items-center gap-2 text-xs font-medium text-ink-muted;
+  }
+
+  .qcard-legend::before {
+    content: "";
+    @apply h-2 w-3.5 shrink-0;
+    background: var(--qtype);
+    clip-path: var(--wedge);
   }
 
   .completion-card {
@@ -455,32 +569,41 @@
     background-image: radial-gradient(circle at 50% -15%, var(--color-success-soft), transparent 55%);
   }
 
+  /* No absolute positioning: marks placed around the disc kept landing behind it, and one
+     in the disc's own colour fused into it and read as a speech-bubble tail. A row under
+     the disc is the same shape the empty state uses and cannot collide. */
   .completion-illustration {
-    @apply relative mx-auto h-16 w-24;
+    @apply relative mx-auto flex w-40 flex-col items-center gap-2.5;
   }
 
   .completion-check {
-    @apply absolute top-1 left-1/2 flex size-14 -translate-x-1/2 items-center justify-center
-      rounded-chip border border-success-line bg-success-soft text-success shadow-raised;
+    @apply flex size-14 items-center justify-center rounded-chip bg-success text-white shadow-raised;
     animation: completion-pop 420ms cubic-bezier(.2, .8, .2, 1.15) both;
   }
 
-  .completion-spark {
-    @apply absolute size-2 rounded-chip bg-warning-line;
+  .completion-marks {
+    @apply flex items-center gap-1.5;
+  }
+
+  /* Three wedges rather than three sparks: what a finished tablet carries is writing,
+     and the shape is the one the rest of the app already uses. */
+  .completion-wedge {
+    @apply block h-2 w-3;
+    clip-path: var(--wedge);
     animation: spark-arrive 480ms ease-out both;
   }
 
-  .completion-spark-one {
-    @apply top-2 left-1;
+  .completion-wedge-one {
+    @apply bg-warning;
   }
 
-  .completion-spark-two {
-    @apply top-0 right-2 size-1.5 bg-info-line;
+  .completion-wedge-two {
+    @apply bg-accent;
     animation-delay: 80ms;
   }
 
-  .completion-spark-three {
-    @apply right-0 bottom-2 size-2.5 bg-accent-line;
+  .completion-wedge-three {
+    @apply bg-success;
     animation-delay: 140ms;
   }
 
@@ -492,7 +615,7 @@
   /* Full-width tappable rows, so a phone user is not aiming at a radio dot. */
   .option {
     @apply flex cursor-pointer items-start gap-3 rounded-control border border-line
-      bg-surface-raised px-3.5 py-3 text-sm text-ink transition-colors
+      bg-surface-raised px-4 py-3.5 text-base text-ink transition-colors
       hover:border-accent-line hover:bg-accent-soft;
   }
 
@@ -501,8 +624,8 @@
   }
 
   .source-text {
-    @apply overflow-y-auto rounded-control border border-line bg-surface px-3.5 py-3
-      text-sm leading-relaxed whitespace-pre-wrap text-ink;
+    @apply overflow-y-auto rounded-control border border-line bg-surface px-4 py-3.5
+      text-base leading-relaxed whitespace-pre-wrap text-ink;
   }
 
   .run-bar {
@@ -511,16 +634,19 @@
   }
 
   .countdown {
-    @apply inline-flex items-center gap-1.5 rounded-control bg-ink px-3 py-1.5
-      font-mono text-sm tabular-nums text-white;
+    @apply inline-flex items-center gap-1.5 rounded-control bg-ink px-3.5 py-2
+      font-mono text-base tabular-nums text-white;
   }
 
+  /* `ink` and `danger` are two steps of the same ramp now, so the last minute cannot
+     announce itself by colour. The ring and the weight are what a student actually
+     catches out of the corner of an eye. */
   .countdown[data-urgency="urgent"] {
-    @apply bg-danger;
+    @apply bg-danger font-bold ring-2 ring-danger ring-offset-2 ring-offset-surface;
   }
 
   .countdown-cell[data-urgency="urgent"] {
-    @apply font-semibold text-danger;
+    @apply font-bold text-danger underline decoration-2 underline-offset-2;
   }
 
   /* Colour lives here rather than on the element, so the state rules below are
@@ -533,8 +659,10 @@
     @apply text-success;
   }
 
+  /* Saved and failed are within a shade of each other now. The status text already says
+     which is which — this makes sure the failed one is not read as decoration. */
   .autosave-status[data-state="failed"] {
-    @apply text-danger;
+    @apply font-bold text-danger underline decoration-2 underline-offset-2;
   }
 
   /* ----------------------------- ordering ------------------------------- */
@@ -599,8 +727,8 @@
 }
 
 @keyframes completion-pop {
-  from { transform: translateX(-50%) scale(0.65) rotate(-8deg); opacity: 0; }
-  to { transform: translateX(-50%) scale(1) rotate(0); opacity: 1; }
+  from { transform: scale(0.65) rotate(-8deg); opacity: 0; }
+  to { transform: scale(1) rotate(0); opacity: 1; }
 }
 
 @keyframes spark-arrive {
@@ -672,6 +800,14 @@
 
   .print-sheet {
     color: #000;
+  }
+
+  /* The sheet shares `.page-title` with the screen, and the screen moved to a serif.
+     Paper is a deliverable that was signed off as it stands, so it keeps the face it
+     had; drop this rule to let Literata onto the printed title. */
+  .print-sheet,
+  .print-sheet .page-title {
+    font-family: var(--font-sans);
   }
 
   .answer-line,

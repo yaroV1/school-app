@@ -88,12 +88,17 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "History of Ukraine", response.body
     assert_select ".student-brand .brand-mark svg"
+    assert_select ".student-brand", text: /#{I18n.t('app_name')}/
+    assert_font_self_hosted
+    assert_select "body.student-shell", 1, "the start screen is where the decoration belongs"
 
     post student_start_url(token: token)
     follow_redirect!
     assert_response :success
     assert_match "History of Ukraine", response.body
     assert_select "img[alt=?]", I18n.t("exams.show.photo_alt")
+    # A student under a countdown gets the calmest surface in the app: no lit shell here.
+    assert_select "body.student-shell", false
 
     attempt = assignment.attempts.last
     mcq, short_q, open_q, ordering, matching, source = exam.questions.order(:position)

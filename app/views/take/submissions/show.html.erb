@@ -1,11 +1,14 @@
 <% content_for :title, t("take.done_title") %>
+<% content_for :shell_class, "student-shell" %>
 <div class="space-y-6">
   <div class="card card-pad completion-card mx-auto max-w-md space-y-3 text-center">
     <div class="completion-illustration" aria-hidden="true">
-      <span class="completion-spark completion-spark-one"></span>
-      <span class="completion-spark completion-spark-two"></span>
-      <span class="completion-spark completion-spark-three"></span>
       <span class="completion-check"><%= ui_icon("check", class_name: "size-7") %></span>
+      <span class="completion-marks">
+        <span class="completion-wedge completion-wedge-one"></span>
+        <span class="completion-wedge completion-wedge-two"></span>
+        <span class="completion-wedge completion-wedge-three"></span>
+      </span>
     </div>
     <h1 class="page-title"><%= t("take.done_heading") %></h1>
     <p class="text-sm text-ink-muted"><%= t("take.done_body", name: @student.name, title: @exam.title) %></p>
