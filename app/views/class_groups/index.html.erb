@@ -1,9 +1,6 @@
 <% content_for :title, t("classes.index.title") %>
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-  <div class="flex items-center gap-3">
-    <span class="page-icon" aria-hidden="true"><%= ui_icon("classes") %></span>
-    <h1 class="page-title"><%= t("classes.index.title") %></h1>
-  </div>
+  <h1 class="page-title"><%= t("classes.index.title") %></h1>
   <%= link_to new_class_group_path, class: btn_primary do %>
     <%= ui_icon("plus", class_name: "size-4") %>
     <%= t("classes.index.new") %>

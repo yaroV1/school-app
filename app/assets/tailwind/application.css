@@ -113,9 +113,9 @@
   --color-info-line: oklch(0.875 0.01 74);
   --color-info-soft: oklch(0.978 0.006 78);
 
-  /* The six question-type stripes on the student runner. With one hue left they
+  /* The six question-type wedges on the student runner. With one hue left they
      become a lightness ramp, which orders them but no longer names them — so the
-     chip beside the stripe in `take/runs/show.html.erb` is now the whole signal,
+     chip beside the wedge in `take/runs/show.html.erb` is now the whole signal,
      not the backup. Keep it. */
   --color-qtype-mcq: oklch(0.42 0.011 64);
   --color-qtype-short-text: oklch(0.51 0.01 66);
@@ -136,8 +136,9 @@
 
 @layer base {
   :root {
-    /* The wedge belongs to the shared empty and completion illustrations. A
-       clip-path keeps it decorative and independent of font support. */
+    /* The cuneiform wedge — current tab, question-type legend, empty tablet and
+       completion marks. A clip-path rather than a glyph, so it inherits size
+       and colour from whatever it marks. */
     --wedge: polygon(0 0, 100% 50%, 0 100%);
   }
 
@@ -180,7 +181,7 @@
   }
 
   .btn-secondary {
-    @apply border-line bg-surface-raised text-ink hover:border-line-strong hover:bg-surface-sunken;
+    @apply text-ink-muted hover:bg-surface-sunken hover:text-ink;
   }
 
   .btn-ghost {
@@ -227,12 +228,15 @@
   }
 
   /* --------------------------- surfaces & lists ------------------------- */
+  /* A grouping hook, not a tile. Spacing comes from `.card-pad` or the
+     template; a raised fill here is how the page turns back into a stack of
+     boxes. */
   .card {
-    @apply rounded-card bg-surface-raised;
+    @apply bg-transparent;
   }
 
   .card-pad {
-    @apply p-5 sm:p-6;
+    @apply py-5 sm:py-6;
   }
 
   .card-title {
@@ -240,11 +244,11 @@
   }
 
   .list {
-    @apply divide-y divide-line overflow-hidden rounded-card bg-surface-raised;
+    /* Intentionally unboxed: rows sit on the page paper. */
   }
 
   .list-row {
-    @apply relative flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-surface;
+    @apply relative flex flex-wrap items-center justify-between gap-3 py-5 transition-colors hover:bg-surface-sunken;
   }
 
   .list-row-title {
@@ -335,13 +339,13 @@
   }
 
   .chip {
-    @apply inline-flex items-center gap-1 rounded-chip border border-line
+    @apply inline-flex items-center gap-1 rounded-chip
       bg-surface-sunken px-2 py-0.5 text-xs font-medium text-ink-muted;
   }
 
   /* -------------------------- navigation & tabs ------------------------- */
   .app-header {
-    @apply sticky top-0 z-30 border-b border-line bg-surface-raised/85 backdrop-blur;
+    @apply sticky top-0 z-30 bg-surface/85 backdrop-blur;
   }
 
   .brand {
@@ -382,17 +386,23 @@
   }
 
   .tab-bar {
-    @apply mb-6 flex flex-wrap gap-5 border-b border-line;
+    @apply mb-6 flex flex-wrap gap-5;
   }
 
   .tab {
-    @apply -mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-0.5
+    @apply inline-flex items-center gap-1.5 px-0.5
       pt-1 pb-3 text-base font-medium text-ink-muted transition-colors
-      hover:border-line-strong hover:text-ink;
+      hover:text-ink;
   }
 
   .tab[aria-current="page"] {
-    @apply border-accent text-ink;
+    @apply text-ink;
+  }
+
+  .tab[aria-current="page"]::before {
+    content: "";
+    @apply size-2 shrink-0 bg-accent;
+    clip-path: var(--wedge);
   }
 
   /* A real count, so it reads at AA rather than as decoration. */
@@ -416,11 +426,6 @@
   /* -------------------------------- text -------------------------------- */
   .page-title {
     @apply font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl;
-  }
-
-  .page-icon {
-    @apply inline-flex size-10 shrink-0 items-center justify-center rounded-card
-      border border-accent-line bg-accent-soft text-accent;
   }
 
   .page-subtitle {
@@ -454,8 +459,7 @@
   }
 
   .empty-state {
-    @apply overflow-hidden rounded-card bg-surface-raised
-      px-4 py-10 text-center text-base text-ink-muted;
+    @apply px-4 py-10 text-center text-base text-ink-muted;
   }
 
   .empty-state-illustration {
@@ -488,36 +492,35 @@
 
   /* ------------------------------- flashes ------------------------------ */
   .flash {
-    @apply mb-5 flex items-start gap-2.5 rounded-card border px-3.5 py-3 text-sm;
+    @apply mb-5 flex items-start gap-2.5 rounded-card px-3.5 py-3 text-sm;
   }
 
   .flash-notice {
-    @apply border-success-line bg-success-soft text-success-strong;
+    @apply bg-success-soft text-success-strong;
   }
 
   .flash-alert {
-    @apply border-danger-line bg-danger-soft text-danger;
+    @apply bg-danger-soft text-danger;
   }
 
   .flash-info {
-    @apply border-accent-line bg-accent-soft text-accent-strong;
+    @apply bg-accent-soft text-accent-strong;
   }
 
   .flash-warning {
-    @apply border-warning-line bg-warning-soft text-warning;
+    @apply bg-warning-soft text-warning;
   }
 
   .flash-muted {
-    @apply border-line bg-surface-sunken text-ink-muted;
+    @apply bg-surface-sunken text-ink-muted;
   }
 
   /* ------------------------- taking a test (Take::) --------------------- */
-  /* The type name in the legend carries meaning; this quiet edge only helps a
-     long run page scan as a sequence. */
+  /* The chip names the type. The legend wedge repeats `--qtype` so a long run
+     still scans as a sequence without a box or a stripe. */
   .qcard {
     --qtype: var(--color-line-strong);
-    @apply rounded-card border-l-[3px] bg-surface-raised p-5 sm:p-6;
-    border-left-color: var(--qtype);
+    @apply py-2;
   }
 
   .qcard[data-qtype="mcq"] {
@@ -546,6 +549,13 @@
 
   .qcard-legend {
     @apply flex flex-wrap items-center gap-2 text-xs font-medium text-ink-muted;
+  }
+
+  .qcard-legend::before {
+    content: "";
+    @apply h-2 w-3.5 shrink-0;
+    background: var(--qtype);
+    clip-path: var(--wedge);
   }
 
   .completion-card {
@@ -598,13 +608,13 @@
 
   /* Full-width tappable rows, so a phone user is not aiming at a radio dot. */
   .option {
-    @apply flex cursor-pointer items-start gap-3 rounded-control border border-line
-      bg-surface-raised px-4 py-3.5 text-base text-ink transition-colors
-      hover:border-accent-line hover:bg-accent-soft;
+    @apply flex cursor-pointer items-start gap-3 rounded-control
+      px-4 py-3.5 text-base text-ink transition-colors
+      hover:bg-accent-soft;
   }
 
   .option:has(input:checked) {
-    @apply border-accent bg-accent-soft font-medium;
+    @apply bg-accent-soft font-medium;
   }
 
   .source-text {
@@ -613,8 +623,7 @@
   }
 
   .run-bar {
-    @apply sticky top-0 z-20 -mx-4 border-b border-line bg-surface-raised/95 px-4 py-3
-      shadow-card backdrop-blur;
+    @apply sticky top-0 z-20 -mx-4 bg-surface/95 px-4 py-3 backdrop-blur;
   }
 
   .countdown {
@@ -651,9 +660,9 @@
 
   /* ----------------------------- ordering ------------------------------- */
   .order-item {
-    @apply flex items-center gap-3 rounded-control border border-line bg-surface-raised
-      px-2.5 py-2 transition-colors hover:border-accent-line
-      aria-selected:border-accent aria-selected:bg-accent-soft
+    @apply flex items-center gap-3 rounded-control
+      px-2.5 py-2 transition-colors hover:bg-accent-soft
+      aria-selected:bg-accent-soft
       data-[dragging]:shadow-raised data-[dragging]:opacity-60;
   }
 
@@ -792,6 +801,13 @@
   .print-sheet,
   .print-sheet .page-title {
     font-family: var(--font-sans);
+  }
+
+  /* Screen titles grew to 3xl/4xl; the signed-off sheet keeps the size it had
+     when it was still `text-2xl`. */
+  .print-sheet .page-title {
+    font-size: 1.5rem;
+    line-height: 2rem;
   }
 
   .answer-line,

@@ -19,7 +19,7 @@
         autosave_failed_value: t("take.save_failed"),
         action: "countdown:ended@window->autosave#save ordering:changed->autosave#save"
       },
-      class: "space-y-4" do %>
+      class: "space-y-8" do %>
   <%= hidden_field_tag :attempt_id, @attempt.id %>
 
   <%# Status enters the flow before the questions, then stays at the top while the

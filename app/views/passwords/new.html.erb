@@ -2,7 +2,7 @@
 <div class="mx-auto w-full max-w-sm">
   <h1 class="page-title mb-6 text-center"><%= t("auth.passwords.forgot_title") %></h1>
 
-  <%= form_with url: passwords_path, class: "card card-pad space-y-4" do |form| %>
+  <%= form_with url: passwords_path, class: "space-y-4" do |form| %>
     <div class="fieldset">
       <%= form.label :email_address, t("auth.email"), class: "field-label" %>
       <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: t("auth.passwords.email_placeholder"), value: params[:email_address], class: field_class %>

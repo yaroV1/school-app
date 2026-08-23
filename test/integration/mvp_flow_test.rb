@@ -91,6 +91,9 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_select ".student-brand", text: /#{I18n.t('app_name')}/
     assert_font_self_hosted
     assert_select "body.student-shell", 1, "the start screen is where the decoration belongs"
+    assert_select "h1.page-title", text: "Unit 1"
+    assert_select ".card", false
+    assert_select "ul svg", false
 
     post student_start_url(token: token)
     follow_redirect!
@@ -143,6 +146,7 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     get student_done_url(token: token)
     assert_response :success
     assert_select ".completion-card .completion-check svg[aria-hidden=true]"
+    assert_select ".completion-wedge", 3
     assert_select "#student_result"
     assert_match I18n.t("attempts.report.earned", score: "11", max: "11"), response.body
     assert_select "#correct_answer_question_#{mcq.id}", text: /4/

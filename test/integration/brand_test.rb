@@ -16,6 +16,7 @@ class BrandTest < ActionDispatch::IntegrationTest
     assert_select ".app-header .brand .brand-mark svg path", minimum: 3,
                   message: "the tablet, its wedges and its rule are three separate paths"
     assert_select ".app-header .brand", text: /#{I18n.t('app_name')}/
+    assert_select ".page-icon", false
   end
 
   # The student layout gets the same assertion where its setup already exists, in
@@ -51,5 +52,6 @@ class BrandTest < ActionDispatch::IntegrationTest
     assert_select "svg circle", minimum: 1, message: "the scribe's head"
     assert_select "svg path", minimum: 6, message: "the scribe, his tablet and his reed"
     assert_select "p", text: I18n.t("app_name")
+    assert_select "form.card", false
   end
 end

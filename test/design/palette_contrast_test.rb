@@ -40,7 +40,7 @@ class PaletteContrastTest < ActiveSupport::TestCase
     # Accent: links, focus, the current state.
     [ "accent", "surface", AA_TEXT, ".link on the page background" ],
     [ "accent", "surface-raised", AA_TEXT, ".link in a card, .list-row-title:hover" ],
-    [ "accent", "accent-soft", AA_TEXT, ".page-icon, .option:has(input:checked)" ],
+    [ "accent", "accent-soft", AA_TEXT, ".option:has(input:checked)" ],
     [ "accent-strong", "accent-soft", AA_TEXT, ".flash-info" ],
     [ "ink", "accent-soft", AA_TEXT, ".option text on the checked row" ],
 
@@ -59,9 +59,9 @@ class PaletteContrastTest < ActiveSupport::TestCase
     [ "surface-raised", "success", AA_TEXT, ".badge-success, the live state" ]
   ].freeze
 
-  # The six type stripes are 3px of border on the student runner, and in a one-hue palette
-  # they are a lightness ramp. The chip beside them names the type, so the bar for the
-  # stripes is that they stay visible and stay apart — not that they stay readable.
+  # The six type tokens colour the legend wedge on the student runner. They are a
+  # lightness ramp, so the chip names the type; the bar for the wedges is that they
+  # stay visible and stay apart — not that they stay readable.
   QTYPE_TOKENS = %w[
     qtype-mcq qtype-short-text qtype-open qtype-ordering qtype-matching qtype-source
   ].freeze
@@ -116,23 +116,23 @@ class PaletteContrastTest < ActiveSupport::TestCase
     assert_empty failures, failures.join("\n")
   end
 
-  test "question-type stripes stay visible against the card they sit on" do
+  test "question-type wedges stay visible against the card they sit on" do
     failures = QTYPE_TOKENS.filter_map do |token|
       ratio = contrast(token, "surface-raised")
       next if ratio >= 1.4
 
-      format("%s is %.2f:1 against the card, too faint to read as a stripe", token, ratio)
+      format("%s is %.2f:1 against the card, too faint to read as a wedge", token, ratio)
     end
 
     assert_empty failures, failures.join("\n")
   end
 
-  test "question-type stripes are distinguishable from one another" do
+  test "question-type wedges are distinguishable from one another" do
     collisions = QTYPE_TOKENS.combination(2).filter_map do |left, right|
       distance = (lightness(left) - lightness(right)).abs
       next if distance >= DISTINCT_STRIPE
 
-      format("%s and %s are %.3f apart in lightness, too close to tell apart at 3px", left, right, distance)
+      format("%s and %s are %.3f apart in lightness, too close to tell apart as wedges", left, right, distance)
     end
 
     assert_empty collisions, collisions.join("\n")

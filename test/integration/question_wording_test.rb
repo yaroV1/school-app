@@ -279,6 +279,7 @@ class QuestionWordingTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?] textarea[name=?]", test_question_path(draft, question), "question[prompt]"
     assert_select "form[action=?] input[name=_method][value=delete]", test_question_path(draft, question)
     assert_select "form[action=?]", test_questions_path(draft)
+    assert_select ".card form[action=?]", test_questions_path(draft), false
   end
   test "a wording form does not steal the add-question form's field ids" do
     draft = create_exam!(@teacher, title: "Чернетка")

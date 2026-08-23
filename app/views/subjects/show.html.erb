@@ -9,7 +9,7 @@
 
   <%= form_with url: subject_path(@subject), method: :get,
         data: { controller: "autosubmit", turbo_action: "replace" },
-        class: "card card-pad mb-4 flex flex-wrap items-end gap-3" do %>
+        class: "mb-4 flex flex-wrap items-end gap-3" do %>
     <div class="min-w-56 flex-1">
       <%= label_tag :q, t("subjects.show.search"), class: "field-label" %>
       <%= search_field_tag :q, @query, placeholder: t("subjects.show.search_placeholder"), class: field_class %>

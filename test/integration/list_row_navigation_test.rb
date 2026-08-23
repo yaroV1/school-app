@@ -25,6 +25,7 @@ class ListRowNavigationTest < ActionDispatch::IntegrationTest
     get class_group_path(@group)
 
     assert_row_opens_once subject_path(@subject)
+    assert_select ".card", false
   end
 
   test "a test row opens the test and offers no second way in" do
@@ -42,6 +43,7 @@ class ListRowNavigationTest < ActionDispatch::IntegrationTest
     assert_select ".list-row .list-row-actions a[href=?]", edit_student_path(@student)
     assert_select ".list-row .list-row-actions form[action=?]",
                   remove_member_class_group_path(@group, student_id: @student.id)
+    assert_select ".card", false
   end
 
   private

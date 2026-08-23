@@ -19,7 +19,7 @@
     <%= render "shared/empty_state", icon: "subjects", message: t("classes.show.empty_subjects") %>
   <% end %>
 
-  <div class="card card-pad">
+  <div class="pt-2">
     <h2 class="card-title mb-3"><%= t("classes.show.add_subject") %></h2>
     <%= form_with model: @subject, url: class_group_subjects_path(@class_group), class: "flex flex-wrap items-end gap-3" do |f| %>
       <%= render "shared/form_errors", record: @subject, span: "w-full" %>
