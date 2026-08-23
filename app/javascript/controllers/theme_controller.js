@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static values = {
     lightColor: { type: String, default: "#f3eee4" },
-    darkColor: { type: String, default: "#2a2620" }
+    darkColor: { type: String, default: "#3f372c" }
   }
 
   toggle() {
