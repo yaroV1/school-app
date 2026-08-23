@@ -9,14 +9,16 @@
     <p class="text-sm text-ink-muted"><%= t("attempts.grade.live_hint") %></p>
   <% end %>
   <% if grade %>
-    <p class="text-sm text-ink-muted">
-      <%= t("attempts.grade.current") %>:
-      <span class="num font-medium text-ink"><%= grade.total_score || t("common.dash") %>/<%= grade.max_score %></span>
-      <% if grade.finalized_by_teacher? %>
-        <span class="badge badge-success"><%= t("attempts.grade.finalized") %></span>
-      <% else %>
-        <span class="badge badge-neutral"><%= t("attempts.grade.not_finalized") %></span>
-      <% end %>
-    </p>
+    <div class="flex flex-wrap items-center gap-3">
+      <%= score_seal(grade) %>
+      <p class="text-sm text-ink-muted">
+        <%= t("attempts.grade.current") %>
+        <% if grade.finalized_by_teacher? %>
+          <span class="badge badge-success"><%= t("attempts.grade.finalized") %></span>
+        <% else %>
+          <span class="badge badge-neutral"><%= t("attempts.grade.not_finalized") %></span>
+        <% end %>
+      </p>
+    </div>
   <% end %>
 </div>

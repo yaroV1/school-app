@@ -28,13 +28,13 @@
 
   <% if @results_visible %>
     <article id="student_result" class="mx-auto max-w-3xl space-y-5">
-      <header>
-        <p class="text-sm text-ink-muted"><%= t("take.results.heading") %></p>
-        <h2 class="page-title mt-1"><%= @exam.title %></h2>
-        <p class="mt-3 text-base font-semibold text-ink">
-          <%= t("take.results.total") %>:
-          <span class="num"><%= t("attempts.report.earned", score: score_text(@grade.total_score), max: score_text(@grade.max_score)) %></span>
-        </p>
+      <header class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="text-sm text-ink-muted"><%= t("take.results.heading") %></p>
+          <h2 class="page-title mt-1"><%= @exam.title %></h2>
+          <p class="mt-2 text-sm text-ink-muted"><%= t("take.results.total") %></p>
+        </div>
+        <%= score_seal(@grade, size: :lg) %>
       </header>
 
       <ol class="space-y-4">

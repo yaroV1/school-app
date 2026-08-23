@@ -394,6 +394,121 @@
     @apply font-mono tabular-nums;
   }
 
+  /* A clay score seal. Wet clay is still an impression — an outline disc.
+     Fired clay is the stamp after the kiln: a solid fill. Hue cannot carry
+     that difference (the same clay either way); the fill vs the ring does.
+     The tilt is the hand that pressed it. A column of identical angles would
+     read as a UI kit, so table rows shift `--seal-tilt`. */
+  .seal {
+    --seal-tilt: -7deg;
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 48% 52% 50% 50%;
+    font-family: var(--font-serif);
+    line-height: 1;
+    vertical-align: middle;
+    transform: rotate(var(--seal-tilt));
+  }
+
+  .seal-face {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+  }
+
+  .seal-score {
+    font-size: 1.05rem;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .seal-rule {
+    display: block;
+    width: 0.95rem;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.4;
+  }
+
+  .seal-max {
+    font-size: 0.62rem;
+    font-weight: 500;
+    opacity: 0.82;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Maker's mark on the clay, not in the number stack — the wedge the rest
+     of the app already uses, sat at seven o'clock like a stylus nick. */
+  .seal-wedge {
+    position: absolute;
+    left: 0.28rem;
+    bottom: 0.4rem;
+    width: 0.38rem;
+    height: 0.26rem;
+    background: currentColor;
+    opacity: 0.45;
+    clip-path: var(--wedge);
+    transform: rotate(-18deg);
+  }
+
+  .seal-wet {
+    @apply bg-accent-soft text-accent-ink;
+    box-shadow:
+      inset 0 0 0 2px var(--color-accent),
+      inset 0 0 0 3.5px color-mix(in oklch, var(--color-accent) 18%, transparent);
+  }
+
+  .seal-fired {
+    @apply bg-solid text-on-fill;
+    box-shadow:
+      inset 0 0 0 2px color-mix(in oklch, var(--color-on-fill) 22%, transparent),
+      0 1px 2px oklch(0.215 0.042 55 / 0.12);
+  }
+
+  .seal-lg {
+    width: 5.75rem;
+    height: 5.75rem;
+    --seal-tilt: -5deg;
+    animation: seal-press 480ms cubic-bezier(.2, .8, .2, 1.1) both;
+  }
+
+  .seal-lg .seal-score {
+    font-size: 2rem;
+  }
+
+  .seal-lg .seal-rule {
+    width: 1.65rem;
+  }
+
+  .seal-lg .seal-max {
+    font-size: 0.85rem;
+  }
+
+  .seal-lg .seal-wedge {
+    left: 0.7rem;
+    bottom: 0.95rem;
+    width: 0.7rem;
+    height: 0.46rem;
+  }
+
+  tbody tr:nth-child(3n) .seal {
+    --seal-tilt: -4deg;
+  }
+
+  tbody tr:nth-child(3n + 1) .seal {
+    --seal-tilt: -8deg;
+  }
+
+  tbody tr:nth-child(3n + 2) .seal {
+    --seal-tilt: 5deg;
+  }
+
   /* ------------------------------- badges ------------------------------- */
   .badge {
     @apply inline-flex items-center gap-1 rounded-chip border px-2 py-0.5 text-xs font-medium;
@@ -825,6 +940,11 @@
   50% { transform: scale(1.04); }
 }
 
+@keyframes seal-press {
+  from { transform: scale(1.12) rotate(-14deg); opacity: 0.4; }
+  to { transform: scale(1) rotate(var(--seal-tilt)); opacity: 1; }
+}
+
 .autosave-check-pop {
   animation: autosave-check-pop 300ms ease-out;
 }
@@ -907,5 +1027,17 @@
   .answer-box,
   .fill-line {
     border-color: #000;
+  }
+
+  /* Screen seals tilt and fill; paper is a photocopy, so flatten them to a
+     black hairline disc. The report sheet never renders a seal. */
+  .seal {
+    transform: none !important;
+    animation: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    outline: 1.5px solid #000;
+    border-radius: 50%;
   }
 }

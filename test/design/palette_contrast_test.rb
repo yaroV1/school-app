@@ -32,7 +32,7 @@ class PaletteContrastTest < ActiveSupport::TestCase
     # Solid fills: the label is `--color-on-fill`, the chip is `--color-solid`
     # or clay. Those names exist so dark mode can invert running text without
     # turning the countdown into a cream-on-cream slab.
-    [ "on-fill", "solid", AA_TEXT, ".countdown" ],
+    [ "on-fill", "solid", AA_TEXT, ".countdown, .seal-fired" ],
     [ "on-fill", "accent", AA_TEXT, ".btn-primary, .order-item[aria-selected] .order-position" ],
     [ "on-fill", "accent-strong", AA_TEXT, ".btn-primary:hover" ],
     [ "on-fill", "success-strong", AA_TEXT, ".badge-success, .completion-check" ],
@@ -40,7 +40,7 @@ class PaletteContrastTest < ActiveSupport::TestCase
     # Accent: links, focus, the current state.
     [ "accent-ink", "surface", AA_TEXT, ".link on the page background" ],
     [ "accent-ink", "surface-raised", AA_TEXT, ".link in a card, .list-row-title:hover" ],
-    [ "accent-ink", "accent-soft", AA_TEXT, ".flash-info, .link-quiet:hover" ],
+    [ "accent-ink", "accent-soft", AA_TEXT, ".flash-info, .link-quiet:hover, .seal-wet" ],
     [ "ink", "accent-soft", AA_TEXT, ".option text on the checked row" ],
 
     # Status colours, each on its own -soft and on a raised surface.
