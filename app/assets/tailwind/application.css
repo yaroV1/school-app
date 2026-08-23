@@ -144,18 +144,20 @@
   --shadow-bar: 0 -1px 3px 0 oklch(0.215 0.042 55 /0.05);
 }
 
-/* Dark remap of the same token names. Surfaces and running text invert;
-   clay fills and `--color-solid` stay dark so a primary button and the
-   countdown keep cream labels. Status-as-text lightens; *-soft darkens. */
+/* Dark remap of the same token names. The page is near-black — a little
+   warmth so it stays clay-night rather than a cold OLED slab. Running text
+   stays cream; clay fills and `--color-solid` stay dark so a primary button
+   and the countdown keep cream labels. Status-as-text lightens; *-soft sits
+   just off the page, not as a mid-grey panel. */
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --color-surface: oklch(0.28 0.028 70);
-  --color-surface-raised: oklch(0.36 0.03 70);
-  --color-surface-sunken: oklch(0.24 0.024 70);
+  --color-surface: oklch(0.12 0.008 70);
+  --color-surface-raised: oklch(0.19 0.01 70);
+  --color-surface-sunken: oklch(0.08 0.006 70);
 
-  --color-line: oklch(0.48 0.03 70);
-  --color-line-strong: oklch(0.58 0.032 70);
+  --color-line: oklch(0.32 0.016 70);
+  --color-line-strong: oklch(0.42 0.018 70);
 
   --color-ink: oklch(0.94 0.018 84);
   --color-ink-light: oklch(0.86 0.018 80);
@@ -165,25 +167,25 @@
   --color-accent: oklch(0.48 0.12 42);
   --color-accent-strong: oklch(0.4 0.11 40);
   --color-accent-line: oklch(0.55 0.07 48);
-  --color-accent-soft: oklch(0.33 0.035 50);
+  --color-accent-soft: oklch(0.22 0.04 50);
   --color-accent-ink: oklch(0.78 0.1 48);
 
   --color-danger: oklch(0.82 0.018 60);
-  --color-danger-line: oklch(0.45 0.016 64);
-  --color-danger-soft: oklch(0.3 0.016 60);
+  --color-danger-line: oklch(0.4 0.014 64);
+  --color-danger-soft: oklch(0.18 0.012 60);
 
   --color-success: oklch(0.8 0.016 66);
   --color-success-strong: oklch(0.32 0.012 62);
-  --color-success-line: oklch(0.48 0.014 70);
-  --color-success-soft: oklch(0.31 0.014 66);
+  --color-success-line: oklch(0.42 0.014 70);
+  --color-success-soft: oklch(0.18 0.012 66);
 
   --color-warning: oklch(0.82 0.016 68);
-  --color-warning-line: oklch(0.5 0.014 72);
-  --color-warning-soft: oklch(0.32 0.014 70);
+  --color-warning-line: oklch(0.44 0.014 72);
+  --color-warning-soft: oklch(0.18 0.012 70);
 
   --color-info: oklch(0.8 0.014 70);
-  --color-info-line: oklch(0.52 0.012 74);
-  --color-info-soft: oklch(0.33 0.012 72);
+  --color-info-line: oklch(0.44 0.012 74);
+  --color-info-soft: oklch(0.18 0.01 72);
 
   --color-qtype-mcq: oklch(0.82 0.02 64);
   --color-qtype-short-text: oklch(0.74 0.018 66);
