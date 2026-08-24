@@ -11,25 +11,9 @@
       <%= status_badge(exam.status) %>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-      <details class="menu">
-        <summary class="<%= btn_secondary %>"><%= safe_join([ ui_icon("copy"), t("exams.show.duplicate") ]) %></summary>
-        <div class="menu-panel">
-          <p class="menu-heading"><%= t("exams.show.duplicate_target") %></p>
-          <%= form_with url: duplicate_test_path(exam) do %>
-            <% subject_targets_by_class.each do |group, subjects| %>
-              <p class="menu-heading"><%= group.name %></p>
-              <% subjects.each do |subject| %>
-                <%= button_tag name: "subject_id", value: subject.id, class: "menu-item" do %>
-                  <%= subject.name %>
-                  <% if subject == exam.subject %>
-                    <span class="text-ink-subtle">· <%= t("exams.show.duplicate_current") %></span>
-                  <% end %>
-                <% end %>
-              <% end %>
-            <% end %>
-          <% end %>
-        </div>
-      </details>
+      <%= link_to duplicate_test_path(exam), class: btn_secondary do %>
+        <%= safe_join([ ui_icon("copy"), t("exams.show.duplicate") ]) %>
+      <% end %>
       <% if exam.draft? %>
         <%= button_to safe_join([ ui_icon("banner"), t("exams.show.publish") ]), publish_test_path(exam), form: { data: { turbo_confirm: t("exams.show.publish_confirm") } }, class: btn_primary %>
       <% elsif exam.published? %>
