@@ -1,0 +1,44 @@
+<% content_for :title, t("exams.duplicate.title", title: @exam.title) %>
+
+<%# A task screen rather than a section of the test, so it carries breadcrumbs instead of
+    "exams/header": that header's tab bar has no entry for this page, and one of its
+    actions is the button that leads here. On a phone the choices start above the fold. %>
+<div class="mb-5">
+  <%= render "shared/breadcrumbs", crumbs: [
+        [ t("classes.index.title"), class_groups_path ],
+        [ @exam.class_group.name, class_group_path(@exam.class_group) ],
+        [ @exam.subject.name, subject_path(@exam.subject) ],
+        [ @exam.title, test_path(@exam) ],
+        [ t("exams.show.duplicate"), nil ]
+      ] %>
+  <h1 class="page-title mt-3"><%= t("exams.duplicate.heading") %></h1>
+  <p class="mt-1 text-sm text-ink-muted"><%= t("exams.duplicate.hint") %></p>
+</div>
+
+<%= form_with url: duplicate_test_path(@exam), class: "space-y-4" do %>
+  <% subject_targets_by_class.each do |group, subjects| %>
+    <div>
+      <p class="field-label mb-1"><%= group.name %></p>
+      <ul class="space-y-1 rounded-control border border-line p-2">
+        <% subjects.each do |subject| %>
+          <li>
+            <label class="flex cursor-pointer items-center gap-2.5 rounded px-1.5 py-2 text-sm transition-colors hover:bg-surface-sunken">
+              <%= check_box_tag "subject_ids[]", subject.id, subject == @exam.subject, id: nil, class: "size-4 shrink-0 accent-accent" %>
+              <%= subject.name %>
+              <% if subject == @exam.subject %>
+                <span class="text-ink-subtle">· <%= t("exams.duplicate.current") %></span>
+              <% end %>
+            </label>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# Sticky rather than trailing: a teacher with many classes must be able to confirm
+      without scrolling the whole list to its end on a phone. %>
+  <div class="sticky bottom-0 flex flex-wrap items-center justify-end gap-2 border-t border-line bg-surface py-3">
+    <%= link_to t("exams.duplicate.cancel"), test_path(@exam), class: btn_secondary %>
+    <%= button_tag safe_join([ ui_icon("copy"), t("exams.duplicate.submit") ]), class: btn_primary %>
+  </div>
+<% end %>

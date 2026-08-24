@@ -1,6 +1,7 @@
 class ExamsController < ApplicationController
   before_action :set_subject, only: %i[new create]
-  before_action :set_exam, only: %i[show edit update destroy publish close duplicate results live print print_key]
+  before_action :set_exam,
+    only: %i[show edit update destroy publish close duplicate create_duplicate results live print print_key]
 
   def show
     @questions = @exam.questions.with_attached_photo
@@ -57,8 +58,11 @@ class ExamsController < ApplicationController
   end
 
   def duplicate
+  end
+
+  def create_duplicate
     targets = duplicate_targets
-    return redirect_to test_path(@exam), alert: t("exams.flash.duplicate_no_target") if targets.empty?
+    return redirect_to duplicate_test_path(@exam), alert: t("exams.flash.duplicate_no_target") if targets.empty?
 
     copies = @exam.duplicate_into!(targets)
     if copies.one?
@@ -106,7 +110,7 @@ class ExamsController < ApplicationController
   # Same rule as the move in #update: each copy's teacher is derived from its incoming
   # subject, so every target resolves through the owner scope, never a permitted param.
   # The whole selection resolves before the first copy exists, so one foreign id answers
-  # 404 with nothing created. The modal posts a checkbox array; a param of any other
+  # 404 with nothing created. The picker posts a checkbox array; a param of any other
   # shape is not a selection this form could have made.
   def duplicate_targets
     ids = params[:subject_ids]

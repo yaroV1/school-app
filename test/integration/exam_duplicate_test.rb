@@ -14,7 +14,7 @@ class ExamDuplicateTest < ActionDispatch::IntegrationTest
 
       get test_path(@exam)
       assert_response :success
-      assert_select "form[action=?]", duplicate_test_path(@exam), 1,
+      assert_select "a[href=?]", duplicate_test_path(@exam), 1,
                     "a #{status} test must offer duplication"
     end
   end
@@ -35,23 +35,26 @@ class ExamDuplicateTest < ActionDispatch::IntegrationTest
     assert_empty copy.assignments
   end
 
-  test "the duplicate modal checkboxes the teacher's subjects by class, with the current one marked" do
+  test "the duplicate page checkboxes the teacher's subjects by class, with the current one marked" do
     target = @teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
 
-    get test_path(@exam)
-    assert_select "button[data-action=?]", "modal#open", text: /#{I18n.t("exams.show.duplicate")}/
-    assert_select "dialog.modal[data-modal-target=dialog]" do
-      assert_select ".modal-group", text: "8-Б"
-      assert_select "form[action=?]", duplicate_test_path(@exam) do
-        assert_select "input[type=checkbox][name=?][value=?]", "subject_ids[]", target.id.to_s
-        assert_select "input[type=checkbox][name=?][value=?][checked]",
-          "subject_ids[]", @exam.subject_id.to_s, true,
-          "the test's own subject starts selected, so duplicating in place stays one tap"
-        assert_select "label[for=?]", "duplicate_subject_#{@exam.subject_id}",
-          text: /#{I18n.t("exams.show.duplicate_current")}/
-      end
+    get duplicate_test_path(@exam)
+    assert_response :success
+    assert_select "form[action=?]", duplicate_test_path(@exam) do
+      assert_select "p", text: "8-Б"
+      assert_select "input[type=checkbox][name=?][value=?]", "subject_ids[]", target.id.to_s
+      assert_select "input[type=checkbox][name=?][value=?][checked]",
+        "subject_ids[]", @exam.subject_id.to_s, true,
+        "the test's own subject starts selected, so duplicating in place stays one tap"
+      assert_select "label", text: /#{I18n.t("exams.duplicate.current")}/
+      assert_select "a[href=?]", test_path(@exam), text: I18n.t("exams.duplicate.cancel")
     end
-    assert_select "details.menu", false, "the dropdown panel that fell off the phone viewport is gone"
+    assert_select "dialog", false, "the picker is a page, not a dialog no old phone can open"
+  end
+
+  test "a foreign test has no duplicate page" do
+    get duplicate_test_path(create_exam!(users(:two)))
+    assert_response :not_found
   end
 
   test "the copy lands in the chosen subject" do
@@ -92,11 +95,11 @@ class ExamDuplicateTest < ActionDispatch::IntegrationTest
     assert_redirected_to test_path(Exam.order(:id).last)
   end
 
-  test "an empty selection creates nothing and says so" do
+  test "an empty selection creates nothing and comes back to the picker" do
     assert_no_difference "Exam.count" do
       post duplicate_test_path(@exam), params: { subject_ids: [ "" ] }
     end
-    assert_redirected_to test_path(@exam)
+    assert_redirected_to duplicate_test_path(@exam)
     assert_equal I18n.t("exams.flash.duplicate_no_target"), flash[:alert]
   end
 
@@ -124,10 +127,10 @@ class ExamDuplicateTest < ActionDispatch::IntegrationTest
 
     assert_no_difference "Exam.count" do
       post duplicate_test_path(@exam), params: { subject_ids: other.id.to_s }
-      assert_redirected_to test_path(@exam)
+      assert_redirected_to duplicate_test_path(@exam)
 
       post duplicate_test_path(@exam), params: { subject_ids: [ { id: other.id } ] }
-      assert_redirected_to test_path(@exam)
+      assert_redirected_to duplicate_test_path(@exam)
     end
     assert_equal I18n.t("exams.flash.duplicate_no_target"), flash[:alert]
   end
