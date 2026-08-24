@@ -231,10 +231,14 @@
 --------------------------------------------------------------------------- */
 @layer components {
   /* ------------------------------- buttons ------------------------------- */
+  /* Pills, in the Basecamp/Hey manner: an action reads as a button from across
+     the room, so the shape carries the affordance and colour stays with the
+     palette. The pill radius is what separates a control you press from the
+     rectangular fields you write into. */
   .btn {
     @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-1.5
-      rounded-control border border-transparent px-4 py-2.5 text-base font-medium
-      whitespace-nowrap transition-colors;
+      rounded-chip border border-transparent px-5 py-2.5 text-base font-semibold
+      whitespace-nowrap transition;
   }
 
   .btn:active:not(:disabled) {
@@ -246,11 +250,13 @@
   }
 
   .btn-primary {
-    @apply bg-accent text-on-fill hover:bg-accent-strong;
+    @apply bg-accent text-on-fill shadow-card hover:bg-accent-strong hover:shadow-raised;
   }
 
+  /* The quiet action keeps a drawn border: on a page with no boxed chrome the
+     outline is what says "press me" without spending a fill on it. */
   .btn-secondary {
-    @apply text-ink-muted hover:bg-surface-sunken hover:text-ink;
+    @apply border-line-strong bg-surface-raised text-ink hover:bg-surface-sunken;
   }
 
   .btn-ghost {
@@ -266,11 +272,11 @@
   }
 
   .btn-sm {
-    @apply min-h-9 gap-1 px-3 py-1.5 text-sm;
+    @apply min-h-9 gap-1 px-3.5 py-1.5 text-sm;
   }
 
   .btn-lg {
-    @apply min-h-12 px-5 text-base;
+    @apply min-h-13 px-6 text-lg;
   }
 
   /* ------------------------------- forms -------------------------------- */
@@ -278,10 +284,13 @@
     @apply block text-sm font-semibold text-ink;
   }
 
+  /* Fields stay rectangular so the pill buttons beside them read as the thing
+     to press; the border is full-strength because a field you have to hunt for
+     is the opposite of the Basecamp form. */
   .field {
-    @apply mt-1.5 block w-full rounded-control border border-line bg-surface-raised
+    @apply mt-1.5 block w-full rounded-control border border-line-strong bg-surface-raised
       px-3.5 py-2.5 text-base text-ink transition-colors
-      placeholder:text-ink-muted hover:border-line-strong focus:border-accent;
+      placeholder:text-ink-muted hover:border-ink-subtle focus:border-accent;
   }
 
   .field-hint {
@@ -320,8 +329,10 @@
     @apply relative flex flex-wrap items-center justify-between gap-3 py-5 transition-colors hover:bg-surface-sunken;
   }
 
+  /* Hey-weight rows: the title is the row, so it carries real weight and the
+     meta stays a quiet line under it. */
   .list-row-title {
-    @apply text-base font-medium text-ink hover:text-accent-ink;
+    @apply text-lg font-semibold text-ink hover:text-accent-ink;
   }
 
   /* The whole row opens the record. The title keeps the real href — so it stays what a
@@ -344,8 +355,14 @@
     @apply mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted;
   }
 
+  /* The Basecamp "add" affordance: a dashed pill that promises a place for
+     something new, drawn — not filled — so it never outweighs the real primary
+     action on the page. The wedge is the disclosure marker and turns down when
+     the form is open. */
   .reveal summary {
-    @apply cursor-pointer font-serif text-lg font-semibold text-ink;
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-chip border-2 border-dashed
+      border-line-strong px-4 py-2 text-base font-semibold text-ink-muted transition-colors
+      hover:border-accent-line hover:text-accent-ink;
     list-style: none;
   }
 
@@ -355,12 +372,63 @@
 
   .reveal summary::before {
     content: "";
-    @apply mr-2 inline-block size-2 bg-ink-subtle;
+    @apply inline-block size-2 shrink-0 bg-ink-subtle transition-transform;
     clip-path: var(--wedge);
+  }
+
+  .reveal[open] summary {
+    @apply border-accent-line text-accent-ink;
   }
 
   .reveal[open] summary::before {
     @apply bg-accent;
+    transform: rotate(90deg);
+  }
+
+  /* --------------------------- the tablet shelf -------------------------- */
+  /* The home screen alone works the Basecamp way: every class is a card on a
+     shelf, because the front door of the app is a place you pick a room, not a
+     document you read. Everywhere deeper the airy list contract still holds —
+     this is the one grid of raised tiles, and it earns the exception. */
+  .tablet-grid {
+    @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .tablet-card {
+    @apply relative flex min-h-40 flex-col justify-between gap-4 rounded-card border border-line
+      bg-surface-raised p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-raised;
+  }
+
+  .tablet-card-title {
+    @apply font-serif text-xl font-semibold text-ink hover:text-accent-ink;
+  }
+
+  /* Same overlay trade as `.list-row-title`: one real link, stretched over the
+     whole card. */
+  .tablet-card-title::after {
+    content: "";
+    @apply absolute inset-0 rounded-card;
+  }
+
+  .tablet-card-meta {
+    @apply flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted;
+  }
+
+  /* Basecamp's dashed "new" card: creation lives on the shelf beside what it
+     creates, promised rather than filled in. */
+  .tablet-card-new {
+    @apply flex-row items-center justify-center gap-2 border-2 border-dashed border-line-strong
+      bg-transparent text-base font-semibold text-ink-muted shadow-none
+      hover:border-accent-line hover:bg-accent-soft hover:text-accent-ink hover:shadow-none;
+  }
+
+  /* A student's mark pressed into a small clay disc — the roster's answer to
+     the Basecamp avatar. The irregular radius is the seal's, so it reads as
+     clay, not as a framework circle. */
+  .avatar-seal {
+    @apply inline-flex size-9 shrink-0 items-center justify-center
+      bg-accent-soft font-serif text-sm font-semibold text-accent-ink;
+    border-radius: 48% 52% 50% 50%;
   }
 
   /* ------------------------------- tables ------------------------------- */
@@ -625,9 +693,10 @@
     clip-path: var(--wedge);
   }
 
-  /* A real count, so it reads at AA rather than as decoration. */
+  /* A real count, so it reads at AA rather than as decoration. The little pill
+     is the Basecamp badge shape; the tone stays in the ramp. */
   .tab-count {
-    @apply text-sm text-ink-muted;
+    @apply rounded-chip bg-surface-sunken px-2 py-0.5 text-xs font-semibold tabular-nums text-ink-muted;
   }
 
   .breadcrumbs {
@@ -645,11 +714,11 @@
 
   /* -------------------------------- text -------------------------------- */
   .page-title {
-    @apply font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl;
+    @apply font-serif text-4xl font-semibold tracking-tight text-ink sm:text-5xl;
   }
 
   .page-subtitle {
-    @apply mt-1 text-base text-ink-muted;
+    @apply mt-1.5 text-lg text-ink-muted;
   }
 
   .section-title {
@@ -760,11 +829,11 @@
   }
 
   .match-item {
-    @apply flex w-full min-h-11 cursor-pointer flex-col items-start gap-0.5 rounded-control
-      px-4 py-3 text-left text-base text-ink transition-colors
-      hover:bg-accent-soft
-      aria-selected:bg-accent-soft aria-selected:font-medium
-      data-[paired=true]:bg-accent-soft;
+    @apply flex w-full min-h-11 cursor-pointer flex-col items-start gap-0.5 rounded-card
+      border border-line bg-surface-raised px-4 py-3 text-left text-base text-ink transition-colors
+      hover:border-accent-line hover:bg-accent-soft
+      aria-selected:border-accent aria-selected:bg-accent-soft aria-selected:font-medium
+      data-[paired=true]:border-accent-line data-[paired=true]:bg-accent-soft;
   }
 
   .completion-card {
@@ -815,15 +884,17 @@
     animation: copied-pulse 260ms ease-out;
   }
 
-  /* Full-width tappable rows, so a phone user is not aiming at a radio dot. */
+  /* Full-width tappable rows, so a phone user is not aiming at a radio dot.
+     Drawn as choice cards in the Basecamp screener manner: the border is the
+     second signal beside the tint, which a monochrome palette owes every state. */
   .option {
-    @apply flex cursor-pointer items-start gap-3 rounded-control
-      px-4 py-3.5 text-base text-ink transition-colors
-      hover:bg-accent-soft;
+    @apply flex cursor-pointer items-start gap-3 rounded-card border border-line
+      bg-surface-raised px-4 py-3.5 text-base text-ink transition-colors
+      hover:border-accent-line hover:bg-accent-soft;
   }
 
   .option:has(input:checked) {
-    @apply bg-accent-soft font-medium;
+    @apply border-accent bg-accent-soft font-medium;
   }
 
   .source-text {
@@ -869,9 +940,9 @@
 
   /* ----------------------------- ordering ------------------------------- */
   .order-item {
-    @apply flex items-center gap-3 rounded-control
-      px-2.5 py-2 transition-colors hover:bg-accent-soft
-      aria-selected:bg-accent-soft
+    @apply flex items-center gap-3 rounded-card border border-line bg-surface-raised
+      px-2.5 py-2 transition-colors hover:border-accent-line hover:bg-accent-soft
+      aria-selected:border-accent aria-selected:bg-accent-soft
       data-[dragging]:shadow-raised data-[dragging]:opacity-60;
   }
 

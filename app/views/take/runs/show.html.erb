@@ -97,7 +97,7 @@
         <div class="space-y-2">
           <% question.student_facing_options.each do |opt| %>
             <label class="option">
-              <%= radio_button_tag "answers[#{question.id}][option_id]", opt["id"], answer&.option_id == opt["id"], class: "mt-0.5 size-4 shrink-0 accent-accent" %>
+              <%= radio_button_tag "answers[#{question.id}][option_id]", opt["id"], answer&.option_id == opt["id"], class: "mt-0.5 size-5 shrink-0 accent-accent" %>
               <span><%= opt["text"] %></span>
             </label>
           <% end %>

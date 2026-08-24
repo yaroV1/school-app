@@ -15,10 +15,17 @@ class ListRowNavigationTest < ActionDispatch::IntegrationTest
     @group.add_student!(@student)
   end
 
-  test "a class row opens the class and offers no second way in" do
+  # The home page is the one card grid; a card follows the same rule as a row.
+  test "a class card opens the class and offers no second way in" do
     get class_groups_path
 
-    assert_row_opens_once class_group_path(@group)
+    assert_response :success
+    assert_select ".tablet-card a[href=?]", class_group_path(@group), 1,
+                  "the card should link to the class exactly once"
+    assert_select "a.tablet-card-title[href=?]", class_group_path(@group), 1,
+                  "and that one link should be the title"
+    assert_select "a.tablet-card-new[href=?]", new_class_group_path, 1,
+                  "creation lives on the shelf as the dashed card"
   end
 
   test "a subject row opens the subject and offers no second way in" do
