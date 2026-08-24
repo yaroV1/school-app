@@ -31,7 +31,7 @@ class ExamTest < ActiveSupport::TestCase
     assert_not Exam.new(status: nil).wording_editable?, "an unset status must not grant wording writes"
   end
 
-  test "duplicate! copies settings and questions into a fresh draft with a cleared window" do
+  test "duplicate_into! copies settings and questions into a fresh draft with a cleared window" do
     exam = create_exam!(users(:one),
       title: "Атлантида", status: :closed, description: "Про міф", time_limit_sec: 600,
       max_attempts: 2, show_results_to_students: true,
@@ -43,7 +43,7 @@ class ExamTest < ActiveSupport::TestCase
       ] })
     exam.questions.create!(question_type: :short_text, prompt: "Опишіть", points: 1, position: 1, config: {})
 
-    copy = exam.duplicate!
+    copy = exam.duplicate_into!([ exam.subject ]).sole
 
     assert copy.persisted?
     assert copy.draft?
@@ -65,13 +65,13 @@ class ExamTest < ActiveSupport::TestCase
     assert_empty original.map(&:id) & copied.map(&:id)
   end
 
-  test "duplicate! copies the photo into a new blob so the copy outlives the original" do
+  test "duplicate_into! copies the photo into a new blob so the copy outlives the original" do
     exam = create_exam!(users(:one))
     question = exam.questions.create!(question_type: :short_text, prompt: "Що на фото?", points: 1,
       position: 0, config: {})
     question.photo.attach(io: File.open(file_fixture("pixel.png")), filename: "pixel.png", content_type: "image/png")
 
-    copied_photo = exam.duplicate!.questions.sole.photo
+    copied_photo = exam.duplicate_into!([ exam.subject ]).sole.questions.sole.photo
 
     assert copied_photo.attached?
     assert_not_equal question.photo.blob.id, copied_photo.blob.id, "a shared blob dies with the original question"
@@ -80,14 +80,14 @@ class ExamTest < ActiveSupport::TestCase
     assert_equal "pixel.png", copied_photo.filename.to_s
   end
 
-  test "duplicate! can land the copy in another subject of the same teacher" do
+  test "duplicate_into! can land the copy in another subject of the same teacher" do
     teacher = users(:one)
     exam = create_exam!(teacher, title: "Атлантида", status: :closed)
     exam.questions.create!(question_type: :short_text, prompt: "Опишіть", points: 1, position: 0, config: {})
     original_subject = exam.subject
     target = teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
 
-    copy = exam.duplicate!(target)
+    copy = exam.duplicate_into!([ target ]).sole
 
     assert_equal target, copy.subject
     assert_equal "8-Б", copy.class_group.name
@@ -121,13 +121,43 @@ class ExamTest < ActiveSupport::TestCase
     assert_equal original, exam.reload.subject
   end
 
-  test "duplicate! leaves assignments behind" do
+  test "duplicate_into! makes one copy per target and reads each photo once for the batch" do
+    teacher = users(:one)
+    exam = create_exam!(teacher, title: "Атлантида")
+    question = exam.questions.create!(question_type: :short_text, prompt: "Що на фото?", points: 1,
+      position: 0, config: {})
+    question.photo.attach(io: File.open(file_fixture("pixel.png")), filename: "pixel.png", content_type: "image/png")
+    targets = [ exam.subject, teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія") ]
+
+    downloads = 0
+    copies = ActiveSupport::Notifications.subscribed(->(*) { downloads += 1 }, "service_download.active_storage") do
+      exam.duplicate_into!(targets)
+    end
+
+    assert_equal targets, copies.map(&:subject)
+    assert copies.all? { |copy| copy.questions.sole.photo.attached? }
+    assert_equal 1, downloads, "a per-target download would re-read the blob for every copy"
+  end
+
+  test "duplicate_into! rolls the whole batch back when a question is invalid" do
+    teacher = users(:one)
+    exam = create_exam!(teacher)
+    exam.questions.create!(question_type: :short_text, prompt: "Опишіть", points: 1, position: 0, config: {})
+    exam.questions.sole.update_column(:question_type, Question.question_types[:mcq])
+    targets = [ exam.subject, teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія") ]
+
+    assert_no_difference "Exam.count" do
+      assert_raises(ActiveRecord::RecordInvalid) { exam.duplicate_into!(targets) }
+    end
+  end
+
+  test "duplicate_into! leaves assignments behind" do
     teacher = users(:one)
     exam = create_exam!(teacher, status: :published)
     exam.questions.create!(question_type: :short_text, prompt: "A", points: 1, position: 0, config: {})
     exam.assignments.create!(student: teacher.students.create!(name: "Оля"))
 
-    copy = exam.duplicate!
+    copy = exam.duplicate_into!([ exam.subject ]).sole
 
     assert_empty copy.assignments
     assert_equal 1, exam.assignments.count

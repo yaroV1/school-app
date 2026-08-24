@@ -27,26 +27,16 @@ class Exam < ApplicationRecord
     update!(status: :closed)
   end
 
-  def duplicate!(target_subject = subject)
-    # Photo bytes are read before BEGIN: the immediate-mode transaction holds the database
-    # write lock from start to commit, and a multi-megabyte blob download inside it would
-    # stall student autosaves for the duration.
+  def duplicate_into!(target_subjects)
+    # Photo bytes are read before BEGIN, once for the whole batch: the immediate-mode
+    # transaction holds the database write lock from start to commit, and a multi-megabyte
+    # blob download inside it would stall student autosaves for the duration.
     downloaded = questions.with_attached_photo.map do |question|
       [ question, question.photo.attached? ? question.photo.download : nil ]
     end
-    transaction do
-      copy = dup
-      copy.assign_attributes(
-        subject: target_subject,
-        title: I18n.t("exams.duplicate.copy_title", title: title),
-        status: :draft,
-        available_from: nil,
-        available_until: nil
-      )
-      copy.save!
-      downloaded.each { |question, photo_bytes| duplicate_question(question, photo_bytes, copy) }
-      copy
-    end
+    # One transaction for the whole batch: a question no copy can accept must leave the
+    # teacher with nothing half-made to clean up.
+    transaction { target_subjects.map { |target| duplicate_copy(target, downloaded) } }
   end
 
   def questions_editable?
@@ -80,6 +70,20 @@ class Exam < ApplicationRecord
   end
 
   private
+
+  def duplicate_copy(target_subject, downloaded)
+    copy = dup
+    copy.assign_attributes(
+      subject: target_subject,
+      title: I18n.t("exams.duplicate.copy_title", title: title),
+      status: :draft,
+      available_from: nil,
+      available_until: nil
+    )
+    copy.save!
+    downloaded.each { |question, photo_bytes| duplicate_question(question, photo_bytes, copy) }
+    copy
+  end
 
   # The upload is deferred to the transaction's commit, so the bytes must sit in an IO
   # that is still open then — a Blob#open tempfile is already closed at that point.

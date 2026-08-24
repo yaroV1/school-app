@@ -385,32 +385,65 @@
     transform: rotate(90deg);
   }
 
-  /* A toolbar dropdown built on <details>: the summary is a regular button, the
-     panel floats under it. No JS on purpose — click-away does not close it, but
-     every action inside navigates, and navigation closes it; that trade keeps
-     the menu testable in integration tests, which is all this app has. */
-  .menu {
-    @apply relative;
+  /* ------------------------------- modals ------------------------------- */
+  /* A native <dialog> opened with showModal(), which brings the backdrop, Esc and an
+     inert page for free. It replaces the absolutely positioned <details> panel this
+     toolbar used to drop: on a phone that panel hung off the right edge and scrolled
+     away with the page behind it. Sized in dvh against the viewport a mobile browser
+     actually leaves, and only .modal-body scrolls. */
+  .modal {
+    @apply m-auto max-h-[85dvh] w-[min(28rem,calc(100vw-2rem))] overflow-hidden rounded-card
+      border border-line bg-surface-raised p-0 text-ink shadow-raised;
   }
 
-  .menu summary {
-    list-style: none;
+  .modal[open] {
+    @apply flex flex-col;
   }
 
-  .menu summary::-webkit-details-marker {
-    display: none;
+  /* Not a token: ::backdrop sits outside the page's element tree, so a theme variable
+     is not guaranteed to reach it. */
+  .modal::backdrop {
+    background: rgb(0 0 0 / 0.45);
   }
 
-  .menu-panel {
-    @apply absolute right-0 z-20 mt-2 w-64 rounded-control border border-line bg-surface-raised p-2 shadow-lg;
+  /* An inert document still takes touch scroll on mobile, so the page behind the
+     dialog is pinned while it is open. */
+  body:has(dialog[open]) {
+    @apply overflow-hidden;
   }
 
-  .menu-heading {
-    @apply px-2 pb-1 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-subtle;
+  .modal-form {
+    @apply flex min-h-0 flex-1 flex-col;
   }
 
-  .menu-item {
-    @apply block w-full rounded-control px-2 py-1.5 text-left text-sm text-ink transition-colors hover:bg-surface-sunken;
+  .modal-head {
+    @apply border-b border-line px-4 py-3;
+  }
+
+  .modal-title {
+    @apply font-serif text-lg font-semibold text-ink;
+  }
+
+  .modal-hint {
+    @apply mt-1 text-sm text-ink-muted;
+  }
+
+  .modal-body {
+    @apply min-h-0 flex-1 overflow-y-auto overscroll-contain p-2;
+  }
+
+  .modal-group {
+    @apply px-2 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-ink-subtle;
+  }
+
+  /* Whole-row target: a checkbox alone is a small tap area on a phone. */
+  .modal-option {
+    @apply flex w-full cursor-pointer items-center gap-2 rounded-control px-2 py-2 text-sm
+      text-ink transition-colors hover:bg-surface-sunken;
+  }
+
+  .modal-actions {
+    @apply flex items-center justify-end gap-2 border-t border-line px-4 py-3;
   }
 
   /* --------------------------- the tablet shelf -------------------------- */

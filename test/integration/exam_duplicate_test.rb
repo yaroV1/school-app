@@ -21,7 +21,7 @@ class ExamDuplicateTest < ActionDispatch::IntegrationTest
 
   test "duplicating a closed test lands on a fresh draft copy" do
     assert_difference [ "Exam.count", "Question.count" ], 1 do
-      post duplicate_test_path(@exam)
+      post duplicate_test_path(@exam), params: { subject_ids: [ @exam.subject_id.to_s ] }
     end
 
     copy = Exam.order(:id).last
@@ -35,25 +35,29 @@ class ExamDuplicateTest < ActionDispatch::IntegrationTest
     assert_empty copy.assignments
   end
 
-  test "the duplicate menu lists the teacher's subjects by class, marking the current one" do
+  test "the duplicate modal checkboxes the teacher's subjects by class, with the current one marked" do
     target = @teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
 
     get test_path(@exam)
-    assert_select "details.menu summary", text: /#{I18n.t("exams.show.duplicate")}/
-    assert_select "details.menu .menu-heading", text: "8-Б"
-    assert_select "form[action=?]", duplicate_test_path(@exam) do
-      assert_select "button[name=subject_id][value=?]", target.id.to_s, text: /Історія/
-      assert_select "button[name=subject_id][value=?]", @exam.subject_id.to_s,
-        text: /#{I18n.t("exams.show.duplicate_current")}/
+    assert_select "button[data-action=?]", "modal#open", text: /#{I18n.t("exams.show.duplicate")}/
+    assert_select "dialog.modal[data-modal-target=dialog]" do
+      assert_select ".modal-group", text: "8-Б"
+      assert_select "form[action=?]", duplicate_test_path(@exam) do
+        assert_select "input[type=checkbox][name=?][value=?]", "subject_ids[]", target.id.to_s
+        assert_select "input[type=checkbox][name=?][value=?][checked]",
+          "subject_ids[]", @exam.subject_id.to_s, true,
+          "the test's own subject starts selected, so duplicating in place stays one tap"
+        assert_select "label[for=?]", "duplicate_subject_#{@exam.subject_id}",
+          text: /#{I18n.t("exams.show.duplicate_current")}/
+      end
     end
-    assert_select "form[action=?] select", duplicate_test_path(@exam), false,
-      "the always-visible select is what the menu replaces"
+    assert_select "details.menu", false, "the dropdown panel that fell off the phone viewport is gone"
   end
 
   test "the copy lands in the chosen subject" do
     target = @teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
 
-    post duplicate_test_path(@exam), params: { subject_id: target.id.to_s }
+    post duplicate_test_path(@exam), params: { subject_ids: [ target.id.to_s ] }
 
     copy = Exam.order(:id).last
     assert_redirected_to test_path(copy)
@@ -63,29 +67,77 @@ class ExamDuplicateTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", test_path(copy)
   end
 
+  test "several subjects each get a copy and the teacher stays on the original" do
+    history = @teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
+    geography = @exam.class_group.subjects.create!(name: "Географія")
+
+    assert_difference "Exam.count", 3 do
+      post duplicate_test_path(@exam),
+        params: { subject_ids: [ @exam.subject_id.to_s, history.id.to_s, geography.id.to_s ] }
+    end
+
+    assert_redirected_to test_path(@exam)
+    assert_equal I18n.t("exams.flash.duplicated_many", count: 3), flash[:notice]
+    copies = Exam.where.not(id: @exam.id).order(:id)
+    assert_equal [ @exam.subject, history, geography ].sort_by(&:id), copies.map(&:subject).sort_by(&:id)
+    assert copies.all?(&:draft?)
+    assert_equal [ [ "Q?" ] ], copies.map { |copy| copy.questions.map(&:prompt) }.uniq
+  end
+
+  test "the same subject twice still yields one copy" do
+    assert_difference "Exam.count", 1 do
+      post duplicate_test_path(@exam),
+        params: { subject_ids: [ @exam.subject_id.to_s, @exam.subject_id.to_s ] }
+    end
+    assert_redirected_to test_path(Exam.order(:id).last)
+  end
+
+  test "an empty selection creates nothing and says so" do
+    assert_no_difference "Exam.count" do
+      post duplicate_test_path(@exam), params: { subject_ids: [ "" ] }
+    end
+    assert_redirected_to test_path(@exam)
+    assert_equal I18n.t("exams.flash.duplicate_no_target"), flash[:alert]
+  end
+
   test "a foreign target subject is a 404 and no copy is made" do
     foreign = users(:two).class_groups.create!(name: "9-В").subjects.create!(name: "Хімія")
 
     assert_no_difference "Exam.count" do
-      post duplicate_test_path(@exam), params: { subject_id: foreign.id.to_s }
+      post duplicate_test_path(@exam), params: { subject_ids: [ foreign.id.to_s ] }
       assert_response :not_found
     end
   end
 
-  test "an array-shaped target is ignored and the copy stays in the exam's subject" do
+  test "one foreign id among the teacher's own cancels the whole batch" do
+    foreign = users(:two).class_groups.create!(name: "9-В").subjects.create!(name: "Хімія")
+
+    assert_no_difference "Exam.count" do
+      post duplicate_test_path(@exam),
+        params: { subject_ids: [ @exam.subject_id.to_s, foreign.id.to_s ] }
+      assert_response :not_found
+    end
+  end
+
+  test "targets that are not an array of ids are ignored" do
     other = @teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
 
-    assert_difference "Exam.count", 1 do
-      post duplicate_test_path(@exam), params: { subject_id: [ other.id ] }
+    assert_no_difference "Exam.count" do
+      post duplicate_test_path(@exam), params: { subject_ids: other.id.to_s }
+      assert_redirected_to test_path(@exam)
+
+      post duplicate_test_path(@exam), params: { subject_ids: [ { id: other.id } ] }
+      assert_redirected_to test_path(@exam)
     end
-    assert_equal @exam.subject, Exam.order(:id).last.subject
+    assert_equal I18n.t("exams.flash.duplicate_no_target"), flash[:alert]
   end
 
   test "a test with drifted question data fails with an alert, not a 500" do
+    other = @teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
     @exam.questions.sole.update_column(:question_type, Question.question_types[:mcq])
 
     assert_no_difference "Exam.count" do
-      post duplicate_test_path(@exam)
+      post duplicate_test_path(@exam), params: { subject_ids: [ @exam.subject_id.to_s, other.id.to_s ] }
     end
     assert_redirected_to test_path(@exam)
     assert_equal I18n.t("exams.flash.duplicate_failed"), flash[:alert]
@@ -95,7 +147,7 @@ class ExamDuplicateTest < ActionDispatch::IntegrationTest
     other = create_exam!(users(:two))
 
     assert_no_difference "Exam.count" do
-      post duplicate_test_path(other)
+      post duplicate_test_path(other), params: { subject_ids: [ @exam.subject_id.to_s ] }
       assert_response :not_found
     end
   end
