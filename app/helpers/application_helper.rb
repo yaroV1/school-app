@@ -32,6 +32,19 @@ module ApplicationHelper
     render "shared/icon", name: name.to_s, class_name: class_name
   end
 
+  def subject_targets_by_class
+    Current.user.subjects.includes(:class_group)
+      .sort_by { |subject| [ subject.class_group.name, subject.name ] }
+      .group_by(&:class_group)
+  end
+
+  def subject_target_options(exam)
+    grouped = subject_targets_by_class.map do |group, subjects|
+      [ group.name, subjects.map { |subject| [ subject.name, subject.id ] } ]
+    end
+    grouped_options_for_select(grouped, exam.subject_id)
+  end
+
   # `aria-current` carries the active state, so highlighting is not tied to a
   # particular colour class.
   def nav_link_to(text, path)

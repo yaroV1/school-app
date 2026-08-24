@@ -29,6 +29,7 @@ Rails.application.routes.draw do
     member do
       post :publish
       post :close
+      post :duplicate
       get :results
       get :live
       get :print

@@ -1,6 +1,6 @@
 class ExamsController < ApplicationController
   before_action :set_subject, only: %i[new create]
-  before_action :set_exam, only: %i[show edit update destroy publish close results live print print_key]
+  before_action :set_exam, only: %i[show edit update destroy publish close duplicate results live print print_key]
 
   def show
     @questions = @exam.questions.with_attached_photo
@@ -23,9 +23,17 @@ class ExamsController < ApplicationController
   end
 
   def update
+    # The target subject is resolved through the owner scope, never permitted raw:
+    # assign_teacher_from_subject derives the teacher from the incoming subject, so a
+    # foreign subject_id would hand the exam to another teacher instead of failing.
+    move_target = params.dig(:exam, :subject_id)
+    @exam.subject = Current.user.subjects.find(move_target) if move_target.is_a?(String) && move_target.present?
     if @exam.update(exam_params)
       redirect_to test_path(@exam), notice: t("exams.flash.updated")
     else
+      # A refused move must not leak into the re-render: the breadcrumbs and the locked
+      # hint would otherwise show the target subject the error just rejected.
+      @exam.restore_attributes(%i[subject_id teacher_id])
       render :edit, status: :unprocessable_entity
     end
   end
@@ -46,6 +54,13 @@ class ExamsController < ApplicationController
   def close
     @exam.close!
     redirect_to test_path(@exam), notice: t("exams.flash.closed")
+  end
+
+  def duplicate
+    copy = @exam.duplicate!(duplicate_target)
+    redirect_to test_path(copy), notice: t("exams.flash.duplicated")
+  rescue ActiveRecord::RecordInvalid
+    redirect_to test_path(@exam), alert: t("exams.flash.duplicate_failed")
   end
 
   def results
@@ -79,6 +94,15 @@ class ExamsController < ApplicationController
 
   def set_subject
     @subject = Current.user.subjects.find(params[:subject_id])
+  end
+
+  # Same rule as the move in #update: the copy's teacher is derived from the incoming
+  # subject, so the target resolves through the owner scope, never a permitted param.
+  def duplicate_target
+    target = params[:subject_id]
+    return @exam.subject unless target.is_a?(String) && target.present?
+
+    Current.user.subjects.find(target)
   end
 
   def set_exam
