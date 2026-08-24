@@ -27,6 +27,12 @@ class Exam < ApplicationRecord
   end
 
   def duplicate!
+    # Photo bytes are read before BEGIN: the immediate-mode transaction holds the database
+    # write lock from start to commit, and a multi-megabyte blob download inside it would
+    # stall student autosaves for the duration.
+    downloaded = questions.with_attached_photo.map do |question|
+      [ question, question.photo.attached? ? question.photo.download : nil ]
+    end
     transaction do
       copy = dup
       copy.assign_attributes(
@@ -36,7 +42,7 @@ class Exam < ApplicationRecord
         available_until: nil
       )
       copy.save!
-      questions.each { |question| duplicate_question(question, copy) }
+      downloaded.each { |question, photo_bytes| duplicate_question(question, photo_bytes, copy) }
       copy
     end
   end
@@ -73,16 +79,16 @@ class Exam < ApplicationRecord
 
   private
 
-  def duplicate_question(question, copy)
+  # The upload is deferred to the transaction's commit, so the bytes must sit in an IO
+  # that is still open then — a Blob#open tempfile is already closed at that point.
+  def duplicate_question(question, photo_bytes, copy)
     duplicated = question.dup
     duplicated.exam = copy
     duplicated.save!
-    return unless question.photo.attached?
+    return if photo_bytes.nil?
 
-    # The upload is deferred to the transaction's commit, so the bytes must sit in an IO
-    # that is still open then — a Blob#open tempfile is already closed at that point.
     duplicated.photo.attach(
-      io: StringIO.new(question.photo.download),
+      io: StringIO.new(photo_bytes),
       filename: question.photo.filename,
       content_type: question.photo.content_type
     )
