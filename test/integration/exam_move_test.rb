@@ -44,6 +44,12 @@ class ExamMoveTest < ActionDispatch::IntegrationTest
     assert_equal @source, @exam.reload.subject
   end
 
+  test "an array-shaped subject_id is ignored, not a 500" do
+    patch test_path(@exam), params: { exam: { subject_id: [ @target.id ] } }
+    assert_redirected_to test_path(@exam)
+    assert_equal @source, @exam.reload.subject
+  end
+
   test "another teacher's subject cannot be the target" do
     foreign = users(:two).class_groups.create!(name: "9-В").subjects.create!(name: "Хімія")
 
