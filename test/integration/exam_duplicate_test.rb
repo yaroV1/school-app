@@ -35,14 +35,19 @@ class ExamDuplicateTest < ActionDispatch::IntegrationTest
     assert_empty copy.assignments
   end
 
-  test "the header select offers the teacher's subjects by class, current one selected" do
-    @teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
+  test "the duplicate menu lists the teacher's subjects by class, marking the current one" do
+    target = @teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
 
     get test_path(@exam)
-    assert_select "form[action=?] select[name=?]", duplicate_test_path(@exam), "subject_id" do
-      assert_select "optgroup[label=?]", "8-Б"
-      assert_select "option[selected][value=?]", @exam.subject_id.to_s
+    assert_select "details.menu summary", text: /#{I18n.t("exams.show.duplicate")}/
+    assert_select "details.menu .menu-heading", text: "8-Б"
+    assert_select "form[action=?]", duplicate_test_path(@exam) do
+      assert_select "button[name=subject_id][value=?]", target.id.to_s, text: /Історія/
+      assert_select "button[name=subject_id][value=?]", @exam.subject_id.to_s,
+        text: /#{I18n.t("exams.show.duplicate_current")}/
     end
+    assert_select "form[action=?] select", duplicate_test_path(@exam), false,
+      "the always-visible select is what the menu replaces"
   end
 
   test "the copy lands in the chosen subject" do

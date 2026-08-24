@@ -385,6 +385,34 @@
     transform: rotate(90deg);
   }
 
+  /* A toolbar dropdown built on <details>: the summary is a regular button, the
+     panel floats under it. No JS on purpose — click-away does not close it, but
+     every action inside navigates, and navigation closes it; that trade keeps
+     the menu testable in integration tests, which is all this app has. */
+  .menu {
+    @apply relative;
+  }
+
+  .menu summary {
+    list-style: none;
+  }
+
+  .menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu-panel {
+    @apply absolute right-0 z-20 mt-2 w-64 rounded-control border border-line bg-surface-raised p-2 shadow-lg;
+  }
+
+  .menu-heading {
+    @apply px-2 pb-1 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-subtle;
+  }
+
+  .menu-item {
+    @apply block w-full rounded-control px-2 py-1.5 text-left text-sm text-ink transition-colors hover:bg-surface-sunken;
+  }
+
   /* --------------------------- the tablet shelf -------------------------- */
   /* The home screen alone works the Basecamp way: every class is a card on a
      shelf, because the front door of the app is a place you pick a room, not a
