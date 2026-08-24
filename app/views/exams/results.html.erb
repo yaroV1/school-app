@@ -2,7 +2,7 @@
 <%= render "exams/header", exam: @exam %>
 
 <div class="mb-4 flex flex-wrap items-center justify-end gap-3">
-  <%= link_to t("common.export_csv"), results_test_path(@exam, format: :csv), class: btn_secondary, data: { turbo: false } %>
+  <%= link_to safe_join([ ui_icon("download"), t("common.export_csv") ]), results_test_path(@exam, format: :csv), class: btn_secondary, data: { turbo: false } %>
 </div>
 
 <% if @assignments.any? %>

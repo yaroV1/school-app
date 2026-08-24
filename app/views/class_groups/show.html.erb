@@ -27,7 +27,7 @@
         <%= f.label :name, class: "field-label" %>
         <%= f.text_field :name, required: true, class: field_class %>
       </div>
-      <%= f.submit t("classes.show.add_subject"), class: btn_primary %>
+      <%= f.button safe_join([ ui_icon("plus"), t("classes.show.add_subject") ]), class: btn_primary %>
     <% end %>
   </details>
 </section>

@@ -197,5 +197,6 @@
     </fieldset>
   <% end %>
 
-  <%= submit_tag t("take.submit"), class: "btn btn-primary btn-lg w-full", data: { turbo_confirm: t("take.submit_confirm") } %>
+  <%# button_tag, not submit_tag: the seal icon needs a <button> that can hold markup. %>
+  <%= button_tag safe_join([ ui_icon("stamp"), t("take.submit") ]), class: "btn btn-primary btn-lg w-full", data: { turbo_confirm: t("take.submit_confirm") } %>
 <% end %>

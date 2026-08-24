@@ -32,7 +32,7 @@
               <span><%= t("exams.points", count: question.points) %></span>
             </div>
             <% if @exam.questions_editable? %>
-              <%= button_to t("exams.show.remove"), test_question_path(@exam, question), method: :delete, form: { data: { turbo_confirm: t("exams.show.remove_confirm") } }, class: "#{btn_danger} btn-sm" %>
+              <%= button_to safe_join([ ui_icon("bin", class_name: "size-4"), t("exams.show.remove") ]), test_question_path(@exam, question), method: :delete, form: { data: { turbo_confirm: t("exams.show.remove_confirm") } }, class: "#{btn_danger} btn-sm" %>
             <% end %>
           </div>
           <%= render "questions/photo", question: question %>
@@ -152,7 +152,7 @@
         <p class="field-hint"><%= t("exams.show.matching_hint") %></p>
       </div>
 
-      <%= f.submit t("exams.show.submit_question"), class: btn_primary %>
+      <%= f.button safe_join([ ui_icon("plus"), t("exams.show.submit_question") ]), class: btn_primary %>
     <% end %>
   </section>
 

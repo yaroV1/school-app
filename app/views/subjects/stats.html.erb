@@ -7,7 +7,7 @@
       <h2 class="section-title"><%= t("subjects.show.stats") %></h2>
       <p class="page-subtitle"><%= t("subjects.show.stats_hint") %></p>
     </div>
-    <%= link_to t("common.export_csv"), stats_subject_path(@subject, format: :csv), class: btn_secondary, data: { turbo: false } %>
+    <%= link_to safe_join([ ui_icon("download"), t("common.export_csv") ]), stats_subject_path(@subject, format: :csv), class: btn_secondary, data: { turbo: false } %>
   </div>
 
   <% if @stat_rows.any? %>

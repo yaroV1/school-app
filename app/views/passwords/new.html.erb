@@ -8,7 +8,7 @@
       <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: t("auth.passwords.email_placeholder"), value: params[:email_address], class: field_class %>
     </div>
 
-    <%= form.submit t("auth.passwords.send_instructions"), class: "#{btn_primary} w-full" %>
+    <%= form.button safe_join([ ui_icon("plane"), t("auth.passwords.send_instructions") ]), class: "#{btn_primary} w-full" %>
     <p class="text-center">
       <%= link_to t("auth.sign_in"), new_session_path, class: "link text-sm" %>
     </p>
