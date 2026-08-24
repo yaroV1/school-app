@@ -35,6 +35,16 @@ class ExamDuplicateTest < ActionDispatch::IntegrationTest
     assert_empty copy.assignments
   end
 
+  test "a test with drifted question data fails with an alert, not a 500" do
+    @exam.questions.sole.update_column(:question_type, Question.question_types[:mcq])
+
+    assert_no_difference "Exam.count" do
+      post duplicate_test_path(@exam)
+    end
+    assert_redirected_to test_path(@exam)
+    assert_equal I18n.t("exams.flash.duplicate_failed"), flash[:alert]
+  end
+
   test "a foreign test cannot be duplicated" do
     other = create_exam!(users(:two))
 

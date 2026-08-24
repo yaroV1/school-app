@@ -51,6 +51,8 @@ class ExamsController < ApplicationController
   def duplicate
     copy = @exam.duplicate!
     redirect_to test_path(copy), notice: t("exams.flash.duplicated")
+  rescue ActiveRecord::RecordInvalid
+    redirect_to test_path(@exam), alert: t("exams.flash.duplicate_failed")
   end
 
   def results

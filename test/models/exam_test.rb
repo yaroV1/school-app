@@ -75,10 +75,12 @@ class ExamTest < ActiveSupport::TestCase
 
     assert copied_photo.attached?
     assert_not_equal question.photo.blob.id, copied_photo.blob.id, "a shared blob dies with the original question"
-    assert_equal question.photo.blob.checksum, copied_photo.blob.checksum
+    assert_equal question.photo.download, copied_photo.download
+    assert_equal "image/png", copied_photo.content_type
+    assert_equal "pixel.png", copied_photo.filename.to_s
   end
 
-  test "duplicate! leaves assignments and attempts behind" do
+  test "duplicate! leaves assignments behind" do
     teacher = users(:one)
     exam = create_exam!(teacher, status: :published)
     exam.questions.create!(question_type: :short_text, prompt: "A", points: 1, position: 0, config: {})

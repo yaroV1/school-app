@@ -81,17 +81,20 @@ class Exam < ApplicationRecord
 
   # The upload is deferred to the transaction's commit, so the bytes must sit in an IO
   # that is still open then — a Blob#open tempfile is already closed at that point.
+  # Attaching before save! keeps the photo inside the copy's validation: attach on an
+  # already-persisted row saves with save, not save!, and a photo the copy cannot accept
+  # would commit the copy silently photo-less instead of rolling it back.
   def duplicate_question(question, photo_bytes, copy)
     duplicated = question.dup
     duplicated.exam = copy
+    if photo_bytes
+      duplicated.photo.attach(
+        io: StringIO.new(photo_bytes),
+        filename: question.photo.filename,
+        content_type: question.photo.content_type
+      )
+    end
     duplicated.save!
-    return if photo_bytes.nil?
-
-    duplicated.photo.attach(
-      io: StringIO.new(photo_bytes),
-      filename: question.photo.filename,
-      content_type: question.photo.content_type
-    )
   end
 
   def assign_teacher_from_subject
