@@ -26,6 +26,21 @@ class Exam < ApplicationRecord
     update!(status: :closed)
   end
 
+  def duplicate!
+    transaction do
+      copy = dup
+      copy.assign_attributes(
+        title: I18n.t("exams.duplicate.copy_title", title: title),
+        status: :draft,
+        available_from: nil,
+        available_until: nil
+      )
+      copy.save!
+      questions.each { |question| duplicate_question(question, copy) }
+      copy
+    end
+  end
+
   def questions_editable?
     draft?
   end
@@ -57,6 +72,21 @@ class Exam < ApplicationRecord
   end
 
   private
+
+  def duplicate_question(question, copy)
+    duplicated = question.dup
+    duplicated.exam = copy
+    duplicated.save!
+    return unless question.photo.attached?
+
+    # The upload is deferred to the transaction's commit, so the bytes must sit in an IO
+    # that is still open then — a Blob#open tempfile is already closed at that point.
+    duplicated.photo.attach(
+      io: StringIO.new(question.photo.download),
+      filename: question.photo.filename,
+      content_type: question.photo.content_type
+    )
+  end
 
   def assign_teacher_from_subject
     self.teacher = subject.class_group.teacher if subject

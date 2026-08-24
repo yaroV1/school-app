@@ -1,6 +1,6 @@
 class ExamsController < ApplicationController
   before_action :set_subject, only: %i[new create]
-  before_action :set_exam, only: %i[show edit update destroy publish close results live print print_key]
+  before_action :set_exam, only: %i[show edit update destroy publish close duplicate results live print print_key]
 
   def show
     @questions = @exam.questions.with_attached_photo
@@ -46,6 +46,11 @@ class ExamsController < ApplicationController
   def close
     @exam.close!
     redirect_to test_path(@exam), notice: t("exams.flash.closed")
+  end
+
+  def duplicate
+    copy = @exam.duplicate!
+    redirect_to test_path(copy), notice: t("exams.flash.duplicated")
   end
 
   def results
