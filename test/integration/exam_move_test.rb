@@ -15,14 +15,20 @@ class ExamMoveTest < ActionDispatch::IntegrationTest
     assert_select "select[name='exam[subject_id]'] optgroup[label=?]", "8-Б" do
       assert_select "option", "Історія України"
     end
+    assert_select "select[name='exam[subject_id]'] option[selected][value=?]", @source.id.to_s
 
     get new_subject_exam_path(@source)
     assert_select "select[name='exam[subject_id]']", false, "a new test is created from its subject page"
   end
 
-  test "moving an unassigned test relocates it to the other class's subject" do
+  test "moving an unassigned test relocates it, within its class or to another" do
+    sibling = @source.class_group.subjects.create!(name: "Історія культури")
+    patch test_path(@exam), params: { exam: { subject_id: sibling.id } }
+    assert_equal sibling, @exam.reload.subject
+
     patch test_path(@exam), params: { exam: { subject_id: @target.id } }
     assert_redirected_to test_path(@exam)
+    assert_equal I18n.t("exams.flash.updated"), flash[:notice]
     assert_equal @target, @exam.reload.subject
 
     get subject_path(@source)
@@ -42,6 +48,11 @@ class ExamMoveTest < ActionDispatch::IntegrationTest
     patch test_path(@exam), params: { exam: { subject_id: @target.id } }
     assert_response :unprocessable_entity
     assert_equal @source, @exam.reload.subject
+    # The refused target must not leak into the re-rendered page: hint and breadcrumbs
+    # keep naming the subject the exam actually belongs to.
+    assert_select "p.field-hint",
+      text: I18n.t("exams.form.subject_locked", subject: "10-А — Всесвітня історія")
+    assert_select "a[href=?]", subject_path(@source)
   end
 
   test "an array-shaped subject_id is ignored, not a 500" do

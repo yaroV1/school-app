@@ -31,6 +31,9 @@ class ExamsController < ApplicationController
     if @exam.update(exam_params)
       redirect_to test_path(@exam), notice: t("exams.flash.updated")
     else
+      # A refused move must not leak into the re-render: the breadcrumbs and the locked
+      # hint would otherwise show the target subject the error just rejected.
+      @exam.restore_attributes(%i[subject_id teacher_id])
       render :edit, status: :unprocessable_entity
     end
   end
