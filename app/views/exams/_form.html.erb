@@ -12,7 +12,7 @@
     <div class="fieldset">
       <% if exam.assignments.none? %>
         <%= f.label :subject_id, t("exams.form.subject"), class: "field-label" %>
-        <%= f.select :subject_id, subject_move_options(exam), {}, class: field_class %>
+        <%= f.select :subject_id, subject_target_options(exam), {}, class: field_class %>
         <p class="field-hint"><%= t("exams.form.subject_hint") %></p>
       <% else %>
         <span class="field-label"><%= t("exams.form.subject") %></span>

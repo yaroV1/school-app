@@ -80,6 +80,23 @@ class ExamTest < ActiveSupport::TestCase
     assert_equal "pixel.png", copied_photo.filename.to_s
   end
 
+  test "duplicate! can land the copy in another subject of the same teacher" do
+    teacher = users(:one)
+    exam = create_exam!(teacher, title: "Атлантида", status: :closed)
+    exam.questions.create!(question_type: :short_text, prompt: "Опишіть", points: 1, position: 0, config: {})
+    original_subject = exam.subject
+    target = teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
+
+    copy = exam.duplicate!(target)
+
+    assert_equal target, copy.subject
+    assert_equal "8-Б", copy.class_group.name
+    assert_equal teacher, copy.teacher
+    assert copy.draft?
+    assert_equal [ "Опишіть" ], copy.questions.map(&:prompt)
+    assert_equal original_subject, exam.reload.subject, "the original must stay where it was"
+  end
+
   test "an unassigned exam moves to another class's subject, whatever its status" do
     teacher = users(:one)
     exam = create_exam!(teacher, status: :closed)

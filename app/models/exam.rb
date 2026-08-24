@@ -27,7 +27,7 @@ class Exam < ApplicationRecord
     update!(status: :closed)
   end
 
-  def duplicate!
+  def duplicate!(target_subject = subject)
     # Photo bytes are read before BEGIN: the immediate-mode transaction holds the database
     # write lock from start to commit, and a multi-megabyte blob download inside it would
     # stall student autosaves for the duration.
@@ -37,6 +37,7 @@ class Exam < ApplicationRecord
     transaction do
       copy = dup
       copy.assign_attributes(
+        subject: target_subject,
         title: I18n.t("exams.duplicate.copy_title", title: title),
         status: :draft,
         available_from: nil,

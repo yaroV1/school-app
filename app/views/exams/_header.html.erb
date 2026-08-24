@@ -11,7 +11,11 @@
       <%= status_badge(exam.status) %>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-      <%= button_to safe_join([ ui_icon("copy"), t("exams.show.duplicate") ]), duplicate_test_path(exam), class: btn_secondary %>
+      <%= form_with url: duplicate_test_path(exam), class: "flex items-center gap-2" do |f| %>
+        <%= f.select :subject_id, subject_target_options(exam), {},
+              class: field_class, "aria-label": t("exams.show.duplicate_target") %>
+        <%= f.button(class: btn_secondary) { safe_join([ ui_icon("copy"), t("exams.show.duplicate") ]) } %>
+      <% end %>
       <% if exam.draft? %>
         <%= button_to safe_join([ ui_icon("banner"), t("exams.show.publish") ]), publish_test_path(exam), form: { data: { turbo_confirm: t("exams.show.publish_confirm") } }, class: btn_primary %>
       <% elsif exam.published? %>

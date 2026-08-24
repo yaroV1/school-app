@@ -57,7 +57,7 @@ class ExamsController < ApplicationController
   end
 
   def duplicate
-    copy = @exam.duplicate!
+    copy = @exam.duplicate!(duplicate_target)
     redirect_to test_path(copy), notice: t("exams.flash.duplicated")
   rescue ActiveRecord::RecordInvalid
     redirect_to test_path(@exam), alert: t("exams.flash.duplicate_failed")
@@ -94,6 +94,15 @@ class ExamsController < ApplicationController
 
   def set_subject
     @subject = Current.user.subjects.find(params[:subject_id])
+  end
+
+  # Same rule as the move in #update: the copy's teacher is derived from the incoming
+  # subject, so the target resolves through the owner scope, never a permitted param.
+  def duplicate_target
+    target = params[:subject_id]
+    return @exam.subject unless target.is_a?(String) && target.present?
+
+    Current.user.subjects.find(target)
   end
 
   def set_exam
