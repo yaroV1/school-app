@@ -17,7 +17,7 @@
       <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72, class: field_class %>
     </div>
 
-    <%= form.submit t("auth.sign_in"), class: "#{btn_primary} w-full" %>
+    <%= form.button safe_join([ ui_icon("enter"), t("auth.sign_in") ]), class: "#{btn_primary} w-full" %>
     <p class="text-center">
       <%= link_to t("auth.forgot_password"), new_password_path, class: "link text-sm" %>
     </p>

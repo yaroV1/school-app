@@ -244,7 +244,10 @@ class QuestionWordingTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?] input[type=text]", test_question_path(@exam, @ordering), count: 3
     assert_select "form[action=?] input[type=text]", test_question_path(@exam, @matching), count: 4
     assert_select "form[action=?] input[type=text]", test_question_path(@exam, @source), count: 0
-    assert_select "form[action=?] button", test_question_path(@exam, @mcq), false, "no add- or remove-row control"
+    # The save control is a <button type=submit> now (it carries an icon), so the
+    # guard against structural row controls has to name what it actually forbids.
+    assert_select "form[action=?] button:not([type=submit])", test_question_path(@exam, @mcq), false,
+      "no add- or remove-row control"
 
     assert_select "form[action=?] textarea[name=?]", test_question_path(@exam, @short), "question[prompt]"
     assert_select "form[action=?] input[name^=?]", test_question_path(@exam, @short), "question[texts]", false

@@ -71,6 +71,12 @@ module ApplicationHelper
     render "shared/score_seal", grade: grade, size: size.to_sym == :lg ? :lg : :md
   end
 
+  # First and last word, because a Ukrainian roster writes surname-first as
+  # often as the reverse — either order yields the same two letters.
+  def initials(name)
+    name.to_s.split.values_at(0, -1).compact.uniq.filter_map { |word| word[0] }.join.upcase
+  end
+
   def status_badge(status)
     variant = STATUS_BADGES.fetch(status.to_s, "badge-neutral")
     content_tag(:span, t("statuses.#{status}"), class: "badge #{variant}")

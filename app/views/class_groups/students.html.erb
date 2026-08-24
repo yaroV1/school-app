@@ -6,15 +6,18 @@
     <ul class="list max-h-96 overflow-y-auto">
       <% @students.each do |student| %>
         <li class="list-row">
-          <div>
-            <%= link_to student.name, student_path(student), class: "list-row-title" %>
-            <% if student.email.present? %>
-              <div class="list-row-meta"><span><%= student.email %></span></div>
-            <% end %>
+          <div class="flex items-center gap-3">
+            <span class="avatar-seal" aria-hidden="true"><%= initials(student.name) %></span>
+            <div>
+              <%= link_to student.name, student_path(student), class: "list-row-title" %>
+              <% if student.email.present? %>
+                <div class="list-row-meta"><span><%= student.email %></span></div>
+              <% end %>
+            </div>
           </div>
           <div class="list-row-actions">
-            <%= link_to t("common.edit"), edit_student_path(student), class: "#{btn_secondary} btn-sm" %>
-            <%= button_to t("classes.show.remove_member"), remove_member_class_group_path(@class_group, student_id: student.id), method: :delete, form: { data: { turbo_confirm: t("classes.show.remove_member_confirm") } }, class: "#{btn_danger} btn-sm" %>
+            <%= link_to safe_join([ ui_icon("stylus", class_name: "size-4"), t("common.edit") ]), edit_student_path(student), class: "#{btn_secondary} btn-sm" %>
+            <%= button_to safe_join([ ui_icon("x", class_name: "size-4"), t("classes.show.remove_member") ]), remove_member_class_group_path(@class_group, student_id: student.id), method: :delete, form: { data: { turbo_confirm: t("classes.show.remove_member_confirm") } }, class: "#{btn_danger} btn-sm" %>
           </div>
         </li>
       <% end %>
@@ -36,7 +39,7 @@
         <%= f.email_field :email, class: field_class %>
       </div>
       <div class="sm:col-span-2">
-        <%= f.submit t("classes.show.add_student"), class: btn_primary %>
+        <%= f.button safe_join([ ui_icon("plus"), t("classes.show.add_student") ]), class: btn_primary %>
       </div>
     <% end %>
   </details>

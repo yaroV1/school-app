@@ -77,6 +77,13 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal I18n.t("common.dash"), html.text.strip
   end
 
+  test "initials take the first and last word in either roster order" do
+    assert_equal "ІП", initials("Іван Петренко")
+    assert_equal "ПІ", initials("Петренко Іван")
+    assert_equal "А", initials("Ада")
+    assert_equal "", initials(nil)
+  end
+
   test "answer_started? follows each question type's payload" do
     assert_not answer_started?(Question.new(question_type: :mcq), nil)
     assert_not answer_started?(Question.new(question_type: :mcq), Answer.new(payload: {}))

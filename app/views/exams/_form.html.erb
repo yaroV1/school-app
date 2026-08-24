@@ -40,5 +40,7 @@
       </span>
     </label>
   </div>
-  <%= f.submit class: btn_primary %>
+  <%# The block form keeps the framework's helpers.submit label, handed in as `label`,
+      because f.submit renders an <input> and an input cannot carry the icon. %>
+  <%= f.button(class: btn_primary) { |label| safe_join([ ui_icon("check"), label ]) } %>
 <% end %>

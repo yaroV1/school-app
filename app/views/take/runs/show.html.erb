@@ -97,7 +97,7 @@
         <div class="space-y-2">
           <% question.student_facing_options.each do |opt| %>
             <label class="option">
-              <%= radio_button_tag "answers[#{question.id}][option_id]", opt["id"], answer&.option_id == opt["id"], class: "mt-0.5 size-4 shrink-0 accent-accent" %>
+              <%= radio_button_tag "answers[#{question.id}][option_id]", opt["id"], answer&.option_id == opt["id"], class: "mt-0.5 size-5 shrink-0 accent-accent" %>
               <span><%= opt["text"] %></span>
             </label>
           <% end %>
@@ -197,5 +197,6 @@
     </fieldset>
   <% end %>
 
-  <%= submit_tag t("take.submit"), class: "btn btn-primary btn-lg w-full", data: { turbo_confirm: t("take.submit_confirm") } %>
+  <%# button_tag, not submit_tag: the seal icon needs a <button> that can hold markup. %>
+  <%= button_tag safe_join([ ui_icon("stamp"), t("take.submit") ]), class: "btn btn-primary btn-lg w-full", data: { turbo_confirm: t("take.submit_confirm") } %>
 <% end %>

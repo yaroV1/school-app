@@ -225,8 +225,8 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     # along from the top; the old bottom bar covered the next card on a phone.
     assert_select ".run-bar [data-countdown-target=display]"
     assert_select ".run-bar [data-autosave-target=status]"
-    assert_select ".run-bar input[type=submit]", false
-    assert_select "form input[type=submit][value=?]", I18n.t("take.submit")
+    assert_select ".run-bar button[type=submit]", false
+    assert_select "form button[type=submit]", text: I18n.t("take.submit")
 
     form_children = css_select("form").first.element_children
     assert_operator form_children.index(css_select(".run-bar").first), :<,

@@ -28,7 +28,7 @@
           <div class="flex items-center gap-1 sm:gap-2">
             <span class="hidden text-sm text-ink-muted sm:inline"><%= Current.user.email_address %></span>
             <%= render "shared/theme_toggle" %>
-            <%= button_to t("nav.sign_out"), session_path, method: :delete, class: "btn btn-ghost btn-sm" %>
+            <%= button_to safe_join([ ui_icon("leave", class_name: "size-4"), t("nav.sign_out") ]), session_path, method: :delete, class: "btn btn-ghost btn-sm" %>
           </div>
         </div>
       </header>

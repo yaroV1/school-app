@@ -4,5 +4,5 @@
     <%= f.label :name, class: "field-label" %>
     <%= f.text_field :name, required: true, class: field_class %>
   </div>
-  <%= f.submit class: btn_primary %>
+  <%= f.button(class: btn_primary) { |label| safe_join([ ui_icon("check"), label ]) } %>
 <% end %>

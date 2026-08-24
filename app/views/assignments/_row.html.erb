@@ -9,7 +9,7 @@
   <td>
     <div class="flex items-center gap-2">
       <code class="max-w-xs truncate rounded bg-surface-sunken px-1.5 py-0.5 text-xs text-ink-muted"><%= url %></code>
-      <button type="button" data-controller="clipboard" data-clipboard-text-value="<%= url %>" data-clipboard-copied-value="<%= t("common.copied") %>" data-action="clipboard#copy" class="<%= btn_secondary %> btn-sm"><%= t("common.copy") %></button>
+      <button type="button" data-controller="clipboard" data-clipboard-text-value="<%= url %>" data-clipboard-copied-value="<%= t("common.copied") %>" data-action="clipboard#copy" class="<%= btn_secondary %> btn-sm"><%= ui_icon("copy", class_name: "size-4") %><span data-clipboard-target="label"><%= t("common.copy") %></span></button>
     </div>
   </td>
   <td><% if assignment.revoked? %><span class="badge badge-danger"><%= t("statuses.revoked") %></span><% else %><span class="badge badge-success"><%= t("statuses.active") %></span><% end %></td>
@@ -17,9 +17,9 @@
   <td class="text-right">
     <div class="flex flex-wrap justify-end gap-2">
       <% unless assignment.revoked? %>
-        <%= button_to t("exams.assign.revoke"), revoke_assignment_path(assignment), class: "#{btn_danger} btn-sm" %>
+        <%= button_to safe_join([ ui_icon("ban", class_name: "size-4"), t("exams.assign.revoke") ]), revoke_assignment_path(assignment), class: "#{btn_danger} btn-sm" %>
       <% end %>
-      <%= button_to t("exams.assign.regenerate"), regenerate_token_assignment_path(assignment), class: "#{btn_secondary} btn-sm" %>
+      <%= button_to safe_join([ ui_icon("refresh", class_name: "size-4"), t("exams.assign.regenerate") ]), regenerate_token_assignment_path(assignment), class: "#{btn_secondary} btn-sm" %>
     </div>
   </td>
 </tr>

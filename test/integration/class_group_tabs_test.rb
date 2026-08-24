@@ -25,6 +25,7 @@ class ClassGroupTabsTest < ActionDispatch::IntegrationTest
     get students_class_group_path(@group)
     assert_response :success
     assert_match "Ada Lovelace", response.body
+    assert_select ".list-row .avatar-seal", text: "AL"
     assert_select "details.reveal:not([open])" do
       assert_select "summary", text: I18n.t("classes.show.add_student")
       assert_select "form[action=?]", class_group_students_path(@group)

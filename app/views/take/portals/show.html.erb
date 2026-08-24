@@ -27,9 +27,9 @@
   <% if @assignment.revoked? %>
     <p class="flash flash-alert"><%= t("take.errors.link_revoked") %></p>
   <% elsif @active_attempt %>
-    <%= button_to t("take.resume"), student_start_path(token: @assignment.access_token), class: "btn btn-primary btn-lg w-full" %>
+    <%= button_to safe_join([ ui_icon("play"), t("take.resume") ]), student_start_path(token: @assignment.access_token), class: "btn btn-primary btn-lg w-full" %>
   <% elsif @can_start %>
-    <%= button_to t("take.start"), student_start_path(token: @assignment.access_token), class: "btn btn-primary btn-lg w-full" %>
+    <%= button_to safe_join([ ui_icon("play"), t("take.start") ]), student_start_path(token: @assignment.access_token), class: "btn btn-primary btn-lg w-full" %>
   <% else %>
     <% if @availability == :not_yet_open %>
       <p class="flash flash-warning"><%= t("take.errors.not_available_yet") %></p>

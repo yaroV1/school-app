@@ -36,6 +36,18 @@ class ChromeTest < ActiveSupport::TestCase
     refute_includes rule(".qcard"), "border-l-[3px]"
   end
 
+  test "buttons are pills and the quiet secondary keeps a drawn border" do
+    assert_includes rule(".btn"), "rounded-chip"
+    assert_includes rule(".btn-secondary"), "border-line-strong"
+  end
+
+  test "the home shelf is the one grid of raised tablet cards" do
+    body = rule(".tablet-card")
+
+    assert_includes body, "rounded-card"
+    assert_includes body, "shadow-card"
+  end
+
   test "catalog numbers on the runner are large serif" do
     body = rule(".qcard-num")
 
