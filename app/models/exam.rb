@@ -13,6 +13,7 @@ class Exam < ApplicationRecord
   validates :time_limit_sec, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :availability_window_order
   validate :subject_belongs_to_teacher
+  validate :subject_change_requires_no_assignments, on: :update
 
   before_validation :assign_teacher_from_subject
 
@@ -106,6 +107,14 @@ class Exam < ApplicationRecord
     return if subject.class_group.teacher_id == teacher_id
 
     errors.add(:subject, :invalid)
+  end
+
+  # Any assignment, revoked included, ties students, tokens and attempt history to the
+  # current class — a moved history would lie in the target subject's stats.
+  def subject_change_requires_no_assignments
+    return unless subject_id_changed? && assignments.exists?
+
+    errors.add(:subject, :has_assignments)
   end
 
   def availability_window_order

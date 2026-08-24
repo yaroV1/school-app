@@ -8,6 +8,17 @@
     <%= f.label :description, class: "field-label" %>
     <%= f.text_area :description, rows: 3, class: field_class %>
   </div>
+  <% if exam.persisted? %>
+    <div class="fieldset">
+      <%= f.label :subject_id, t("exams.form.subject"), class: "field-label" %>
+      <% if exam.assignments.none? %>
+        <%= f.select :subject_id, subject_move_options(exam), {}, class: field_class %>
+        <p class="field-hint"><%= t("exams.form.subject_hint") %></p>
+      <% else %>
+        <p class="field-hint"><%= t("exams.form.subject_locked", subject: "#{exam.class_group.name} — #{exam.subject.name}") %></p>
+      <% end %>
+    </div>
+  <% end %>
   <div class="grid gap-4 sm:grid-cols-2">
     <div class="fieldset">
       <%= f.label :time_limit_sec, t("exams.form.time_limit"), class: "field-label" %>

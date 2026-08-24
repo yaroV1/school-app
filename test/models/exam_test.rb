@@ -80,6 +80,30 @@ class ExamTest < ActiveSupport::TestCase
     assert_equal "pixel.png", copied_photo.filename.to_s
   end
 
+  test "an unassigned exam moves to another class's subject, whatever its status" do
+    teacher = users(:one)
+    exam = create_exam!(teacher, status: :closed)
+    target = teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
+
+    assert exam.update(subject: target), exam.errors.full_messages.to_sentence
+    assert_equal target, exam.reload.subject
+    assert_equal "8-Б", exam.class_group.name
+    assert_equal teacher, exam.teacher
+  end
+
+  test "one assignment, even revoked, pins the exam to its subject" do
+    teacher = users(:one)
+    exam = create_exam!(teacher)
+    exam.assignments.create!(student: teacher.students.create!(name: "Оля")).revoke!
+    original = exam.subject
+    target = teacher.class_groups.create!(name: "8-Б").subjects.create!(name: "Історія")
+
+    assert_not exam.update(subject: target)
+    assert_includes exam.errors[:subject],
+      I18n.t("activerecord.errors.models.exam.attributes.subject.has_assignments")
+    assert_equal original, exam.reload.subject
+  end
+
   test "duplicate! leaves assignments behind" do
     teacher = users(:one)
     exam = create_exam!(teacher, status: :published)

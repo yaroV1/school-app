@@ -204,6 +204,9 @@ uk:
     edit:
       title: "Редагувати тест"
     form:
+      subject: "Предмет"
+      subject_hint: "Можна перенести тест в інший предмет чи клас, поки його нікому не призначено."
+      subject_locked: "Тест уже має призначення, тому закріплений за «%{subject}». Щоб дати його в іншому класі, продублюйте тест."
       time_limit: "Ліміт часу (секунди, необов’язково)"
       available_from: "Доступ з (необов’язково)"
       available_until: "Доступ до (необов’язково)"
@@ -533,6 +536,8 @@ uk:
           attributes:
             available_until:
               after_available_from: "має бути пізніше за початок доступу"
+            subject:
+              has_assignments: "не можна змінити: тест уже має призначення"
         question:
           attributes:
             base:

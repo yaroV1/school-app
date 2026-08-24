@@ -23,6 +23,11 @@ class ExamsController < ApplicationController
   end
 
   def update
+    # The target subject is resolved through the owner scope, never permitted raw:
+    # assign_teacher_from_subject derives the teacher from the incoming subject, so a
+    # foreign subject_id would hand the exam to another teacher instead of failing.
+    move_target = params.dig(:exam, :subject_id)
+    @exam.subject = Current.user.subjects.find(move_target) if move_target.present?
     if @exam.update(exam_params)
       redirect_to test_path(@exam), notice: t("exams.flash.updated")
     else
