@@ -477,6 +477,26 @@ table.data td:first-child {
   height: 100%;
 }
 
+.pair-land-port {
+  display: grid;
+  grid-template-rows: minmax(1.9in, 0.85fr) 1.2fr;
+  gap: 0.1in;
+  height: 100%;
+  min-height: 0;
+}
+
+.pair-land-port .portrait {
+  min-height: 0;
+}
+
+.cards-top {
+  align-content: start;
+}
+
+.cards-top .card {
+  min-height: 2.6in;
+}
+
 .portrait {
   display: grid;
   grid-template-rows: 1fr auto;
