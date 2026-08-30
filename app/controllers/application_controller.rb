@@ -2,8 +2,18 @@ require "csv"
 
 class ApplicationController < ActionController::Base
   include Authentication
-  # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
-  allow_browser versions: :modern
+
+  # Rails' :modern set is a generic marker, never measured against this app, and it reaches the
+  # unauthenticated Take:: pages too — where being turned away is a student staring at an error
+  # instead of the test their class is sitting, with a teacher who cannot debug it mid-lesson.
+  # So these floors come from what the pages actually use: oklch() and color-mix() carry the
+  # whole palette, import maps load every Stimulus controller, and a single :has() rule is what
+  # Firefox waits on. Opera 97 is Chromium 111. Tailwind guards its @property block behind
+  # @supports, so that one sets no floor. Against :modern this admits Safari 16.4-17.1 — every
+  # iPhone that stopped at iOS 16 — and Chrome 111-119.
+  SUPPORTED_BROWSERS = { safari: 16.4, chrome: 111, firefox: 121, opera: 97, ie: false }.freeze
+
+  allow_browser versions: SUPPORTED_BROWSERS
 
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
