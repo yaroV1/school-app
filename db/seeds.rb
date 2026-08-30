@@ -10,7 +10,7 @@
 abort "db/seeds.rb is demo data and must not run in production." if Rails.env.production?
 
 teacher = User.find_or_create_by!(email_address: "teacher@example.com") do |user|
-  user.password = "password123"
+  user.password = "password1234"
 end
 
 # ---------------------------------------------------------------------------
@@ -613,7 +613,7 @@ end
 puts ""
 puts "Seeded demo data"
 puts "================"
-puts "Teacher login:  teacher@example.com / password123"
+puts "Teacher login:  teacher@example.com / password1234"
 puts "Classes:        #{teacher.class_groups.order(:name).pluck(:name).join(', ')}"
 puts "Subjects:       #{Subject.joins(:class_group).where(class_groups: { teacher_id: teacher.id }).order(:name).map { |s| "#{s.class_group.name}: #{s.name}" }.join(', ')}"
 puts "Students:       #{teacher.students.active.count}"

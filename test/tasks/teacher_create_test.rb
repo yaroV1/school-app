@@ -45,7 +45,8 @@ class TeacherCreateTest < ActiveSupport::TestCase
       assert_raises(SystemExit) { run_task("short-pw@example.com\nshort\nshort\n") }
     end
 
-    assert_includes @output, I18n.t("tasks.teacher_create.too_short", minimum: 12)
+    # The floor is User's now, so the task must be repeating the model's sentence, not its own.
+    assert_includes @output, I18n.t("errors.messages.too_short", count: User::MINIMUM_PASSWORD_LENGTH)
   end
 
   # The confirmation is read after the length check, so a typo in an otherwise long enough

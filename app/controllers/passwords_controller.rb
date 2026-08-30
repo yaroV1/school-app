@@ -22,7 +22,12 @@ class PasswordsController < ApplicationController
       @user.sessions.destroy_all
       redirect_to new_session_path, notice: t("auth.passwords.reset_success")
     else
-      redirect_to edit_password_path(params[:token]), alert: t("auth.passwords.mismatch")
+      # A mismatch was the only way this could fail until the password grew a length floor, and
+      # a teacher told "паролі не збігаються" about two identical short ones would retype them
+      # forever. rails-i18n words the length refusal well; its confirmation message does not, so
+      # that one keeps the curated sentence.
+      redirect_to edit_password_path(params[:token]),
+        alert: @user.errors.where(:password).first&.full_message || t("auth.passwords.mismatch")
     end
   end
 

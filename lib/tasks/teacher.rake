@@ -6,8 +6,6 @@
 namespace :teacher do
   desc "Create a teacher account, prompting for the email and password"
   task create: :environment do
-    minimum_length = 12
-
     ask = ->(prompt) do
       $stdout.print(prompt)
       $stdout.flush
@@ -31,14 +29,14 @@ namespace :teacher do
 
     email = ask.call(I18n.t("tasks.teacher_create.email"))
 
-    password = ask_secret.call(I18n.t("tasks.teacher_create.password", minimum: minimum_length))
-    abort I18n.t("tasks.teacher_create.too_short", minimum: minimum_length) if password.length < minimum_length
-    # The reset form states this one already, and it is the same sentence about the same mistake.
+    password = ask_secret.call(I18n.t("tasks.teacher_create.password", minimum: User::MINIMUM_PASSWORD_LENGTH))
+    # has_secure_password would catch this too, but only through rails-i18n's confirmation
+    # message, which prefixes an untranslated attribute name. The reset form already states the
+    # same mistake in Ukrainian, so ask here and reuse that sentence.
     abort I18n.t("auth.passwords.mismatch") if password != ask_secret.call(I18n.t("tasks.teacher_create.repeat"))
 
-    # Presence and uniqueness of the address are the model's, and it phrases those refusals in
-    # the same language as the prompts; only the two rules it does not carry — a length floor
-    # and a confirmation — are guarded above.
+    # Every other rule is the model's — the address, and the password floor it now carries — so
+    # there is one place to change any of them and no second copy to drift.
     teacher = User.new(email_address: email, password: password)
     abort teacher.errors.full_messages.to_sentence unless teacher.save
 

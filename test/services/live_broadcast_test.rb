@@ -61,7 +61,7 @@ class LiveBroadcastTest < ActiveSupport::TestCase
   end
 
   test "the board snapshot stays inside the exam's own assignments" do
-    other_teacher = User.create!(email_address: "other@example.com", password: "password123")
+    other_teacher = User.create!(email_address: "other@example.com", password: "password1234")
     other_exam = create_exam!(other_teacher, title: "Theirs", status: :published)
     other_exam.assignments.create!(student: other_teacher.students.create!(name: "Not mine"))
     @assignment # ours
