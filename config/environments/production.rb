@@ -24,14 +24,19 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # config.assume_ssl = true
+  # kamal-proxy terminates TLS and forwards plain HTTP, so the only evidence a request arrived
+  # securely is X-Forwarded-Proto. Without this Rails treats every request as insecure: it builds
+  # http:// URLs into password-reset mail and drops the `secure` flag from the session cookie.
+  config.assume_ssl = true
 
-  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  # Redirects http:// to https:// and sends HSTS. On this app a plain-HTTP request is not a
+  # cosmetic problem: a student's /t/:token link is their only credential and it rides in the
+  # request path, in the clear, for anyone on the same classroom Wi-Fi.
+  config.force_ssl = true
 
-  # Skip http-to-https redirect for the default health check endpoint.
-  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+  # kamal-proxy health-checks the container over plain HTTP on the internal network, and a 301
+  # is not a passing health check — an unexcluded /up fails every deploy.
+  config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]
@@ -57,8 +62,10 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
-  # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+  # Host for links in mailer templates. https, because force_ssl above would bounce an http://
+  # reset link anyway and the redirect is one more hop for a teacher already locked out.
+  # Delivery itself is still unconfigured — see docs/deploy.md § Known gaps.
+  config.action_mailer.default_url_options = { host: "edubba.com.ua", protocol: "https" }
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
   # config.action_mailer.smtp_settings = {
@@ -79,12 +86,12 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  #
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # Answer only to the name the certificate is issued for. No subdomain pattern: nothing is
+  # served off one, and a wildcard would accept a Host header for a name that does not exist.
+  # Adding www means adding it here, to proxy.host in config/deploy.yml, and to DNS — all three.
+  config.hosts = [ "edubba.com.ua" ]
+
+  # Same reason as ssl_options above: the proxy's health check arrives with the container's own
+  # Host, which is never the domain, so /up has to sit outside this check or deploys fail.
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end

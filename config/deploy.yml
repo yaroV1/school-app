@@ -13,15 +13,17 @@ servers:
   web:
     - 203.0.113.10
 
-# No domain is pointed at the droplet yet, so kamal-proxy serves plain HTTP on port 80 and
-# Let's Encrypt stays off. When a domain lands, uncomment this block and, in the same change,
-# turn on config.assume_ssl and config.force_ssl in config/environments/production.rb —
-# an SSL-terminating proxy in front of Rails needs both, or the app builds http:// URLs and
-# hands out non-secure cookies. See docs/deploy.md § Adding a domain.
+# kamal-proxy terminates TLS here and forwards plain HTTP to the container, with a Let's Encrypt
+# certificate it obtains and renews itself. Its paired half is config.assume_ssl / force_ssl in
+# config/environments/production.rb: without those Rails cannot tell the request arrived over TLS
+# and hands out http:// URLs and non-secure cookies behind this proxy. The two move together.
 #
-# proxy:
-#   ssl: true
-#   host: tests.example.com
+# The apex only. Let's Encrypt certifies every name listed here, and one without an A record
+# fails the challenge and leaves the whole site without a certificate — so adding www means
+# adding the DNS record, this list, and config.hosts together.
+proxy:
+  ssl: true
+  host: edubba.com.ua
 
 # Where you keep your container images.
 registry:
