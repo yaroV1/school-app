@@ -11,7 +11,7 @@ image: yarov1/school-app
 # address back out of this file to seed known_hosts, so it is configured here and nowhere else.
 servers:
   web:
-    - 203.0.113.10
+    - 165.22.21.19
 
 # kamal-proxy terminates TLS here and forwards plain HTTP to the container, with a Let's Encrypt
 # certificate it obtains and renews itself. Its paired half is config.assume_ssl / force_ssl in

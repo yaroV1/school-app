@@ -21,18 +21,39 @@ same directory. Every piece of production state is therefore a file on disk, whi
 
 ### 1. The droplet
 
-Create an Ubuntu LTS droplet. `s-1vcpu-2gb` (~$12/mo) is the comfortable size; `s-1vcpu-1gb` works
-because images are built on the CI runner and the droplet only pulls them, but leaves little headroom
-for `bin/rails console` alongside Puma and the Solid Queue supervisor.
+Create an Ubuntu LTS droplet, `s-1vcpu-2gb`, in a region close to the classrooms — Frankfurt for
+Ukraine. Latency is felt here rather than merely measured: the runner autosaves every 5 seconds and the
+live board polls every 4, for every student at once.
+
+One vCPU is the right number, not a compromise. SQLite serializes writes on the database lock for the
+whole of each `:immediate` transaction, so extra cores buy no throughput — which is also why
+`WEB_CONCURRENCY` stays at 1 — and images are built on the CI runner, never here.
+
+2 GB is, though. A production Rails process eager-loads to ~120 MB; Puma plus the Solid Queue
+supervisor and its three forks land around 600-800 MB, and Docker and the OS take another 250-400.
+That fits in 1 GB right up until a deploy, when Kamal runs the old and new containers side by side
+until `/up` answers and the total roughly doubles. DigitalOcean droplets ship without swap, so that
+peak is an OOM kill rather than a slow minute. Adding a swap file is worth it either way:
+
+```bash
+fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+echo "/swapfile none swap sw 0 0" >> /etc/fstab
+```
+
+Turn on **Backups** (+20%) while creating it. The nightly snapshots from `BackupDatabaseJob` live on
+the same volume as the database, so they cover a bad migration but not a lost droplet; DigitalOcean's
+weekly image is the cheapest thing that covers the second case. **Monitoring** is free and worth having
+given there is no error tracking.
 
 Add your SSH key at creation time. Then, with a DigitalOcean Cloud Firewall or `ufw`, allow inbound
 `22/tcp`, `80/tcp` and `443/tcp`. Keep SSH open to any source: GitHub-hosted runners have no stable
 egress IP. Port 80 stays open even though the app redirects to HTTPS — Let's Encrypt answers its
 HTTP-01 challenge there.
 
-Put the droplet's public IPv4 address into `config/deploy.yml` under `servers.web`, replacing the
-`203.0.113.10` placeholder. That file is the only place the address is configured — the deploy job reads
-it back out to pin the host key.
+The droplet's public IPv4 address goes into `config/deploy.yml` under `servers.web`. That file is the
+only place it is configured — the deploy job reads it back out to pin the host key, so a wrong address
+fails at `ssh-keyscan` naming it rather than somewhere deep inside Kamal. Rebuilding onto a new droplet
+means editing that one line.
 
 ### 1b. DNS, before the first deploy
 
@@ -48,11 +69,21 @@ container comes up without a certificate.
 Only the apex. Every name in `proxy.host` is certified, and one without an A record fails the whole
 challenge — adding `www` later means a DNS record, `proxy.host`, and `config.hosts` in the same change.
 
-Confirm it resolves before going further:
+**Delete any `AAAA` record that does not point at this droplet.** Let's Encrypt prefers IPv6 when both
+families are published, so a stale `AAAA` left over from a previous host silently sends the challenge to
+a server that knows nothing about it — the A record looks right, the certificate never arrives, and each
+retry spends one of the five failures per hour the rate limit allows. Either drop the record, or, if the
+droplet has IPv6 enabled, point it at the droplet's own address.
+
+Confirm both families before going further, not just the one you set:
 
 ```bash
-dig +short edubba.com.ua
+dig +short A edubba.com.ua       # the droplet
+dig +short AAAA edubba.com.ua    # empty, or the droplet's IPv6
 ```
+
+`.com.ua` can propagate more slowly than the common zones; querying a public resolver
+(`dig +short edubba.com.ua @8.8.8.8`) shows what Let's Encrypt will see rather than what your ISP cached.
 
 ### 2. A deploy key for GitHub Actions
 
@@ -135,6 +166,35 @@ After the first successful push, the GHCR package is private and the droplet pul
 workflow's `GITHUB_TOKEN`, which expires when the run ends. Set the package to public at
 **github.com/users/yaroV1/packages → school-app → Package settings → Change visibility** so the droplet
 can pull unauthenticated. The repository is already public, so this leaks nothing new.
+
+## After the first deploy
+
+Four checks, in this order. The first two are about whether TLS actually happened; the third catches a
+misconfiguration that looks fine until it matters.
+
+```bash
+# 1. The certificate is real and issued to the domain, not a self-signed placeholder.
+curl -sSI https://edubba.com.ua/up | head -1
+
+# 2. Plain HTTP redirects rather than serving.
+curl -sSI http://edubba.com.ua/ | head -1        # expect 301
+
+# 3. The client IP reaches Rails. Sign in first, then:
+bin/kamal app exec --reuse "bin/rails runner 'puts Session.last.ip_address'"
+
+# 4. The first nightly snapshot, the morning after.
+bin/kamal app exec --reuse "ls -la storage/backups"
+```
+
+Check 3 is the one worth understanding. With `proxy.ssl: true` kamal-proxy stops forwarding
+`X-Forwarded-For` unless `forward_headers: true` is set, and `request.remote_ip` is what
+`rate_limit to: 10, within: 3.minutes` on `SessionsController#create` keys on. If that command prints a
+private address (`172.x`, `10.x`) rather than your own public one, the login limit is being counted
+globally instead of per client — one person hammering the form could lock the teacher out in
+three-minute stretches. The fix is `forward_headers: true` under `proxy:` in `config/deploy.yml`.
+
+TLS itself does not depend on this: `config.assume_ssl` sets `HTTPS=on` and `X-Forwarded-Proto` on every
+request from inside Rails, without asking the proxy.
 
 ## Deploying after that
 
