@@ -60,6 +60,11 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 # Final stage for app image
 FROM base
 
+# Links the published GHCR package back to the repository. Without it the package is created
+# unattached to any repo, and the workflow's GITHUB_TOKEN loses push access after the first
+# deploy. See docs/deploy.md.
+LABEL org.opencontainers.image.source="https://github.com/yaroV1/school-app"
+
 # Run and own only the runtime files as a non-root user for security
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash

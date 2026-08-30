@@ -89,3 +89,51 @@ jobs:
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
+
+  deploy:
+    # Only a green main reaches the droplet.
+    needs: [ scan_ruby, scan_js, lint, test ]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    # One deploy at a time. Both containers of a rolling swap share the single SQLite volume,
+    # and two swaps at once would put two db:prepare runs and two Solid Queue supervisors on
+    # the same files. Queue the second deploy instead of cancelling it — a cancelled run can
+    # leave the droplet mid-swap.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Authorize the runner against the droplet
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # config/deploy.yml is the only place the droplet address is configured; reading it
+          # back here pins the host key to the same server Kamal is about to deploy to.
+          host="$(ruby -ryaml -e 'puts YAML.load_file("config/deploy.yml")["servers"]["web"].first')"
+          ssh-keyscan -H "$host" > ~/.ssh/known_hosts
+          # ssh-keyscan exits 0 on an unreachable host, which would leave Kamal to fail later
+          # with an opaque host-key error instead of naming the wrong address.
+          test -s ~/.ssh/known_hosts || { echo "::error::No SSH host key from $host — check servers.web in config/deploy.yml and the firewall."; exit 1; }
+
+      - name: Deploy with Kamal
+        env:
+          KAMAL_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+        run: bin/kamal deploy
