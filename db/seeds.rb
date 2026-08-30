@@ -3,6 +3,12 @@
 #   # or fresh:
 #   bin/rails db:reset
 
+# This file publishes tests with live /t/ links and a teacher whose password is printed below and
+# committed to the repository. `seeds: false` on the production primary keeps db:prepare from
+# loading it on a fresh volume; db:seed calls load_seed directly and ignores that flag, so the
+# second door closes here.
+abort "db/seeds.rb is demo data and must not run in production." if Rails.env.production?
+
 teacher = User.find_or_create_by!(email_address: "teacher@example.com") do |user|
   user.password = "password123"
 end
