@@ -17,7 +17,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 **Teacher login (seed):**
 - Email: `teacher@example.com`
-- Password: `password123`
+- Password: `password1234`
 
 Seed loads demo **Classes**, **Students**, **Subjects**, and **Tests** (with sample access links printed in the console). Re-run anytime with `bin/rails db:seed`, or wipe and reload with `bin/rails db:reset`.
 

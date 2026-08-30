@@ -64,7 +64,7 @@ class ClassGroupTabsTest < ActionDispatch::IntegrationTest
   end
 
   test "tabs are scoped to the signed-in teacher" do
-    other = User.create!(email_address: "other@example.com", password: "password123")
+    other = User.create!(email_address: "other@example.com", password: "password1234")
     foreign = other.class_groups.create!(name: "Not mine")
 
     get students_class_group_path(foreign)

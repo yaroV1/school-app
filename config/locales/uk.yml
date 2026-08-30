@@ -76,6 +76,13 @@ uk:
       mail_link: "цій сторінці"
       mail_expiry: "Посилання дійсне %{duration}."
 
+  tasks:
+    teacher_create:
+      email: "Email: "
+      password: "Пароль (щонайменше %{minimum} символів): "
+      repeat: "Повторіть пароль: "
+      created: "Створено вчителя %{email} (id %{id})."
+
   students:
     index:
       title: "Учні"
@@ -522,6 +529,9 @@ uk:
       exam: "Тест"
       question: "Питання"
     attributes:
+      user:
+        email_address: "Email"
+        password: "Пароль"
       student:
         name: "Ім’я"
         email: "Email"
