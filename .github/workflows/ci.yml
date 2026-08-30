@@ -127,7 +127,10 @@ jobs:
           # config/deploy.yml is the only place the droplet address is configured; reading it
           # back here pins the host key to the same server Kamal is about to deploy to.
           host="$(ruby -ryaml -e 'puts YAML.load_file("config/deploy.yml")["servers"]["web"].first')"
-          ssh-keyscan -H "$host" > ~/.ssh/known_hosts
+          # No -H: net-ssh reads hashed known_hosts through a separate code path that does not
+          # agree with what ssh-keyscan writes, and answers a correct key with HostKeyMismatch.
+          # The runner lives for one job, so there is no host name here worth hashing anyway.
+          ssh-keyscan "$host" > ~/.ssh/known_hosts
           # ssh-keyscan exits 0 on an unreachable host, which would leave Kamal to fail later
           # with an opaque host-key error instead of naming the wrong address.
           test -s ~/.ssh/known_hosts || { echo "::error::No SSH host key from $host — check servers.web in config/deploy.yml and the firewall."; exit 1; }

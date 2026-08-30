@@ -109,22 +109,44 @@ the runner and the droplet into the registry, so the workflow has no separate lo
 
 ### 4. `.kamal/secrets`
 
-Kamal resolves `env.secret` entries through `.kamal/secrets`, and the generated file reads the master
-key off disk:
+Kamal resolves `env.secret` and `registry.password` through `.kamal/secrets`. Two lines in the
+generated file need editing before CI can deploy — one is commented out, the other reads a file that
+does not exist on a runner:
 
 ```sh
-RAILS_MASTER_KEY=$(cat config/master.key)
+# Uncomment this one. Without it Kamal aborts with
+# "Secret 'KAMAL_REGISTRY_PASSWORD' not found in .kamal/secrets".
+KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD
+
+# Was: RAILS_MASTER_KEY=$(cat config/master.key)
+# config/master.key is gitignored, so on a runner that file does not exist.
+RAILS_MASTER_KEY=$RAILS_MASTER_KEY
 ```
 
-`config/master.key` is gitignored, so on a CI runner that file does not exist and the deploy would ship
-an empty key. Change the line to prefer the environment and keep the file as a local fallback:
+**This file is not a shell script.** Kamal parses it with dotenv, which understands `$VAR` and
+`${VAR}` and nothing else — there is no `${VAR:-default}`. Writing one does not fail loudly; it
+corrupts the value. With `RAILS_MASTER_KEY` set to `abc123`, dotenv parses
 
 ```sh
 RAILS_MASTER_KEY=${RAILS_MASTER_KEY:-$(cat config/master.key)}
 ```
 
-The `KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD` line already reads from the environment and needs
-no change.
+into `abc123:-}` — the variable substituted, the rest of the shell syntax left in place as literal
+text. The container then boots with a master key that is almost right, fails to decrypt credentials,
+and never answers the health check.
+
+Kamal also runs every `$(...)` unconditionally while parsing, so a `cat: config/master.key: No such
+file or directory` line in the deploy log is expected noise on a runner, not evidence of a missing
+secret.
+
+Because there is no fallback syntax, `bin/kamal` from your own machine needs the key in the
+environment too:
+
+```bash
+export RAILS_MASTER_KEY=$(cat config/master.key)
+```
+
+Worth putting in your shell profile, or in a direnv `.envrc` for the project.
 
 ### 5. Bootstrap the droplet, then let CI do the first deploy
 
