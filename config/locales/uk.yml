@@ -82,6 +82,8 @@ uk:
       password: "Пароль (щонайменше %{minimum} символів): "
       repeat: "Повторіть пароль: "
       created: "Створено вчителя %{email} (id %{id})."
+    db_backup:
+      created: "Знімок бази збережено: %{path} (%{kilobytes} КБ)."
 
   students:
     index:

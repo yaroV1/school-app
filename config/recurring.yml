@@ -20,3 +20,10 @@ production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+
+  # Overnight, when no class is mid-test: VACUUM INTO holds a read transaction for as long as
+  # it takes to write the file, and the copies land on the same volume as the database.
+  backup_database:
+    class: BackupDatabaseJob
+    queue: default
+    schedule: every day at 3:30am
