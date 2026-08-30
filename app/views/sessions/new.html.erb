@@ -1,12 +1,12 @@
 <% content_for :title, t("auth.sign_in") %>
 <div class="mx-auto w-full max-w-sm">
   <div class="mb-6 text-center">
-    <%= render "shared/brand_mark", class_name: "mx-auto mb-3 size-11 rounded-card" %>
-    <h1 class="page-title"><%= t("auth.sign_in") %></h1>
+    <%= render "shared/scribe", class_name: "mx-auto size-24 text-accent" %>
+    <h1 class="page-title mt-1"><%= t("auth.sign_in") %></h1>
     <p class="page-subtitle"><%= t("app_name") %></p>
   </div>
 
-  <%= form_with url: session_url, class: "card card-pad space-y-4" do |form| %>
+  <%= form_with url: session_url, class: "space-y-4" do |form| %>
     <div class="fieldset">
       <%= form.label :email_address, t("auth.email"), class: "field-label" %>
       <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", value: params[:email_address], class: field_class %>
@@ -17,7 +17,7 @@
       <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72, class: field_class %>
     </div>
 
-    <%= form.submit t("auth.sign_in"), class: "#{btn_primary} w-full" %>
+    <%= form.button safe_join([ ui_icon("enter"), t("auth.sign_in") ]), class: "#{btn_primary} w-full" %>
     <p class="text-center">
       <%= link_to t("auth.forgot_password"), new_password_path, class: "link text-sm" %>
     </p>

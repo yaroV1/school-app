@@ -32,6 +32,19 @@ module ApplicationHelper
     render "shared/icon", name: name.to_s, class_name: class_name
   end
 
+  def subject_targets_by_class
+    Current.user.subjects.includes(:class_group)
+      .sort_by { |subject| [ subject.class_group.name, subject.name ] }
+      .group_by(&:class_group)
+  end
+
+  def subject_target_options(exam)
+    grouped = subject_targets_by_class.map do |group, subjects|
+      [ group.name, subjects.map { |subject| [ subject.name, subject.id ] } ]
+    end
+    grouped_options_for_select(grouped, exam.subject_id)
+  end
+
   # `aria-current` carries the active state, so highlighting is not tied to a
   # particular colour class.
   def nav_link_to(text, path)
@@ -63,8 +76,47 @@ module ApplicationHelper
     number.frac.zero? ? number.to_i.to_s : number.to_s("F")
   end
 
+  # Wet clay is a draft total; fired clay is the teacher-finalized stamp.
+  # The two states are fill vs outline so hue never has to carry the meaning.
+  def score_seal(grade, size: :md)
+    return content_tag(:span, t("common.dash"), class: "text-ink-muted") if grade.nil?
+
+    render "shared/score_seal", grade: grade, size: size.to_sym == :lg ? :lg : :md
+  end
+
+  # First and last word, because a Ukrainian roster writes surname-first as
+  # often as the reverse — either order yields the same two letters.
+  def initials(name)
+    name.to_s.split.values_at(0, -1).compact.uniq.filter_map { |word| word[0] }.join.upcase
+  end
+
   def status_badge(status)
     variant = STATUS_BADGES.fetch(status.to_s, "badge-neutral")
     content_tag(:span, t("statuses.#{status}"), class: "badge #{variant}")
+  end
+
+  def take_brief(exam, student, attempts_used)
+    t("take.brief",
+      name: student.name,
+      questions: t("exams.questions_count", count: exam.questions.size),
+      time: exam.time_limit_sec ? t("take.brief_time", count: exam.time_limit_sec / 60) : t("take.brief_untimed"),
+      used: attempts_used,
+      max: exam.max_attempts)
+  end
+
+  # Ordering stores a full permutation as soon as the first autosave lands, so a
+  # saved row counts as started even if the student never reordered.
+  def answer_started?(question, answer)
+    return false if answer.nil?
+
+    if question.mcq?
+      answer.option_id.present?
+    elsif question.ordering?
+      answer.order_ids.any?
+    elsif question.matching?
+      answer.pairs.values.any?(&:present?)
+    else
+      answer.text_response.present?
+    end
   end
 end

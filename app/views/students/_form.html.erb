@@ -8,5 +8,5 @@
     <%= f.label :email, t("students.form.email_optional"), class: "field-label" %>
     <%= f.email_field :email, class: field_class %>
   </div>
-  <%= f.submit class: btn_primary %>
+  <%= f.button(class: btn_primary) { |label| safe_join([ ui_icon("check"), label ]) } %>
 <% end %>

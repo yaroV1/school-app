@@ -1,6 +1,7 @@
 class ExamsController < ApplicationController
   before_action :set_subject, only: %i[new create]
-  before_action :set_exam, only: %i[show edit update destroy publish close results live print print_key]
+  before_action :set_exam,
+    only: %i[show edit update destroy publish close duplicate create_duplicate results live print print_key]
 
   def show
     @questions = @exam.questions.with_attached_photo
@@ -23,9 +24,17 @@ class ExamsController < ApplicationController
   end
 
   def update
+    # The target subject is resolved through the owner scope, never permitted raw:
+    # assign_teacher_from_subject derives the teacher from the incoming subject, so a
+    # foreign subject_id would hand the exam to another teacher instead of failing.
+    move_target = params.dig(:exam, :subject_id)
+    @exam.subject = Current.user.subjects.find(move_target) if move_target.is_a?(String) && move_target.present?
     if @exam.update(exam_params)
       redirect_to test_path(@exam), notice: t("exams.flash.updated")
     else
+      # A refused move must not leak into the re-render: the breadcrumbs and the locked
+      # hint would otherwise show the target subject the error just rejected.
+      @exam.restore_attributes(%i[subject_id teacher_id])
       render :edit, status: :unprocessable_entity
     end
   end
@@ -46,6 +55,23 @@ class ExamsController < ApplicationController
   def close
     @exam.close!
     redirect_to test_path(@exam), notice: t("exams.flash.closed")
+  end
+
+  def duplicate
+  end
+
+  def create_duplicate
+    targets = duplicate_targets
+    return redirect_to duplicate_test_path(@exam), alert: t("exams.flash.duplicate_no_target") if targets.empty?
+
+    copies = @exam.duplicate_into!(targets)
+    if copies.one?
+      redirect_to test_path(copies.sole), notice: t("exams.flash.duplicated")
+    else
+      redirect_to test_path(@exam), notice: t("exams.flash.duplicated_many", count: copies.size)
+    end
+  rescue ActiveRecord::RecordInvalid
+    redirect_to test_path(@exam), alert: t("exams.flash.duplicate_failed")
   end
 
   def results
@@ -79,6 +105,18 @@ class ExamsController < ApplicationController
 
   def set_subject
     @subject = Current.user.subjects.find(params[:subject_id])
+  end
+
+  # Same rule as the move in #update: each copy's teacher is derived from its incoming
+  # subject, so every target resolves through the owner scope, never a permitted param.
+  # The whole selection resolves before the first copy exists, so one foreign id answers
+  # 404 with nothing created. The picker posts a checkbox array; a param of any other
+  # shape is not a selection this form could have made.
+  def duplicate_targets
+    ids = params[:subject_ids]
+    return [] unless ids.is_a?(Array)
+
+    Current.user.subjects.find(ids.grep(String).select(&:present?).uniq)
   end
 
   def set_exam

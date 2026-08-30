@@ -37,6 +37,6 @@
     <% end %>
 
     <p class="field-hint"><%= t("exams.show.wording_hint") %></p>
-    <%= f.submit t("exams.show.save_wording"), class: "#{btn_secondary} btn-sm" %>
+    <%= f.button safe_join([ ui_icon("check", class_name: "size-4"), t("exams.show.save_wording") ]), class: "#{btn_secondary} btn-sm" %>
   <% end %>
 </details>

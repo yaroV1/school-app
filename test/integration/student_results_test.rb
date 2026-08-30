@@ -46,6 +46,8 @@ class StudentResultsTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "#student_result"
+    assert_select "#student_result .seal-fired.seal-lg .seal-score", text: "3"
+    assert_select "#student_result .seal-fired.seal-lg .seal-max", text: "9"
     assert_match I18n.t("attempts.report.earned", score: "3", max: "9"), response.body
     assert_match "MCQ_TEACHER_COMMENT", response.body
     assert_match "SHORT_TEACHER_COMMENT", response.body

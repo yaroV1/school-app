@@ -5,12 +5,12 @@
   <p class="flash flash-warning"><%= t("exams.assign.publish_hint") %></p>
 <% end %>
 
-<section class="card card-pad mb-8">
+<section class="mb-8">
   <h2 class="section-title mb-3"><%= t("exams.assign.assign_students") %></h2>
   <% if @students.any? %>
     <%= form_with url: test_assignments_path(@exam), class: "mb-5" do %>
       <%= hidden_field_tag :assign_class, "1" %>
-      <%= submit_tag t("exams.assign.assign_class"), class: btn_primary %>
+      <%= button_tag safe_join([ ui_icon("students"), t("exams.assign.assign_class") ]), class: btn_primary %>
     <% end %>
     <p class="field-label mb-2"><%= t("exams.assign.or_pick") %></p>
     <%= form_with url: test_assignments_path(@exam), class: "space-y-3" do %>
@@ -24,7 +24,7 @@
           </li>
         <% end %>
       </ul>
-      <%= submit_tag t("exams.assign.create_links"), class: btn_secondary %>
+      <%= button_tag safe_join([ ui_icon("link"), t("exams.assign.create_links") ]), class: btn_secondary %>
     <% end %>
   <% else %>
     <p class="text-sm text-ink-muted"><%= t("exams.assign.empty_class") %></p>
@@ -37,7 +37,7 @@
 
   <% if @assignments.any? %>
     <%= form_with url: bulk_revoke_test_assignments_path(@exam), method: :post, id: "bulk-revoke", class: "mb-3" do %>
-      <%= submit_tag t("exams.assign.revoke_selected"), class: btn_danger, data: { turbo_confirm: t("exams.assign.revoke_confirm") } %>
+      <%= button_tag safe_join([ ui_icon("ban"), t("exams.assign.revoke_selected") ]), class: btn_danger, data: { turbo_confirm: t("exams.assign.revoke_confirm") } %>
     <% end %>
     <div class="table-wrap">
       <table class="data-table">

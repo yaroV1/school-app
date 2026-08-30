@@ -88,15 +88,38 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "History of Ukraine", response.body
     assert_select ".student-brand .brand-mark svg"
+    assert_select ".student-brand", text: /#{I18n.t('app_name')}/
+    assert_font_self_hosted
+    assert_select "body.student-shell", 1, "the start screen is where the decoration belongs"
+    assert_select "h1.page-title", text: "Unit 1"
+    assert_select ".card", false
+    assert_select "ul svg", false
+    assert_match I18n.t("take.brief",
+      name: "Sam",
+      questions: I18n.t("exams.questions_count", count: 6),
+      time: I18n.t("take.brief_time", count: 5),
+      used: 0,
+      max: 1), response.body
+    assert_select ".chip", text: I18n.t("common.credits", count: 0)
 
     post student_start_url(token: token)
     follow_redirect!
     assert_response :success
     assert_match "History of Ukraine", response.body
     assert_select "img[alt=?]", I18n.t("exams.show.photo_alt")
+    # A student under a countdown gets the calmest surface in the app: no lit shell here.
+    assert_select "body.student-shell", false
 
     attempt = assignment.attempts.last
     mcq, short_q, open_q, ordering, matching, source = exam.questions.order(:position)
+    left_id = matching.student_facing_left.first.fetch("id")
+
+    assert_select ".run-progress-mark", 6
+    assert_select ".qcard-num", 6
+    assert_select ".qcard .chip", false
+    assert_select "select", false
+    assert_select "[data-controller=matching]"
+    assert_select "input[type=hidden][name=?]", "answers[#{matching.id}][pairs][#{left_id}]"
 
     put student_answers_url(token: token), params: {
       attempt_id: attempt.id,
@@ -138,7 +161,10 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     get student_done_url(token: token)
     assert_response :success
     assert_select ".completion-card .completion-check svg[aria-hidden=true]"
+    assert_select ".completion-wedge", 3
     assert_select "#student_result"
+    assert_select "#student_result .seal-fired.seal-lg .seal-score", text: "11"
+    assert_select "#student_result .seal-fired.seal-lg .seal-max", text: "11"
     assert_match I18n.t("attempts.report.earned", score: "11", max: "11"), response.body
     assert_select "#correct_answer_question_#{mcq.id}", text: /4/
     assert_match "Добре", response.body
@@ -195,12 +221,16 @@ class MvpFlowTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
 
-    # The clock and the save state ride along while scrolling; submitting ends
-    # the attempt for good, so that button must not sit under a reader's thumb.
+    # The clock and save state enter the flow before the questions and ride
+    # along from the top; the old bottom bar covered the next card on a phone.
     assert_select ".run-bar [data-countdown-target=display]"
     assert_select ".run-bar [data-autosave-target=status]"
-    assert_select ".run-bar input[type=submit]", false
-    assert_select "form input[type=submit][value=?]", I18n.t("take.submit")
+    assert_select ".run-bar button[type=submit]", false
+    assert_select "form button[type=submit]", text: I18n.t("take.submit")
+
+    form_children = css_select("form").first.element_children
+    assert_operator form_children.index(css_select(".run-bar").first), :<,
+                    form_children.index(css_select(".qcard").first)
   end
 
   test "class tabs split subjects and students; subject tabs split tests and stats" do

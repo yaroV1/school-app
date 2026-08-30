@@ -4,12 +4,12 @@
 <section>
   <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
     <h2 class="section-title"><%= t("subjects.show.tests") %></h2>
-    <%= link_to t("subjects.show.new_test"), new_subject_exam_path(@subject), class: btn_primary %>
+    <%= link_to safe_join([ ui_icon("plus"), t("subjects.show.new_test") ]), new_subject_exam_path(@subject), class: btn_primary %>
   </div>
 
   <%= form_with url: subject_path(@subject), method: :get,
         data: { controller: "autosubmit", turbo_action: "replace" },
-        class: "card card-pad mb-4 flex flex-wrap items-end gap-3" do %>
+        class: "mb-4 flex flex-wrap items-end gap-3" do %>
     <div class="min-w-56 flex-1">
       <%= label_tag :q, t("subjects.show.search"), class: "field-label" %>
       <%= search_field_tag :q, @query, placeholder: t("subjects.show.search_placeholder"), class: field_class %>
@@ -19,9 +19,9 @@
       <%= select_tag :sort, options_for_select(@sort_options, @sort),
             class: field_class, data: { action: "change->autosubmit#submit" } %>
     </div>
-    <%= submit_tag t("common.apply"), class: btn_secondary %>
+    <%= button_tag safe_join([ ui_icon("search"), t("common.apply") ]), class: btn_secondary %>
     <% if @filtered %>
-      <%= link_to t("subjects.show.clear"), subject_path(@subject), class: "btn btn-ghost" %>
+      <%= link_to safe_join([ ui_icon("x"), t("subjects.show.clear") ]), subject_path(@subject), class: "btn btn-ghost" %>
     <% end %>
   <% end %>
 
@@ -38,7 +38,6 @@
               <span><%= l(exam.created_at, format: :short) %></span>
             </div>
           </div>
-          <%= link_to t("common.open"), test_path(exam), class: "#{btn_secondary} btn-sm" %>
         </li>
       <% end %>
     </ul>

@@ -17,6 +17,7 @@ class AssignmentsManageTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "form#bulk-revoke"
+    assert_select "section.card", false
     assert_select "form#bulk-revoke table", false
     assert_select "form#bulk-revoke form", false
     assert_select "tr##{dom_id(@assignment)} input[name='assignment_ids[]'][form=bulk-revoke]"

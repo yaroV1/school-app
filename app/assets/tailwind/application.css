@@ -1,75 +1,216 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* ---------------------------------------------------------------------------
+   Literata, the heading face
+
+   Self-hosted rather than pulled from a CDN: a classroom Wi-Fi is the network
+   this runs on, and it keeps the commented-out CSP initializer to one origin
+   whenever it is switched on. The files come from `@fontsource-variable/literata`
+   and are OFL-1.1 — `app/assets/fonts/Literata-OFL.txt` travels with them.
+
+   One variable file per script, split on `unicode-range` so a page pulls only
+   what it sets. The Cyrillic range is the reason this face was picked at all:
+   most serifs with the right voice have no `і ї є ґ`, and this UI is Ukrainian.
+   `swap` over `block`, because a heading a student cannot read yet is worse
+   than a heading that changes shape once.
+--------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("literata-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("literata-cyrillic-wght-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
 /* ---------------------------------------------------------------------------
    Design tokens
 
    Semantic names only. Templates should reach for `bg-surface`, `text-ink-muted`
-   or `border-line` instead of a raw `slate-*`, so a palette change happens here
-   and nowhere else. Values mirror the Tailwind slate / indigo / red / emerald /
-   amber / sky ramps.
+   or `border-line` instead of a raw `stone-*`, so a palette change happens here
+   and nowhere else.
+
+   The palette is Mesopotamian and restrained. Surfaces are warm cream, text and
+   statuses stay in a Bitumen-to-brown ramp, and fired clay is the one interaction
+   accent. The clay appears only where the interface needs attention: links,
+   focus, current state, selected controls, and primary actions.
+
+   That has a consequence the components have to answer for: hue can no longer
+   carry meaning. `success` and `danger` are the same colour family, separated
+   only by lightness, so any state a reader must not miss is marked by FORM as
+   well — a solid fill against an outline, a heavier border, an icon. Relying on
+   colour alone was a WCAG 1.4.1 failure in the previous palette anyway; this one
+   cannot make that mistake because it has no colour to lean on.
 
    Every text token is at or above the 4.5:1 WCAG AA ratio on the surface it is
    meant to sit on. `ink-subtle` is the one exception: it clears 3:1, so it is
    for hairline separators, list markers and icon strokes only — never for text
-   a reader has to make out.
+   a reader has to make out. `test/design/palette_contrast_test.rb` is the proof,
+   and it parses this block directly, so a new colour token belongs in its pair
+   table.
 --------------------------------------------------------------------------- */
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji";
 
-  /* Neutral surfaces, from the page backdrop up to raised panels */
-  --color-surface: oklch(0.984 0.003 247);
-  --color-surface-raised: #fff;
-  --color-surface-sunken: oklch(0.968 0.007 247);
+  /* Titles and the wordmark only. Body copy, form labels and table cells stay
+     on the system sans: this is a document the reader scans, not one they read
+     end to end, and a serif at 13px on a classroom phone is a worse read. */
+  --font-serif: "Literata", ui-serif, Georgia, "Times New Roman", serif;
+
+  /* Cream paper, warmer than the clay it replaced. */
+  --color-surface: oklch(0.978 0.009 84);
+  --color-surface-raised: oklch(0.995 0.004 84);
+  --color-surface-sunken: oklch(0.955 0.013 82);
 
   /* Hairlines */
-  --color-line: oklch(0.929 0.013 255);
-  --color-line-strong: oklch(0.869 0.022 252);
+  --color-line: oklch(0.915 0.014 78);
+  --color-line-strong: oklch(0.845 0.02 74);
 
-  /* Text, darkest to lightest. `ink-light` is the hover for solid ink fills.
-     `ink-subtle` is not a text colour — see the note above. */
-  --color-ink: oklch(0.208 0.042 265);
-  --color-ink-light: oklch(0.372 0.044 257);
-  --color-ink-muted: oklch(0.502 0.045 257);
-  --color-ink-subtle: oklch(0.64 0.043 257);
+  /* Text: dark brown, and deliberately browner than anything else here, so the
+     charcoal of a link reads as a different material rather than a shade. */
+  --color-ink: oklch(0.215 0.042 55);
+  --color-ink-light: oklch(0.375 0.038 54);
+  --color-ink-muted: oklch(0.495 0.032 56);
+  --color-ink-subtle: oklch(0.635 0.026 58);
 
-  /* One accent, reserved for focus, current state, links and brand artwork */
-  --color-accent: oklch(0.511 0.262 276);
-  --color-accent-strong: oklch(0.457 0.24 277);
-  --color-accent-line: oklch(0.785 0.115 274);
-  --color-accent-soft: oklch(0.962 0.018 272);
+  /* Fired clay. Saturated enough to establish the brand, dark enough for AA
+     text and white labels on the cream surfaces. */
+  --color-accent: oklch(0.43 0.12 42);
+  --color-accent-strong: oklch(0.35 0.1 40);
+  --color-accent-line: oklch(0.76 0.06 50);
+  --color-accent-soft: oklch(0.95 0.025 60);
 
-  --color-danger: oklch(0.505 0.213 27);
-  --color-danger-line: oklch(0.885 0.062 18);
-  --color-danger-soft: oklch(0.971 0.013 17);
+  /* Status, as a lightness ladder in the same Bitumen family rather than as
+     four hues. Darkest carries the most weight; the components pair each of
+     these with a fill or an outline so the tone is never the only signal. */
+  --color-danger: oklch(0.285 0.011 60);
+  --color-danger-line: oklch(0.76 0.014 64);
+  --color-danger-soft: oklch(0.947 0.01 70);
 
-  /* Status hues. Same three-step shape as `danger`, so a badge and a flash can
-     be built from tokens rather than from a raw ramp. */
-  --color-success: oklch(0.508 0.118 165.612);
-  --color-success-strong: oklch(0.432 0.095 166.913);
-  --color-success-line: oklch(0.905 0.093 164.15);
-  --color-success-soft: oklch(0.979 0.021 166.113);
+  --color-success: oklch(0.375 0.009 66);
+  --color-success-strong: oklch(0.295 0.01 62);
+  --color-success-line: oklch(0.81 0.012 70);
+  --color-success-soft: oklch(0.962 0.008 74);
 
-  --color-warning: oklch(0.473 0.137 46.201);
-  --color-warning-line: oklch(0.924 0.12 95.746);
-  --color-warning-soft: oklch(0.987 0.022 95.277);
+  --color-warning: oklch(0.45 0.009 68);
+  --color-warning-line: oklch(0.845 0.012 72);
+  --color-warning-soft: oklch(0.972 0.007 76);
 
-  --color-info: oklch(0.5 0.134 242.749);
-  --color-info-line: oklch(0.901 0.058 230.902);
-  --color-info-soft: oklch(0.977 0.013 236.62);
+  --color-info: oklch(0.525 0.008 70);
+  --color-info-line: oklch(0.875 0.01 74);
+  --color-info-soft: oklch(0.978 0.006 78);
+
+  /* Kept as a lightness ramp for any future type-coloured mark. The runner names
+     the type in words now, so these tokens no longer have a component. */
+  --color-qtype-mcq: oklch(0.42 0.011 64);
+  --color-qtype-short-text: oklch(0.51 0.01 66);
+  --color-qtype-open: oklch(0.60 0.01 68);
+  --color-qtype-ordering: oklch(0.68 0.009 70);
+  --color-qtype-matching: oklch(0.76 0.008 72);
+  --color-qtype-source: oklch(0.84 0.007 74);
+
+  /* Solid fills that must not invert with the page: the countdown chip, and the
+     label that sits on those fills. In light they match `ink` / `surface-raised`. */
+  --color-solid: oklch(0.215 0.042 55);
+  --color-on-fill: oklch(0.995 0.004 84);
+
+  /* Accent used as text (links). Same clay as `--color-accent` in light; dark
+     mode lightens this and leaves the fill token alone so white-on-clay buttons
+     stay legal. */
+  --color-accent-ink: oklch(0.43 0.12 42);
 
   --radius-control: 0.5rem;
   --radius-card: 0.75rem;
   --radius-chip: 9999px;
 
-  --shadow-card: 0 1px 2px 0 oklch(0.208 0.042 265 / 0.04);
-  --shadow-raised: 0 4px 12px -2px oklch(0.208 0.042 265 / 0.08),
-    0 2px 4px -3px oklch(0.208 0.042 265 / 0.06);
-  --shadow-bar: 0 -1px 3px 0 oklch(0.208 0.042 265 / 0.05);
+  --shadow-card: 0 1px 2px 0 oklch(0.215 0.042 55 /0.04);
+  --shadow-raised: 0 4px 12px -2px oklch(0.215 0.042 55 /0.08),
+    0 2px 4px -3px oklch(0.215 0.042 55 /0.06);
+  --shadow-bar: 0 -1px 3px 0 oklch(0.215 0.042 55 /0.05);
+}
+
+/* Dark remap of the same token names. The page is near-black — a little
+   warmth so it stays clay-night rather than a cold OLED slab. Running text
+   stays cream; clay fills and `--color-solid` stay dark so a primary button
+   and the countdown keep cream labels. Status-as-text lightens; *-soft sits
+   just off the page, not as a mid-grey panel. */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-surface: oklch(0.12 0.008 70);
+  --color-surface-raised: oklch(0.19 0.01 70);
+  --color-surface-sunken: oklch(0.08 0.006 70);
+
+  --color-line: oklch(0.32 0.016 70);
+  --color-line-strong: oklch(0.42 0.018 70);
+
+  --color-ink: oklch(0.94 0.018 84);
+  --color-ink-light: oklch(0.86 0.018 80);
+  --color-ink-muted: oklch(0.78 0.02 78);
+  --color-ink-subtle: oklch(0.66 0.018 74);
+
+  --color-accent: oklch(0.48 0.12 42);
+  --color-accent-strong: oklch(0.4 0.11 40);
+  --color-accent-line: oklch(0.55 0.07 48);
+  --color-accent-soft: oklch(0.22 0.04 50);
+  --color-accent-ink: oklch(0.78 0.1 48);
+
+  --color-danger: oklch(0.82 0.018 60);
+  --color-danger-line: oklch(0.4 0.014 64);
+  --color-danger-soft: oklch(0.18 0.012 60);
+
+  --color-success: oklch(0.8 0.016 66);
+  --color-success-strong: oklch(0.32 0.012 62);
+  --color-success-line: oklch(0.42 0.014 70);
+  --color-success-soft: oklch(0.18 0.012 66);
+
+  --color-warning: oklch(0.82 0.016 68);
+  --color-warning-line: oklch(0.44 0.014 72);
+  --color-warning-soft: oklch(0.18 0.012 70);
+
+  --color-info: oklch(0.8 0.014 70);
+  --color-info-line: oklch(0.44 0.012 74);
+  --color-info-soft: oklch(0.18 0.01 72);
+
+  --color-qtype-mcq: oklch(0.82 0.02 64);
+  --color-qtype-short-text: oklch(0.74 0.018 66);
+  --color-qtype-open: oklch(0.66 0.016 68);
+  --color-qtype-ordering: oklch(0.58 0.014 70);
+  --color-qtype-matching: oklch(0.52 0.012 72);
+  --color-qtype-source: oklch(0.46 0.01 74);
+
+  --color-solid: oklch(0.215 0.042 55);
+  --color-on-fill: oklch(0.94 0.018 84);
+
+  --shadow-card: 0 1px 2px 0 oklch(0 0 0 / 0.35);
+  --shadow-raised: 0 8px 20px -6px oklch(0 0 0 / 0.45);
+  --shadow-bar: 0 -1px 4px 0 oklch(0 0 0 / 0.4);
 }
 
 @layer base {
+  :root {
+    color-scheme: light;
+    /* The cuneiform wedge — current tab, run progress, empty tablet, disclosure
+       marker and completion marks. A clip-path rather than a glyph, so it
+       inherits size and colour from whatever it marks. */
+    --wedge: polygon(0 0, 100% 50%, 0 100%);
+  }
+
   /* One visible focus treatment for every interactive element. Replaces the
      `focus:outline-none` that used to leave inputs with no keyboard cue. */
   :focus-visible {
@@ -90,10 +231,14 @@
 --------------------------------------------------------------------------- */
 @layer components {
   /* ------------------------------- buttons ------------------------------- */
+  /* Pills, in the Basecamp/Hey manner: an action reads as a button from across
+     the room, so the shape carries the affordance and colour stays with the
+     palette. The pill radius is what separates a control you press from the
+     rectangular fields you write into. */
   .btn {
-    @apply inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5
-      rounded-control border border-transparent px-3.5 py-2 text-sm font-medium
-      whitespace-nowrap transition-colors;
+    @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-1.5
+      rounded-chip border border-transparent px-5 py-2.5 text-base font-semibold
+      whitespace-nowrap transition;
   }
 
   .btn:active:not(:disabled) {
@@ -105,42 +250,51 @@
   }
 
   .btn-primary {
-    @apply bg-ink text-white hover:bg-ink-light;
+    @apply bg-accent text-on-fill shadow-card hover:bg-accent-strong hover:shadow-raised;
   }
 
+  /* The quiet action keeps a drawn border: on a page with no boxed chrome the
+     outline is what says "press me" without spending a fill on it. */
   .btn-secondary {
-    @apply border-line bg-surface-raised text-ink hover:border-line-strong hover:bg-surface-sunken;
+    @apply border-line-strong bg-surface-raised text-ink hover:bg-surface-sunken;
   }
 
   .btn-ghost {
     @apply text-ink-muted hover:bg-surface-sunken hover:text-ink;
   }
 
+  /* Destructive stays an outline — the solid fill belongs to the primary action, and a
+     delete button that outweighs it is how a class gets removed by accident. What marks it
+     instead is the full-strength border and the heavier label, which is all the separation
+     left once there is no red. */
   .btn-danger {
-    @apply border-danger-line bg-surface-raised text-danger hover:bg-danger-soft;
+    @apply border-danger bg-surface-raised font-semibold text-danger hover:bg-danger-soft;
   }
 
   .btn-sm {
-    @apply min-h-8 gap-1 px-2.5 py-1 text-xs;
+    @apply min-h-9 gap-1 px-3.5 py-1.5 text-sm;
   }
 
   .btn-lg {
-    @apply min-h-12 px-5 text-base;
+    @apply min-h-13 px-6 text-lg;
   }
 
   /* ------------------------------- forms -------------------------------- */
   .field-label {
-    @apply block text-sm font-medium text-ink;
+    @apply block text-sm font-semibold text-ink;
   }
 
+  /* Fields stay rectangular so the pill buttons beside them read as the thing
+     to press; the border is full-strength because a field you have to hunt for
+     is the opposite of the Basecamp form. */
   .field {
-    @apply mt-1.5 block w-full rounded-control border border-line bg-surface-raised
-      px-3 py-2 text-sm text-ink transition-colors
-      placeholder:text-ink-muted hover:border-line-strong focus:border-accent;
+    @apply mt-1.5 block w-full rounded-control border border-line-strong bg-surface-raised
+      px-3.5 py-2.5 text-base text-ink transition-colors
+      placeholder:text-ink-muted hover:border-ink-subtle focus:border-accent;
   }
 
   .field-hint {
-    @apply mt-1.5 text-xs text-ink-muted;
+    @apply mt-1.5 text-sm text-ink-muted;
   }
 
   .field-error {
@@ -152,42 +306,138 @@
   }
 
   /* --------------------------- surfaces & lists ------------------------- */
+  /* A grouping hook, not a tile. Spacing comes from `.card-pad` or the
+     template; a raised fill here is how the page turns back into a stack of
+     boxes. */
   .card {
-    @apply rounded-card border border-line bg-surface-raised shadow-card;
+    @apply bg-transparent;
   }
 
   .card-pad {
-    @apply p-4 sm:p-5;
+    @apply py-5 sm:py-6;
   }
 
   .card-title {
-    @apply text-sm font-semibold text-ink;
+    @apply font-serif text-lg font-semibold text-ink;
   }
 
   .list {
-    @apply divide-y divide-line overflow-hidden rounded-card border border-line
-      bg-surface-raised shadow-card;
+    /* Intentionally unboxed: rows sit on the page paper. */
   }
 
   .list-row {
-    @apply flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-surface;
+    @apply relative flex flex-wrap items-center justify-between gap-3 py-5 transition-colors hover:bg-surface-sunken;
   }
 
+  /* Hey-weight rows: the title is the row, so it carries real weight and the
+     meta stays a quiet line under it. */
   .list-row-title {
-    @apply font-medium text-ink hover:text-accent;
+    @apply text-lg font-semibold text-ink hover:text-accent-ink;
+  }
+
+  /* The whole row opens the record. The title keeps the real href — so it stays what a
+     screen reader announces, what Tab focuses and what a middle click opens — and this
+     overlay only stretches its hit area across the row. It costs text selection inside
+     the row, which is a fair trade for a row whose one job is to be opened.
+
+     Anything else interactive in the row has to be lifted above the overlay, which is
+     what `.list-row-actions` is for. */
+  .list-row-title::after {
+    content: "";
+    @apply absolute inset-0;
+  }
+
+  .list-row-actions {
+    @apply relative z-10 flex flex-wrap items-center gap-2;
   }
 
   .list-row-meta {
-    @apply mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted;
+    @apply mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted;
+  }
+
+  /* The Basecamp "add" affordance: a dashed pill that promises a place for
+     something new, drawn — not filled — so it never outweighs the real primary
+     action on the page. The wedge is the disclosure marker and turns down when
+     the form is open. */
+  .reveal summary {
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-chip border-2 border-dashed
+      border-line-strong px-4 py-2 text-base font-semibold text-ink-muted transition-colors
+      hover:border-accent-line hover:text-accent-ink;
+    list-style: none;
+  }
+
+  .reveal summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .reveal summary::before {
+    content: "";
+    @apply inline-block size-2 shrink-0 bg-ink-subtle transition-transform;
+    clip-path: var(--wedge);
+  }
+
+  .reveal[open] summary {
+    @apply border-accent-line text-accent-ink;
+  }
+
+  .reveal[open] summary::before {
+    @apply bg-accent;
+    transform: rotate(90deg);
+  }
+
+  /* --------------------------- the tablet shelf -------------------------- */
+  /* The home screen alone works the Basecamp way: every class is a card on a
+     shelf, because the front door of the app is a place you pick a room, not a
+     document you read. Everywhere deeper the airy list contract still holds —
+     this is the one grid of raised tiles, and it earns the exception. */
+  .tablet-grid {
+    @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .tablet-card {
+    @apply relative flex min-h-40 flex-col justify-between gap-4 rounded-card border border-line
+      bg-surface-raised p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-raised;
+  }
+
+  .tablet-card-title {
+    @apply font-serif text-xl font-semibold text-ink hover:text-accent-ink;
+  }
+
+  /* Same overlay trade as `.list-row-title`: one real link, stretched over the
+     whole card. */
+  .tablet-card-title::after {
+    content: "";
+    @apply absolute inset-0 rounded-card;
+  }
+
+  .tablet-card-meta {
+    @apply flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted;
+  }
+
+  /* Basecamp's dashed "new" card: creation lives on the shelf beside what it
+     creates, promised rather than filled in. */
+  .tablet-card-new {
+    @apply flex-row items-center justify-center gap-2 border-2 border-dashed border-line-strong
+      bg-transparent text-base font-semibold text-ink-muted shadow-none
+      hover:border-accent-line hover:bg-accent-soft hover:text-accent-ink hover:shadow-none;
+  }
+
+  /* A student's mark pressed into a small clay disc — the roster's answer to
+     the Basecamp avatar. The irregular radius is the seal's, so it reads as
+     clay, not as a framework circle. */
+  .avatar-seal {
+    @apply inline-flex size-9 shrink-0 items-center justify-center
+      bg-accent-soft font-serif text-sm font-semibold text-accent-ink;
+    border-radius: 48% 52% 50% 50%;
   }
 
   /* ------------------------------- tables ------------------------------- */
   .table-wrap {
-    @apply overflow-x-auto rounded-card border border-line bg-surface-raised shadow-card;
+    @apply overflow-x-auto rounded-card bg-surface-raised;
   }
 
   .data-table {
-    @apply min-w-full text-sm;
+    @apply min-w-full text-base;
   }
 
   .data-table thead {
@@ -195,7 +445,7 @@
   }
 
   .data-table th {
-    @apply px-3.5 py-2.5 text-xs font-semibold text-ink-muted;
+    @apply px-4 py-3 text-sm font-semibold text-ink-muted;
   }
 
   .data-table tbody {
@@ -207,11 +457,126 @@
   }
 
   .data-table td {
-    @apply px-3.5 py-2.5 align-middle text-ink;
+    @apply px-4 py-3.5 align-middle text-ink;
   }
 
   .num {
     @apply font-mono tabular-nums;
+  }
+
+  /* A clay score seal. Wet clay is still an impression — an outline disc.
+     Fired clay is the stamp after the kiln: a solid fill. Hue cannot carry
+     that difference (the same clay either way); the fill vs the ring does.
+     The tilt is the hand that pressed it. A column of identical angles would
+     read as a UI kit, so table rows shift `--seal-tilt`. */
+  .seal {
+    --seal-tilt: -7deg;
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 48% 52% 50% 50%;
+    font-family: var(--font-serif);
+    line-height: 1;
+    vertical-align: middle;
+    transform: rotate(var(--seal-tilt));
+  }
+
+  .seal-face {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+  }
+
+  .seal-score {
+    font-size: 1.05rem;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .seal-rule {
+    display: block;
+    width: 0.95rem;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.4;
+  }
+
+  .seal-max {
+    font-size: 0.62rem;
+    font-weight: 500;
+    opacity: 0.82;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Maker's mark on the clay, not in the number stack — the wedge the rest
+     of the app already uses, sat at seven o'clock like a stylus nick. */
+  .seal-wedge {
+    position: absolute;
+    left: 0.28rem;
+    bottom: 0.4rem;
+    width: 0.38rem;
+    height: 0.26rem;
+    background: currentColor;
+    opacity: 0.45;
+    clip-path: var(--wedge);
+    transform: rotate(-18deg);
+  }
+
+  .seal-wet {
+    @apply bg-accent-soft text-accent-ink;
+    box-shadow:
+      inset 0 0 0 2px var(--color-accent),
+      inset 0 0 0 3.5px color-mix(in oklch, var(--color-accent) 18%, transparent);
+  }
+
+  .seal-fired {
+    @apply bg-solid text-on-fill;
+    box-shadow:
+      inset 0 0 0 2px color-mix(in oklch, var(--color-on-fill) 22%, transparent),
+      0 1px 2px oklch(0.215 0.042 55 / 0.12);
+  }
+
+  .seal-lg {
+    width: 5.75rem;
+    height: 5.75rem;
+    --seal-tilt: -5deg;
+    animation: seal-press 480ms cubic-bezier(.2, .8, .2, 1.1) both;
+  }
+
+  .seal-lg .seal-score {
+    font-size: 2rem;
+  }
+
+  .seal-lg .seal-rule {
+    width: 1.65rem;
+  }
+
+  .seal-lg .seal-max {
+    font-size: 0.85rem;
+  }
+
+  .seal-lg .seal-wedge {
+    left: 0.7rem;
+    bottom: 0.95rem;
+    width: 0.7rem;
+    height: 0.46rem;
+  }
+
+  tbody tr:nth-child(3n) .seal {
+    --seal-tilt: -4deg;
+  }
+
+  tbody tr:nth-child(3n + 1) .seal {
+    --seal-tilt: -8deg;
+  }
+
+  tbody tr:nth-child(3n + 2) .seal {
+    --seal-tilt: 5deg;
   }
 
   /* ------------------------------- badges ------------------------------- */
@@ -223,8 +588,11 @@
     @apply border-line bg-surface-sunken text-ink-muted;
   }
 
+  /* The solid fill is the whole emphasis budget of a monochrome palette, so it goes to
+     the one state that is live right now — published, active, submitted. Every other
+     status is an outline and lets its own word do the work. */
   .badge-success {
-    @apply border-success-line bg-success-soft text-success;
+    @apply border-transparent bg-success-strong text-on-fill;
   }
 
   .badge-warning {
@@ -235,28 +603,30 @@
     @apply border-info-line bg-info-soft text-info;
   }
 
+  /* Not a fill, because a revoked link is not the live state — but the darkest tone,
+     a full-strength border and the heavier weight, so it is never mistaken for a draft. */
   .badge-danger {
-    @apply border-danger-line bg-danger-soft text-danger;
+    @apply border-danger bg-surface-raised font-semibold text-danger;
   }
 
   .chip {
-    @apply inline-flex items-center gap-1 rounded-chip border border-line
+    @apply inline-flex items-center gap-1 rounded-chip
       bg-surface-sunken px-2 py-0.5 text-xs font-medium text-ink-muted;
   }
 
   /* -------------------------- navigation & tabs ------------------------- */
   .app-header {
-    @apply sticky top-0 z-30 border-b border-line bg-surface-raised/85 backdrop-blur;
+    @apply sticky top-0 z-30 bg-surface/85 backdrop-blur;
   }
 
   .brand {
-    @apply inline-flex items-center gap-2 text-sm font-semibold tracking-tight text-ink;
+    @apply inline-flex items-center gap-2 font-serif text-base font-semibold tracking-tight text-ink;
   }
 
   .brand-mark {
     @apply inline-flex size-8 shrink-0 items-center justify-center rounded-control
-      text-white shadow-card;
-    background: linear-gradient(145deg, var(--color-accent), var(--color-ink));
+      text-on-fill shadow-card;
+    background: linear-gradient(145deg, var(--color-accent), var(--color-solid));
     transition: transform 180ms ease, box-shadow 180ms ease;
   }
 
@@ -278,7 +648,7 @@
   }
 
   .nav-link {
-    @apply rounded-control px-2 py-1 text-sm font-medium text-ink-muted transition-colors
+    @apply rounded-control px-2.5 py-1.5 text-base font-medium text-ink-muted transition-colors
       hover:bg-surface-sunken hover:text-ink;
   }
 
@@ -286,23 +656,47 @@
     @apply bg-surface-sunken text-ink;
   }
 
+  .theme-toggle {
+    @apply inline-flex size-11 shrink-0 cursor-pointer items-center justify-center
+      rounded-control text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink;
+  }
+
+  .theme-icon-sun {
+    display: none;
+  }
+
+  [data-theme="dark"] .theme-icon-sun {
+    display: block;
+  }
+
+  [data-theme="dark"] .theme-icon-moon {
+    display: none;
+  }
+
   .tab-bar {
-    @apply mb-6 flex flex-wrap gap-5 border-b border-line;
+    @apply mb-6 flex flex-wrap gap-5;
   }
 
   .tab {
-    @apply -mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-0.5
-      pt-1 pb-2.5 text-sm font-medium text-ink-muted transition-colors
-      hover:border-line-strong hover:text-ink;
+    @apply inline-flex items-center gap-1.5 px-0.5
+      pt-1 pb-3 text-base font-medium text-ink-muted transition-colors
+      hover:text-ink;
   }
 
   .tab[aria-current="page"] {
-    @apply border-accent text-ink;
+    @apply text-ink;
   }
 
-  /* A real count, so it reads at AA rather than as decoration. */
+  .tab[aria-current="page"]::before {
+    content: "";
+    @apply size-2 shrink-0 bg-accent;
+    clip-path: var(--wedge);
+  }
+
+  /* A real count, so it reads at AA rather than as decoration. The little pill
+     is the Basecamp badge shape; the tone stays in the ramp. */
   .tab-count {
-    @apply text-xs text-ink-muted;
+    @apply rounded-chip bg-surface-sunken px-2 py-0.5 text-xs font-semibold tabular-nums text-ink-muted;
   }
 
   .breadcrumbs {
@@ -320,25 +714,20 @@
 
   /* -------------------------------- text -------------------------------- */
   .page-title {
-    @apply text-2xl font-semibold tracking-tight text-ink;
-  }
-
-  .page-icon {
-    @apply inline-flex size-10 shrink-0 items-center justify-center rounded-card
-      border border-accent-line bg-accent-soft text-accent;
+    @apply font-serif text-4xl font-semibold tracking-tight text-ink sm:text-5xl;
   }
 
   .page-subtitle {
-    @apply mt-1 text-sm text-ink-muted;
+    @apply mt-1.5 text-lg text-ink-muted;
   }
 
   .section-title {
-    @apply text-base font-semibold text-ink;
+    @apply font-serif text-xl font-semibold text-ink;
   }
 
   .link {
-    @apply font-medium text-accent underline decoration-accent-line underline-offset-2
-      transition-colors hover:decoration-accent;
+    @apply font-medium text-accent-ink underline decoration-accent-line underline-offset-2
+      transition-colors hover:decoration-accent-ink;
   }
 
   .link-muted {
@@ -350,7 +739,7 @@
      a touch reader never gets to do. */
   .link-quiet {
     @apply font-medium text-ink underline decoration-line underline-offset-2
-      transition-colors hover:text-accent hover:decoration-accent-line;
+      transition-colors hover:text-accent-ink hover:decoration-accent-line;
   }
 
   .link-danger {
@@ -359,32 +748,31 @@
   }
 
   .empty-state {
-    @apply overflow-hidden rounded-card border border-dashed border-line bg-surface-raised
-      px-4 py-8 text-center text-sm text-ink-muted;
-    background-image: radial-gradient(circle at 50% 0%, var(--color-accent-soft), transparent 45%);
+    @apply px-4 py-10 text-center text-base text-ink-muted;
   }
 
   .empty-state-illustration {
-    @apply relative mx-auto mb-3 flex h-16 w-28 items-center justify-center;
+    @apply relative mx-auto mb-4 flex h-20 w-28 items-center justify-center;
     animation: empty-state-arrive 360ms ease-out both;
   }
 
-  .empty-state-icon {
-    @apply relative z-10 inline-flex size-14 items-center justify-center rounded-card
-      border border-accent-line bg-surface-raised text-accent shadow-raised;
-    transform: rotate(-3deg);
+  /* A blank tablet waiting to be written on, which is what an empty list is. The soft
+     corner radius stands in for the pillow shape the brand mark draws properly; a card
+     radius here would just read as another card. */
+  .empty-state-tablet {
+    @apply relative flex size-20 flex-col items-center justify-center gap-2
+      border-2 border-ink-subtle bg-surface-sunken text-ink-light shadow-raised;
+    border-radius: 30% / 24%;
+    transform: rotate(-2deg);
   }
 
-  .empty-state-dot {
-    @apply absolute rounded-chip;
+  .empty-state-marks {
+    @apply flex items-center gap-1;
   }
 
-  .empty-state-dot-left {
-    @apply left-1 bottom-2 size-4 bg-warning-soft ring-1 ring-warning-line;
-  }
-
-  .empty-state-dot-right {
-    @apply top-1 right-0 size-6 bg-info-soft ring-1 ring-info-line;
+  .empty-state-marks span {
+    @apply block h-1.5 w-2.5 bg-ink-subtle;
+    clip-path: var(--wedge);
   }
 
   .empty-state-message {
@@ -393,61 +781,59 @@
 
   /* ------------------------------- flashes ------------------------------ */
   .flash {
-    @apply mb-5 flex items-start gap-2.5 rounded-card border px-3.5 py-3 text-sm;
+    @apply mb-5 flex items-start gap-2.5 rounded-card px-3.5 py-3 text-sm;
   }
 
   .flash-notice {
-    @apply border-success-line bg-success-soft text-success-strong;
+    @apply bg-success-soft text-success;
   }
 
   .flash-alert {
-    @apply border-danger-line bg-danger-soft text-danger;
+    @apply bg-danger-soft text-danger;
   }
 
   .flash-info {
-    @apply border-accent-line bg-accent-soft text-accent-strong;
+    @apply bg-accent-soft text-accent-ink;
   }
 
   .flash-warning {
-    @apply border-warning-line bg-warning-soft text-warning;
+    @apply bg-warning-soft text-warning;
   }
 
   .flash-muted {
-    @apply border-line bg-surface-sunken text-ink-muted;
+    @apply bg-surface-sunken text-ink-muted;
   }
 
   /* ------------------------- taking a test (Take::) --------------------- */
   .qcard {
-    @apply rounded-card border border-line border-l-[3px] border-l-line-strong
-      bg-surface-raised p-4 shadow-card sm:p-5;
+    @apply py-2;
   }
 
-  .qcard[data-qtype="mcq"] {
-    @apply border-l-sky-400;
+  .qcard-num {
+    @apply font-serif text-4xl font-semibold leading-none tracking-tight text-ink;
   }
 
-  .qcard[data-qtype="short_text"] {
-    @apply border-l-amber-400;
+  .run-progress {
+    @apply flex flex-wrap items-center gap-1.5;
   }
 
-  .qcard[data-qtype="open"] {
-    @apply border-l-violet-400;
+  /* Filled vs empty is a fill, not a second hue: the wedge is already the brand
+     mark, and colour-alone would fail the same WCAG rule the palette documents. */
+  .run-progress-mark {
+    @apply block h-2.5 w-3.5 shrink-0 bg-ink-subtle;
+    clip-path: var(--wedge);
   }
 
-  .qcard[data-qtype="ordering"] {
-    @apply border-l-emerald-400;
+  .run-progress-mark[data-answered="true"] {
+    @apply bg-accent;
   }
 
-  .qcard[data-qtype="matching"] {
-    @apply border-l-rose-400;
-  }
-
-  .qcard[data-qtype="source"] {
-    @apply border-l-stone-400;
-  }
-
-  .qcard-legend {
-    @apply flex flex-wrap items-center gap-2 text-xs font-medium text-ink-muted;
+  .match-item {
+    @apply flex w-full min-h-11 cursor-pointer flex-col items-start gap-0.5 rounded-card
+      border border-line bg-surface-raised px-4 py-3 text-left text-base text-ink transition-colors
+      hover:border-accent-line hover:bg-accent-soft
+      aria-selected:border-accent aria-selected:bg-accent-soft aria-selected:font-medium
+      data-[paired=true]:border-accent-line data-[paired=true]:bg-accent-soft;
   }
 
   .completion-card {
@@ -455,32 +841,41 @@
     background-image: radial-gradient(circle at 50% -15%, var(--color-success-soft), transparent 55%);
   }
 
+  /* No absolute positioning: marks placed around the disc kept landing behind it, and one
+     in the disc's own colour fused into it and read as a speech-bubble tail. A row under
+     the disc is the same shape the empty state uses and cannot collide. */
   .completion-illustration {
-    @apply relative mx-auto h-16 w-24;
+    @apply relative mx-auto flex w-40 flex-col items-center gap-2.5;
   }
 
   .completion-check {
-    @apply absolute top-1 left-1/2 flex size-14 -translate-x-1/2 items-center justify-center
-      rounded-chip border border-success-line bg-success-soft text-success shadow-raised;
+    @apply flex size-14 items-center justify-center rounded-chip bg-success-strong text-on-fill shadow-raised;
     animation: completion-pop 420ms cubic-bezier(.2, .8, .2, 1.15) both;
   }
 
-  .completion-spark {
-    @apply absolute size-2 rounded-chip bg-warning-line;
+  .completion-marks {
+    @apply flex items-center gap-1.5;
+  }
+
+  /* Three wedges rather than three sparks: what a finished tablet carries is writing,
+     and the shape is the one the rest of the app already uses. */
+  .completion-wedge {
+    @apply block h-2 w-3;
+    clip-path: var(--wedge);
     animation: spark-arrive 480ms ease-out both;
   }
 
-  .completion-spark-one {
-    @apply top-2 left-1;
+  .completion-wedge-one {
+    @apply bg-warning;
   }
 
-  .completion-spark-two {
-    @apply top-0 right-2 size-1.5 bg-info-line;
+  .completion-wedge-two {
+    @apply bg-accent;
     animation-delay: 80ms;
   }
 
-  .completion-spark-three {
-    @apply right-0 bottom-2 size-2.5 bg-accent-line;
+  .completion-wedge-three {
+    @apply bg-success;
     animation-delay: 140ms;
   }
 
@@ -489,10 +884,12 @@
     animation: copied-pulse 260ms ease-out;
   }
 
-  /* Full-width tappable rows, so a phone user is not aiming at a radio dot. */
+  /* Full-width tappable rows, so a phone user is not aiming at a radio dot.
+     Drawn as choice cards in the Basecamp screener manner: the border is the
+     second signal beside the tint, which a monochrome palette owes every state. */
   .option {
-    @apply flex cursor-pointer items-start gap-3 rounded-control border border-line
-      bg-surface-raised px-3.5 py-3 text-sm text-ink transition-colors
+    @apply flex cursor-pointer items-start gap-3 rounded-card border border-line
+      bg-surface-raised px-4 py-3.5 text-base text-ink transition-colors
       hover:border-accent-line hover:bg-accent-soft;
   }
 
@@ -501,26 +898,28 @@
   }
 
   .source-text {
-    @apply overflow-y-auto rounded-control border border-line bg-surface px-3.5 py-3
-      text-sm leading-relaxed whitespace-pre-wrap text-ink;
+    @apply overflow-y-auto rounded-control border border-line bg-surface px-4 py-3.5
+      text-base leading-relaxed whitespace-pre-wrap text-ink;
   }
 
   .run-bar {
-    @apply sticky bottom-0 z-20 -mx-4 border-t border-line bg-surface-raised/95 px-4 py-3
-      shadow-bar backdrop-blur;
+    @apply sticky top-0 z-20 -mx-4 bg-surface/95 px-4 py-3 backdrop-blur;
   }
 
   .countdown {
-    @apply inline-flex items-center gap-1.5 rounded-control bg-ink px-3 py-1.5
-      font-mono text-sm tabular-nums text-white;
+    @apply inline-flex items-center gap-1.5 rounded-control bg-solid px-3.5 py-2
+      font-mono text-base tabular-nums text-on-fill;
   }
 
+  /* `ink` and `danger` are two steps of the same ramp now, so the last minute cannot
+     announce itself by colour. The ring and the weight are what a student actually
+     catches out of the corner of an eye. */
   .countdown[data-urgency="urgent"] {
-    @apply bg-danger;
+    @apply bg-solid font-bold ring-2 ring-danger ring-offset-2 ring-offset-surface;
   }
 
   .countdown-cell[data-urgency="urgent"] {
-    @apply font-semibold text-danger;
+    @apply font-bold text-danger underline decoration-2 underline-offset-2;
   }
 
   /* Colour lives here rather than on the element, so the state rules below are
@@ -533,14 +932,16 @@
     @apply text-success;
   }
 
+  /* Saved and failed are within a shade of each other now. The status text already says
+     which is which — this makes sure the failed one is not read as decoration. */
   .autosave-status[data-state="failed"] {
-    @apply text-danger;
+    @apply font-bold text-danger underline decoration-2 underline-offset-2;
   }
 
   /* ----------------------------- ordering ------------------------------- */
   .order-item {
-    @apply flex items-center gap-3 rounded-control border border-line bg-surface-raised
-      px-2.5 py-2 transition-colors hover:border-accent-line
+    @apply flex items-center gap-3 rounded-card border border-line bg-surface-raised
+      px-2.5 py-2 transition-colors hover:border-accent-line hover:bg-accent-soft
       aria-selected:border-accent aria-selected:bg-accent-soft
       data-[dragging]:shadow-raised data-[dragging]:opacity-60;
   }
@@ -551,11 +952,11 @@
   }
 
   .order-item[aria-selected="true"] .order-position {
-    @apply bg-accent text-white;
+    @apply bg-accent text-on-fill;
   }
 
   .order-handle {
-    @apply cursor-grab touch-none rounded p-1 text-ink-subtle transition-colors
+    @apply inline-flex min-h-11 min-w-11 cursor-grab touch-none items-center justify-center rounded p-1 text-ink-subtle transition-colors
       hover:bg-surface-sunken hover:text-ink active:cursor-grabbing;
   }
 
@@ -599,8 +1000,8 @@
 }
 
 @keyframes completion-pop {
-  from { transform: translateX(-50%) scale(0.65) rotate(-8deg); opacity: 0; }
-  to { transform: translateX(-50%) scale(1) rotate(0); opacity: 1; }
+  from { transform: scale(0.65) rotate(-8deg); opacity: 0; }
+  to { transform: scale(1) rotate(0); opacity: 1; }
 }
 
 @keyframes spark-arrive {
@@ -610,6 +1011,11 @@
 
 @keyframes copied-pulse {
   50% { transform: scale(1.04); }
+}
+
+@keyframes seal-press {
+  from { transform: scale(1.12) rotate(-14deg); opacity: 0.4; }
+  to { transform: scale(1) rotate(var(--seal-tilt)); opacity: 1; }
 }
 
 .autosave-check-pop {
@@ -649,6 +1055,7 @@
 
   .no-print,
   .app-header,
+  .theme-toggle,
   .flash {
     display: none !important;
   }
@@ -674,9 +1081,36 @@
     color: #000;
   }
 
+  /* The sheet shares `.page-title` with the screen, and the screen moved to a serif.
+     Paper is a deliverable that was signed off as it stands, so it keeps the face it
+     had; drop this rule to let Literata onto the printed title. */
+  .print-sheet,
+  .print-sheet .page-title {
+    font-family: var(--font-sans);
+  }
+
+  /* Screen titles grew to 3xl/4xl; the signed-off sheet keeps the size it had
+     when it was still `text-2xl`. */
+  .print-sheet .page-title {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
   .answer-line,
   .answer-box,
   .fill-line {
     border-color: #000;
+  }
+
+  /* Screen seals tilt and fill; paper is a photocopy, so flatten them to a
+     black hairline disc. The report sheet never renders a seal. */
+  .seal {
+    transform: none !important;
+    animation: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    outline: 1.5px solid #000;
+    border-radius: 50%;
   }
 }

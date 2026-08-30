@@ -17,7 +17,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 **Teacher login (seed):**
 - Email: `teacher@example.com`
-- Password: `password123`
+- Password: `password1234`
 
 Seed loads demo **Classes**, **Students**, **Subjects**, and **Tests** (with sample access links printed in the console). Re-run anytime with `bin/rails db:seed`, or wipe and reload with `bin/rails db:reset`.
 
@@ -38,6 +38,50 @@ Seed loads demo **Classes**, **Students**, **Subjects**, and **Tests** (with sam
 - SQLite (development/test/production-ready for personal use)
 - Solid Queue, Solid Cache, Solid Cable
 - Rails 8 authentication (session + `has_secure_password`)
+
+## Backups
+
+`BackupDatabaseJob` runs nightly from `config/recurring.yml` and keeps the last 7 snapshots in
+`storage/backups/`. Only the **primary** database is copied — cache, queue and cable are all
+rebuildable. Take one by hand before anything risky:
+
+```bash
+bin/rails db:backup                                    # locally
+bin/kamal app exec --reuse "bin/rails db:backup"       # on the server
+```
+
+Snapshots are written with `VACUUM INTO`, not `cp`: under WAL the `.sqlite3` file on its own is
+not a complete database, so a plain file copy silently loses the most recent commits.
+
+### Restoring
+
+The app must not be running — a live process holds its own WAL and will overwrite what you put
+back.
+
+```bash
+bin/kamal app stop
+bin/kamal app exec --reuse "bash -c '
+  cd storage &&
+  cp production.sqlite3 production.sqlite3.before-restore &&
+  rm -f production.sqlite3-wal production.sqlite3-shm &&
+  cp backups/primary-<STAMP>Z.sqlite3 production.sqlite3
+'"
+bin/kamal app boot
+```
+
+Deleting `-wal` and `-shm` is the step people skip: a stale write-ahead log left beside a restored
+database replays over it and undoes the restore.
+
+### What this does not cover
+
+The snapshots sit on the same Docker volume as the database, so they protect against a bad
+migration, a wrong bulk edit or a corrupted database — **not** against losing the volume or the
+server. Copy them somewhere else on a schedule; until you do, a lost server is still lost grades.
+
+```bash
+# from your own machine
+scp -r <server>:/var/lib/docker/volumes/school_app_storage/_data/backups ./
+```
 
 ## Tests
 

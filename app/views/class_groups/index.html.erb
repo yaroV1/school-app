@@ -1,30 +1,26 @@
 <% content_for :title, t("classes.index.title") %>
-<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-  <div class="flex items-center gap-3">
-    <span class="page-icon" aria-hidden="true"><%= ui_icon("classes") %></span>
-    <h1 class="page-title"><%= t("classes.index.title") %></h1>
-  </div>
-  <%= link_to new_class_group_path, class: btn_primary do %>
-    <%= ui_icon("plus", class_name: "size-4") %>
-    <%= t("classes.index.new") %>
-  <% end %>
+<div class="mb-8">
+  <h1 class="page-title"><%= t("classes.index.title") %></h1>
 </div>
 
 <% if @class_groups.any? %>
-  <ul class="list">
+  <ul class="tablet-grid">
     <% @class_groups.each do |group| %>
-      <li class="list-row">
-        <div>
-          <%= link_to group.name, group, class: "list-row-title" %>
-          <div class="list-row-meta">
-            <span><%= t("students.count", count: group.students.count { |s| !s.archived? }) %></span>
-            <span aria-hidden="true">·</span>
-            <span><%= t("classes.subjects_count", count: group.subjects.size) %></span>
-          </div>
+      <li class="tablet-card">
+        <%= link_to group.name, group, class: "tablet-card-title" %>
+        <div class="tablet-card-meta">
+          <span><%= t("students.count", count: group.students.count { |s| !s.archived? }) %></span>
+          <span aria-hidden="true">·</span>
+          <span><%= t("classes.subjects_count", count: group.subjects.size) %></span>
         </div>
-        <%= link_to t("common.manage"), group, class: "#{btn_secondary} btn-sm" %>
       </li>
     <% end %>
+    <li class="flex">
+      <%= link_to new_class_group_path, class: "tablet-card tablet-card-new w-full" do %>
+        <%= ui_icon("plus", class_name: "size-5") %>
+        <%= t("classes.index.new") %>
+      <% end %>
+    </li>
   </ul>
 <% else %>
   <%= render "shared/empty_state", icon: "classes", message: t("classes.index.empty"), action_text: t("classes.index.new"), action_path: new_class_group_path %>

@@ -1,34 +1,44 @@
 <!DOCTYPE html>
 <html lang="uk">
   <head>
+    <%= render "shared/theme_boot" %>
     <title><%= content_for(:title) || t("app_name") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#fbf7f1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= yield :head %>
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%# Only the Cyrillic subset is preloaded: every heading on a Ukrainian page needs it,
+        while the Latin file serves the wordmark alone and can wait its turn. %>
+    <link rel="preload" href="<%= asset_path("literata-cyrillic-wght-normal.woff2") %>"
+          as="font" type="font/woff2" crossorigin>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
   <body class="min-h-screen bg-surface text-ink antialiased">
     <% if authenticated? %>
       <header class="app-header">
-        <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5">
+        <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <%= link_to class_groups_path, class: "brand" do %>
             <%= render "shared/brand_mark" %>
             <%= t("app_name") %>
           <% end %>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1 sm:gap-2">
             <span class="hidden text-sm text-ink-muted sm:inline"><%= Current.user.email_address %></span>
-            <%= button_to t("nav.sign_out"), session_path, method: :delete, class: "btn btn-ghost btn-sm" %>
+            <%= render "shared/theme_toggle" %>
+            <%= button_to safe_join([ ui_icon("leave", class_name: "size-4"), t("nav.sign_out") ]), session_path, method: :delete, class: "btn btn-ghost btn-sm" %>
           </div>
         </div>
       </header>
+    <% else %>
+      <div class="mx-auto flex max-w-6xl justify-end px-4 pt-4">
+        <%= render "shared/theme_toggle" %>
+      </div>
     <% end %>
 
-    <main class="mx-auto max-w-6xl px-4 py-8">
+    <main class="mx-auto max-w-6xl px-4 py-10">
       <%= render "shared/flash" %>
       <%= yield %>
     </main>

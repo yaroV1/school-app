@@ -12,7 +12,7 @@
       <% if @student.email.present? %><p class="page-subtitle"><%= @student.email %></p><% end %>
       <p class="mt-2"><span class="chip"><%= t("common.credits", count: @student.credit_balance) %></span></p>
     </div>
-    <%= link_to t("common.edit"), edit_student_path(@student), class: btn_secondary %>
+    <%= link_to safe_join([ ui_icon("stylus"), t("common.edit") ]), edit_student_path(@student), class: btn_secondary %>
   </div>
 </div>
 
@@ -37,15 +37,8 @@
             <td class="num">№<%= attempt.attempt_no %></td>
             <td><%= status_badge(attempt.status) %></td>
             <td class="text-ink-muted"><%= l(attempt.started_at, format: :short) %></td>
-            <td class="num">
-              <% if attempt.grade&.finalized_by_teacher? %>
-                <%= attempt.grade.total_score %>/<%= attempt.grade.max_score %>
-              <% elsif attempt.grade %>
-                <%= attempt.grade.total_score || t("common.dash") %>/<%= attempt.grade.max_score %>
-                <span class="text-ink-muted"><%= t("students.show.draft_score") %></span>
-              <% else %>
-                <%= t("common.dash") %>
-              <% end %>
+            <td>
+              <%= score_seal(attempt.grade) %>
             </td>
             <td class="text-right"><%= link_to t("common.open"), attempt_path(attempt), class: "link" %></td>
           </tr>

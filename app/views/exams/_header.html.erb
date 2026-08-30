@@ -10,11 +10,16 @@
       <h1 class="page-title"><%= exam.title %></h1>
       <%= status_badge(exam.status) %>
     </div>
-    <% if exam.draft? %>
-      <%= button_to t("exams.show.publish"), publish_test_path(exam), form: { data: { turbo_confirm: t("exams.show.publish_confirm") } }, class: btn_primary %>
-    <% elsif exam.published? %>
-      <%= button_to t("exams.show.close"), close_test_path(exam), form: { data: { turbo_confirm: t("exams.show.close_confirm") } }, class: btn_secondary %>
-    <% end %>
+    <div class="flex flex-wrap items-center gap-2">
+      <%= link_to duplicate_test_path(exam), class: btn_secondary do %>
+        <%= safe_join([ ui_icon("copy"), t("exams.show.duplicate") ]) %>
+      <% end %>
+      <% if exam.draft? %>
+        <%= button_to safe_join([ ui_icon("banner"), t("exams.show.publish") ]), publish_test_path(exam), form: { data: { turbo_confirm: t("exams.show.publish_confirm") } }, class: btn_primary %>
+      <% elsif exam.published? %>
+        <%= button_to safe_join([ ui_icon("lock"), t("exams.show.close") ]), close_test_path(exam), form: { data: { turbo_confirm: t("exams.show.close_confirm") } }, class: btn_secondary %>
+      <% end %>
+    </div>
   </div>
 </div>
 

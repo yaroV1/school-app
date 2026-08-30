@@ -1,11 +1,18 @@
 <svg class="<%= class_name %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <% case name %>
+  <%# The tablet house: two terraced tiers, a flat roof and the arched doorway a pupil
+      walked through. A mortarboard would be the wrong millennium; a pitched roof would
+      be the wrong architecture and would read as the home icon besides. %>
   <% when "classes" %>
-    <path d="M4.5 7.5 12 3l7.5 4.5L12 12 4.5 7.5Z" />
-    <path d="M7 10v5.2c0 1.5 2.2 2.8 5 2.8s5-1.3 5-2.8V10M19.5 8v6" />
+    <path d="M2.5 20h19" />
+    <path d="M5 20V10h14v10" />
+    <path d="M3.5 10h17" />
+    <path d="M8 10V6.5h8V10" />
+    <path d="M9.8 20v-4a2.2 2.2 0 0 1 4.4 0V20" />
+  <%# A clay tablet, pillow-shaped like the brand mark, with two lines of writing. %>
   <% when "subjects" %>
-    <path d="M5 4.5h10.5A3.5 3.5 0 0 1 19 8v11H8.5A3.5 3.5 0 0 1 5 15.5v-11Z" />
-    <path d="M8.5 16H19M9 8h6M9 11h4" />
+    <path d="M6 5.5c4-1 8-1 12 0 1 4.3 1 8.7 0 13-4 1-8 1-12 0-1-4.3-1-8.7 0-13Z" />
+    <path d="M9 10.5h6M9 14h4" />
   <% when "tests" %>
     <rect x="5" y="3.5" width="14" height="17" rx="2.5" />
     <path d="M9 3.5v3h6v-3M8.5 11h3M8.5 15h3M14 11.5l1 1 2-2.5M14 15.5l1 1 2-2.5" />
@@ -23,5 +30,67 @@
     <path d="M12 5v14M5 12h14" />
   <% when "check" %>
     <path d="m5 12.5 4.5 4.5L19 7.5" />
+  <% when "moon" %>
+    <path d="M15 3.4A8 8 0 1 0 20.6 14 6.3 6.3 0 0 1 15 3.4Z" />
+  <% when "sun" %>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.5 1.5M16.9 16.9l1.5 1.5M5.6 18.4l1.5-1.5M16.9 7.1l1.5-1.5" />
+  <%# Action icons for the pill buttons, one symbol per verb. Where the verb has a
+      Mesopotamian answer it takes it: the scribe's reed for edit, the cylinder seal
+      for submit and finalize, the wedge for start, two pillow tablets for copy, and
+      the doorway from the "classes" house for entering and leaving. %>
+  <% when "stylus" %>
+    <path d="M15.2 4.6 19.4 8.8 8.8 19.4H4.6v-4.2L15.2 4.6Z" />
+    <path d="m13 6.8 4.2 4.2" />
+  <% when "bin" %>
+    <path d="M4.5 6.5h15" />
+    <path d="M9.5 6.5V4.2h5v2.3" />
+    <path d="m6.3 6.5.9 13.3h9.6l.9-13.3" />
+    <path d="M10 10.5v5.5M14 10.5v5.5" />
+  <% when "x" %>
+    <path d="m6 6 12 12M18 6 6 18" />
+  <% when "enter" %>
+    <path d="M14.5 3.5H20v17h-5.5" />
+    <path d="M3.5 12H14M10.5 8.5 14 12l-3.5 3.5" />
+  <% when "leave" %>
+    <path d="M9.5 3.5H4v17h5.5" />
+    <path d="M9.5 12H20M16.5 8.5 20 12l-3.5 3.5" />
+  <%# The standard raised over the walls: a test opened to the class. %>
+  <% when "banner" %>
+    <path d="M5.5 20.5v-17" />
+    <path d="M5.5 4.5H18l-2.6 3.75L18 12H5.5" />
+  <% when "lock" %>
+    <rect x="4.5" y="10.5" width="15" height="9.5" rx="2" />
+    <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+  <% when "copy" %>
+    <path d="M9 8.8c3-.85 6.2-.85 9.2 0 .85 3.2.85 6.5 0 9.7-3 .85-6.2.85-9.2 0-.85-3.2-.85-6.5 0-9.7Z" />
+    <path d="M6 15.2c-.75-2.9-.75-5.8 0-8.7C9 5.65 12 5.65 15 6.5" />
+  <% when "printer" %>
+    <path d="M7 8V3.8h10V8" />
+    <path d="M7 15.5H4.5V8h15v7.5H17" />
+    <path d="M7 12.5h10v7.7H7v-7.7Z" />
+  <% when "download" %>
+    <path d="M12 3.5V15M7.5 10.7 12 15.2l4.5-4.5" />
+    <path d="M4 16.5V19a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-2.5" />
+  <% when "refresh" %>
+    <path d="M20.5 5v5.5H15" />
+    <path d="M19.85 14.6a8.25 8.25 0 1 1-1.94-8.58L20.5 8.6" />
+  <% when "ban" %>
+    <circle cx="12" cy="12" r="8.2" />
+    <path d="m6.2 6.2 11.6 11.6" />
+  <%# The brand wedge turned play button. %>
+  <% when "play" %>
+    <path d="M8 5.2v13.6L19 12 8 5.2Z" />
+  <% when "stamp" %>
+    <path d="M12 3.8a3.2 3.2 0 0 1 3.2 3.2c0 2.1-1.4 2.9-1.4 4.6h-3.6c0-1.7-1.4-2.5-1.4-4.6A3.2 3.2 0 0 1 12 3.8Z" />
+    <path d="M6 16.4c0-2 2.7-2.4 6-2.4s6 .4 6 2.4v1.8H6v-1.8Z" />
+    <path d="M7.5 21h9" />
+  <% when "plane" %>
+    <path d="M20.5 3.9 11.2 13.2" />
+    <path d="M20.5 3.9 14.4 20.4l-3.2-7.2-7.3-3.2 16.6-6.1Z" />
+  <%# Without this a typo renders an empty <svg>: no error, no failing test, just a
+      control that lost its icon. %>
+  <% else %>
+    <% raise ArgumentError, "no icon named #{name.inspect} in shared/_icon" %>
   <% end %>
 </svg>

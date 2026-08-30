@@ -6,8 +6,8 @@
   <div class="mt-3 flex flex-wrap items-start justify-between gap-3">
     <h1 class="page-title"><%= class_group.name %></h1>
     <div class="flex flex-wrap gap-2">
-      <%= link_to t("common.edit"), edit_class_group_path(class_group), class: btn_secondary %>
-      <%= button_to t("common.delete"), class_group_path(class_group), method: :delete, form: { data: { turbo_confirm: t("classes.show.delete_confirm") } }, class: btn_danger %>
+      <%= link_to safe_join([ ui_icon("stylus"), t("common.edit") ]), edit_class_group_path(class_group), class: btn_secondary %>
+      <%= button_to safe_join([ ui_icon("bin"), t("common.delete") ]), class_group_path(class_group), method: :delete, form: { data: { turbo_confirm: t("classes.show.delete_confirm") } }, class: btn_danger %>
     </div>
   </div>
 </div>

@@ -3,15 +3,14 @@
 #   # or fresh:
 #   bin/rails db:reset
 
-# bin/docker-entrypoint runs db:prepare on every container boot, and db:prepare seeds any database
-# it had to create. Without this guard the first production deploy would publish the demo teacher
-# whose password sits in the public README, and print live /t/ access tokens to the container log —
-# the one place docs/agent-rules.md § Tokens says they must never reach. Create the first real
-# teacher through bin/kamal console instead; there is no registration route.
-return if Rails.env.production?
+# This file publishes tests with live /t/ links and a teacher whose password is printed below and
+# committed to the repository. `seeds: false` on the production primary keeps db:prepare from
+# loading it on a fresh volume; db:seed calls load_seed directly and ignores that flag, so the
+# second door closes here.
+abort "db/seeds.rb is demo data and must not run in production." if Rails.env.production?
 
 teacher = User.find_or_create_by!(email_address: "teacher@example.com") do |user|
-  user.password = "password123"
+  user.password = "password1234"
 end
 
 # ---------------------------------------------------------------------------
@@ -614,7 +613,7 @@ end
 puts ""
 puts "Seeded demo data"
 puts "================"
-puts "Teacher login:  teacher@example.com / password123"
+puts "Teacher login:  teacher@example.com / password1234"
 puts "Classes:        #{teacher.class_groups.order(:name).pluck(:name).join(', ')}"
 puts "Subjects:       #{Subject.joins(:class_group).where(class_groups: { teacher_id: teacher.id }).order(:name).map { |s| "#{s.class_group.name}: #{s.name}" }.join(', ')}"
 puts "Students:       #{teacher.students.active.count}"

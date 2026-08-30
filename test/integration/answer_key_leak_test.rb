@@ -80,6 +80,14 @@ class AnswerKeyLeakTest < ActionDispatch::IntegrationTest
     assert_match "Alpha", body
 
     assert_no_answer_key body
+
+    assert_select "select", false
+    assert_select "[data-controller=matching]"
+    assert_select "[data-matching-target=left]", @matching.student_facing_left.size
+    assert_select "[data-matching-target=right]", @matching.shuffled_right_items(@attempt.id).size
+    @matching.student_facing_left.each do |left|
+      assert_select "input[type=hidden][name=?]", "answers[#{@matching.id}][pairs][#{left["id"]}]"
+    end
   end
 
   test "ordering items render in the seeded shuffle, not the stored answer order" do

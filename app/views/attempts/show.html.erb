@@ -16,7 +16,7 @@
       that is stale before it reaches the printer, and #report refuses it anyway. %>
   <% unless @attempt.in_progress? %>
     <p class="mt-3">
-      <%= link_to t("attempts.show.report"), report_attempt_path(@attempt),
+      <%= link_to safe_join([ ui_icon("printer"), t("attempts.show.report") ]), report_attempt_path(@attempt),
             class: "#{btn_secondary} no-print" %>
     </p>
   <% end %>
@@ -68,9 +68,9 @@
   </div>
 
   <div class="flex flex-wrap gap-2">
-    <%= submit_tag t("attempts.grade.save"), class: btn_secondary %>
+    <%= button_tag safe_join([ ui_icon("check"), t("attempts.grade.save") ]), class: btn_secondary %>
     <%# button_tag, not submit_tag: an options hash overrides submit_tag's label
         argument, so the finalize flag was rendering as the button's caption. %>
-    <%= button_tag t("attempts.grade.save_finalize"), type: "submit", name: "finalize", value: "1", class: btn_primary %>
+    <%= button_tag safe_join([ ui_icon("stamp"), t("attempts.grade.save_finalize") ]), type: "submit", name: "finalize", value: "1", class: btn_primary %>
   </div>
 <% end %>

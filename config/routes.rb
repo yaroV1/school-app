@@ -29,6 +29,8 @@ Rails.application.routes.draw do
     member do
       post :publish
       post :close
+      get :duplicate
+      post :duplicate, action: :create_duplicate, as: nil
       get :results
       get :live
       get :print

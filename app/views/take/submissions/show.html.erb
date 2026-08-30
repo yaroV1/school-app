@@ -1,11 +1,14 @@
 <% content_for :title, t("take.done_title") %>
+<% content_for :shell_class, "student-shell" %>
 <div class="space-y-6">
-  <div class="card card-pad completion-card mx-auto max-w-md space-y-3 text-center">
+  <div class="completion-card mx-auto max-w-md space-y-3 text-center">
     <div class="completion-illustration" aria-hidden="true">
-      <span class="completion-spark completion-spark-one"></span>
-      <span class="completion-spark completion-spark-two"></span>
-      <span class="completion-spark completion-spark-three"></span>
       <span class="completion-check"><%= ui_icon("check", class_name: "size-7") %></span>
+      <span class="completion-marks">
+        <span class="completion-wedge completion-wedge-one"></span>
+        <span class="completion-wedge completion-wedge-two"></span>
+        <span class="completion-wedge completion-wedge-three"></span>
+      </span>
     </div>
     <h1 class="page-title"><%= t("take.done_heading") %></h1>
     <p class="text-sm text-ink-muted"><%= t("take.done_body", name: @student.name, title: @exam.title) %></p>
@@ -25,19 +28,19 @@
 
   <% if @results_visible %>
     <article id="student_result" class="mx-auto max-w-3xl space-y-5">
-      <header class="card card-pad">
-        <p class="text-sm text-ink-muted"><%= t("take.results.heading") %></p>
-        <h2 class="page-title mt-1"><%= @exam.title %></h2>
-        <p class="mt-3 text-base font-semibold text-ink">
-          <%= t("take.results.total") %>:
-          <span class="num"><%= t("attempts.report.earned", score: score_text(@grade.total_score), max: score_text(@grade.max_score)) %></span>
-        </p>
+      <header class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="text-sm text-ink-muted"><%= t("take.results.heading") %></p>
+          <h2 class="page-title mt-1"><%= @exam.title %></h2>
+          <p class="mt-2 text-sm text-ink-muted"><%= t("take.results.total") %></p>
+        </div>
+        <%= score_seal(@grade, size: :lg) %>
       </header>
 
       <ol class="space-y-4">
         <% @questions.each_with_index do |question, index| %>
           <% answer = @answers[question.id] %>
-          <li id="<%= dom_id(question, :result) %>" class="card card-pad">
+          <li id="<%= dom_id(question, :result) %>">
             <div class="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
               <span class="num font-semibold">№<%= index + 1 %></span>
               <span class="chip"><%= t("question_types.#{question.question_type}") %></span>
@@ -65,7 +68,7 @@
       </ol>
 
       <% if @grade.teacher_comment.present? %>
-        <section class="card card-pad">
+        <section>
           <p class="text-xs font-medium text-ink-muted"><%= t("attempts.grade.overall_comment") %></p>
           <p class="mt-1 text-sm whitespace-pre-wrap text-ink"><%= @grade.teacher_comment %></p>
         </section>

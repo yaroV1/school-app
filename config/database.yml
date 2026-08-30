@@ -26,6 +26,10 @@ production:
   primary:
     <<: *default
     database: storage/production.sqlite3
+    # db/seeds.rb is demo data, and bin/docker-entrypoint runs db:prepare on every boot. On a
+    # fresh volume prepare_all seeds any database whose config answers seeds? — true by default
+    # for the primary — which would publish the demo tests and their /t/ links on a real server.
+    seeds: false
   cache:
     <<: *default
     database: storage/production_cache.sqlite3

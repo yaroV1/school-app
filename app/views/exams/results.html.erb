@@ -2,7 +2,7 @@
 <%= render "exams/header", exam: @exam %>
 
 <div class="mb-4 flex flex-wrap items-center justify-end gap-3">
-  <%= link_to t("common.export_csv"), results_test_path(@exam, format: :csv), class: btn_secondary, data: { turbo: false } %>
+  <%= link_to safe_join([ ui_icon("download"), t("common.export_csv") ]), results_test_path(@exam, format: :csv), class: btn_secondary, data: { turbo: false } %>
 </div>
 
 <% if @assignments.any? %>
@@ -33,15 +33,8 @@
             </td>
             <td class="text-ink-muted"><%= attempt ? l(attempt.started_at, format: :short) : t("common.dash") %></td>
             <td class="text-ink-muted"><%= attempt&.submitted_at ? l(attempt.submitted_at, format: :short) : t("common.dash") %></td>
-            <td class="num">
-              <% if attempt&.grade %>
-                <%= attempt.grade.total_score || t("common.dash") %>/<%= attempt.grade.max_score %>
-                <% if attempt.grade.finalized_by_teacher? %>
-                  <span class="badge badge-success"><%= t("exams.results.finalized") %></span>
-                <% end %>
-              <% else %>
-                <span class="text-ink-muted"><%= t("common.dash") %></span>
-              <% end %>
+            <td>
+              <%= score_seal(attempt&.grade) %>
             </td>
             <td class="text-right">
               <% if attempt %><%= link_to t("exams.results.grade"), attempt_path(attempt), class: "link" %><% end %>
