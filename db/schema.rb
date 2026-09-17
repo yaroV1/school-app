@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_000000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -59,6 +59,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_010000) do
     t.integer "exam_id", null: false
     t.datetime "revoked_at"
     t.integer "student_id", null: false
+    t.bigint "telegram_chat_id"
+    t.string "telegram_error"
+    t.string "telegram_request_id"
+    t.datetime "telegram_requested_at"
+    t.datetime "telegram_sent_at"
+    t.string "telegram_status", default: "unsent", null: false
+    t.string "telegram_token_digest"
     t.datetime "updated_at", null: false
     t.index ["access_token"], name: "index_assignments_on_access_token", unique: true
     t.index ["exam_id", "student_id"], name: "index_assignments_on_exam_id_and_student_id", unique: true
@@ -86,8 +93,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_010000) do
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.integer "teacher_id", null: false
+    t.string "telegram_join_token", null: false
     t.datetime "updated_at", null: false
     t.index ["teacher_id"], name: "index_class_groups_on_teacher_id"
+    t.index ["telegram_join_token"], name: "index_class_groups_on_telegram_join_token", unique: true
   end
 
   create_table "class_memberships", force: :cascade do |t|
@@ -166,7 +175,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_010000) do
     t.string "email"
     t.string "name", null: false
     t.integer "teacher_id", null: false
+    t.bigint "telegram_chat_id"
+    t.bigint "telegram_pending_chat_id"
+    t.string "telegram_pending_name"
+    t.string "telegram_username"
     t.datetime "updated_at", null: false
+    t.index ["teacher_id", "telegram_chat_id"], name: "index_students_on_teacher_id_and_telegram_chat_id", unique: true
+    t.index ["teacher_id", "telegram_username"], name: "index_students_on_teacher_id_and_telegram_username", unique: true
     t.index ["teacher_id"], name: "index_students_on_teacher_id"
   end
 

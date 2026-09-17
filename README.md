@@ -32,6 +32,65 @@ Seed loads demo **Classes**, **Students**, **Subjects**, and **Tests** (with sam
 6. Teacher opens **Results** → grade short/open → finalize
 7. Student history is on each student page
 
+## Telegram delivery
+
+Students can store an optional Telegram username alongside their name and email. Each class has one
+bot invitation link on its **Students** tab. Students open it privately and press **Start**; the bot
+matches the username within that class. The teacher verifies the account with the student and confirms
+the request on the student's page. A username alone never grants access to test links.
+
+After confirmation, **Assign / links** offers sending to all assigned students, selected rows, or one
+student. Each message contains only that student's existing `/t/` link. Publishing does not send
+anything. Confirmed numeric Telegram IDs survive username changes; disconnect before binding a
+different account. Students without usernames must set one before onboarding.
+
+### One-time bot setup
+
+1. Create a dedicated bot using [@BotFather](https://t.me/BotFather). Use separate bots for development
+   and production: Telegram allows only one webhook per bot.
+2. Configure these Rails credentials with `bin/rails credentials:edit` (never commit plaintext tokens):
+
+   ```yaml
+   telegram:
+     bot_token: <token from BotFather>
+     bot_username: <bot username without @>
+     webhook_secret: <random secret, e.g. openssl rand -hex 32>
+     app_url: https://edubba.com.ua
+   ```
+
+   Environment variables `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, and
+   `TELEGRAM_APP_URL` override credentials. `app_url` is the public HTTPS origin, not a request-derived
+   hostname. In Kamal, credentials use the existing `RAILS_MASTER_KEY`; environment overrides need
+   explicit forwarding in `config/deploy.yml` and `.kamal/secrets`.
+3. Deploy the code/migration and restart with the configuration. Ensure Solid Queue is running
+   (`SOLID_QUEUE_IN_PUMA` is already enabled in production).
+4. **After approving the external configuration change**, run in the configured environment:
+
+   ```bash
+   RAILS_ENV=production bin/rails telegram:set_webhook
+   # Or, from an authorized operator's machine:
+   bin/kamal app exec --reuse "bin/rails telegram:set_webhook"
+   ```
+
+   This registers `/telegram/webhook` with a secret header, accepts only message updates, and does not
+   discard pending updates. It never prints the bot token. The endpoint must be publicly reachable by
+   Telegram over HTTPS; an authenticated development portal is not a production webhook endpoint.
+5. Use a test student to complete Start → teacher confirmation → send → receive before inviting a class.
+
+### Delivery status and retries
+
+Refresh the assignment page to see **queued / sending / sent / failed**. Sent means Telegram accepted
+the message, not that the student read it. Unconnected, archived and revoked assignments are skipped.
+Messages are spaced one second apart within a batch. A Telegram rate limit or blocked bot is shown as
+an error; unblock/start the bot or wait, then retry explicitly.
+
+Double clicks and duplicate jobs are suppressed. Queued work rechecks the recipient, publication,
+revocation and token before sending; regenerating a link clears its previous delivery status.
+An already in-flight API request cannot be recalled. Timeouts are marked **result unknown**, not
+automatically retried: Telegram has no idempotency key for `sendMessage`. Check with the student before
+retrying to avoid duplicates. If a worker stops while queued/sending, the retry button becomes available
+after five minutes. Check the worker first; resending all also repeats previously successful messages.
+
 ## Stack
 
 - Ruby on Rails 8, Hotwire (Turbo + Stimulus), Tailwind

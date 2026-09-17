@@ -2,6 +2,19 @@
 <%= render "class_groups/header", class_group: @class_group %>
 
 <section class="space-y-4">
+  <div class="space-y-3 py-5 sm:py-6">
+    <h2 class="section-title"><%= t("telegram.class_title") %></h2>
+    <% if TelegramBot.configured? %>
+      <p class="text-sm text-ink-muted"><%= t("telegram.join_hint") %></p>
+      <% join_url = TelegramBot.join_url(@class_group) %>
+      <div class="flex flex-wrap items-center gap-2">
+        <%= link_to join_url, join_url, class: "link break-all", target: "_blank", rel: "noopener noreferrer" %>
+        <button type="button" data-controller="clipboard" data-clipboard-text-value="<%= join_url %>" data-clipboard-copied-value="<%= t('common.copied') %>" data-action="clipboard#copy" class="<%= btn_secondary %> btn-sm"><span data-clipboard-target="label"><%= t("common.copy") %></span></button>
+      </div>
+    <% else %>
+      <p class="text-sm text-ink-muted"><%= t("telegram.not_configured") %></p>
+    <% end %>
+  </div>
   <% if @students.any? %>
     <ul class="list max-h-96 overflow-y-auto">
       <% @students.each do |student| %>
@@ -13,6 +26,10 @@
               <% if student.email.present? %>
                 <div class="list-row-meta"><span><%= student.email %></span></div>
               <% end %>
+              <div class="list-row-meta">
+                <% if student.telegram_username.present? %><span>@<%= student.telegram_username %></span><% end %>
+                <span><%= t("telegram.connection.#{student.telegram_connection_status}") %></span>
+              </div>
             </div>
           </div>
           <div class="list-row-actions">
@@ -37,6 +54,10 @@
       <div>
         <%= f.label :email, t("students.form.email_optional"), class: "field-label" %>
         <%= f.email_field :email, class: field_class %>
+      </div>
+      <div>
+        <%= f.label :telegram_username, t("telegram.username_optional"), class: "field-label" %>
+        <%= f.text_field :telegram_username, placeholder: "@username", class: field_class, autocapitalize: "none", spellcheck: false %>
       </div>
       <div class="sm:col-span-2">
         <%= f.button safe_join([ ui_icon("plus"), t("classes.show.add_student") ]), class: btn_primary %>

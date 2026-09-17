@@ -16,6 +16,23 @@
   </div>
 </div>
 
+<section class="card card-pad mb-6 space-y-3" aria-label="<%= t('telegram.title') %>">
+  <h2 class="section-title"><%= t("telegram.title") %></h2>
+  <% if @student.telegram_username.present? %><p>@<%= @student.telegram_username %></p><% end %>
+  <p><%= t("telegram.connection.#{@student.telegram_connection_status}") %></p>
+  <% if @student.telegram_chat_id.present? %>
+    <p class="text-sm text-ink-muted"><%= t("telegram.connection.account", id: @student.telegram_chat_id) %></p>
+    <%= button_to t("telegram.connection.disconnect"), student_telegram_connection_path(@student), method: :delete, class: btn_secondary, data: { turbo_confirm: t("telegram.connection.disconnect_confirm") } %>
+  <% elsif @student.telegram_pending_chat_id.present? %>
+    <p class="text-sm text-ink-muted"><%= t("telegram.connection.request", name: @student.telegram_pending_name, id: @student.telegram_pending_chat_id) %></p>
+    <p class="text-sm text-ink-muted"><%= t("telegram.connection.verify_hint") %></p>
+    <div class="flex flex-wrap gap-2">
+      <%= button_to t("telegram.connection.confirm"), student_telegram_connection_path(@student), params: { chat_id: @student.telegram_pending_chat_id }, class: btn_primary %>
+      <%= button_to t("telegram.connection.reject"), student_telegram_connection_path(@student), method: :delete, class: btn_secondary %>
+    </div>
+  <% end %>
+</section>
+
 <h2 class="section-title mb-3"><%= t("students.show.history") %></h2>
 <% if @attempts.any? %>
   <div class="table-wrap">

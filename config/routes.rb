@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   end
 
   resources :students, except: %i[index new create destroy] do
+    resource :telegram_connection, only: %i[create destroy]
     member do
       post :archive
       post :unarchive
@@ -38,6 +39,7 @@ Rails.application.routes.draw do
     end
 
     resources :questions, only: %i[create update destroy]
+    resources :telegram_deliveries, only: :create
     resources :assignments, only: %i[index create] do
       collection do
         get :manage
@@ -69,6 +71,8 @@ Rails.application.routes.draw do
     post "focus_events", to: "focus_events#create", as: :focus_events
     get "done", to: "submissions#show", as: :done
   end
+
+  post "telegram/webhook", to: "telegram_webhooks#create", as: :telegram_webhook
 
   get "up" => "rails/health#show", as: :rails_health_check
 

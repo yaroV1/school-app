@@ -2,18 +2,30 @@
 <tr id="<%= dom_id(assignment) %>">
   <td>
     <% unless assignment.revoked? %>
-      <%= check_box_tag "assignment_ids[]", assignment.id, false, form: "bulk-revoke", class: "size-4 accent-accent" %>
+      <%= check_box_tag "assignment_ids[]", assignment.id, false, form: "bulk-revoke", class: "size-4 accent-accent", aria: { label: t("telegram.delivery.select_student", name: assignment.student.name) } %>
     <% end %>
   </td>
   <td class="font-medium"><%= assignment.student.name %></td>
   <td>
-    <div class="flex items-center gap-2">
-      <code class="max-w-xs truncate rounded bg-surface-sunken px-1.5 py-0.5 text-xs text-ink-muted"><%= url %></code>
+    <div class="flex flex-col items-start gap-2">
+      <code class="max-w-44 truncate rounded bg-surface-sunken px-1.5 py-0.5 text-xs text-ink-muted"><%= url %></code>
       <button type="button" data-controller="clipboard" data-clipboard-text-value="<%= url %>" data-clipboard-copied-value="<%= t("common.copied") %>" data-action="clipboard#copy" class="<%= btn_secondary %> btn-sm"><%= ui_icon("copy", class_name: "size-4") %><span data-clipboard-target="label"><%= t("common.copy") %></span></button>
     </div>
   </td>
   <td><% if assignment.revoked? %><span class="badge badge-danger"><%= t("statuses.revoked") %></span><% else %><span class="badge badge-success"><%= t("statuses.active") %></span><% end %></td>
   <td class="num"><%= assignment.attempts_used %>/<%= exam.max_attempts %></td>
+  <td>
+    <% if assignment.student.telegram_chat_id.blank? %>
+      <span class="text-sm text-ink-muted"><%= t("telegram.connection.#{assignment.student.telegram_connection_status}") %></span>
+    <% else %>
+      <span class="badge <%= assignment.telegram_status == 'failed' ? 'badge-danger' : 'badge-neutral' %>"><%= t("telegram.delivery.status.#{assignment.telegram_status}") %></span>
+      <% if assignment.telegram_sent_at.present? %><p class="mt-1 text-xs text-ink-muted"><%= l(assignment.telegram_sent_at, format: :short) %></p><% end %>
+      <% if assignment.telegram_error.present? %><p class="mt-1 text-xs text-ink-muted"><%= t("telegram.errors.#{assignment.telegram_error}") %></p><% end %>
+      <% if TelegramBot.configured? && exam.published? && !assignment.revoked? && !assignment.student.archived? %>
+        <%= button_to t(assignment.telegram_status == "unsent" ? "telegram.delivery.send" : "telegram.delivery.resend"), test_telegram_deliveries_path(exam), params: { assignment_ids: [assignment.id] }, class: "#{btn_secondary} btn-sm mt-2", disabled: assignment.telegram_delivery_pending?, data: { turbo_confirm: t("telegram.delivery.confirm") } %>
+      <% end %>
+    <% end %>
+  </td>
   <td class="text-right">
     <div class="flex flex-wrap justify-end gap-2">
       <% unless assignment.revoked? %>
