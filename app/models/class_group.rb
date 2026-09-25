@@ -5,6 +5,8 @@ class ClassGroup < ApplicationRecord
   has_many :subjects, dependent: :restrict_with_error, inverse_of: :class_group
   has_many :exams, through: :subjects
 
+  has_secure_token :telegram_join_token
+
   validates :name, presence: true
 
   def add_student!(student)

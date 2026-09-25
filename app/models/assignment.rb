@@ -28,7 +28,13 @@ class Assignment < ApplicationRecord
   end
 
   def regenerate_token!
-    update!(access_token: TokenGenerator.call, revoked_at: nil)
+    update!(access_token: TokenGenerator.call, revoked_at: nil,
+      telegram_status: "unsent", telegram_request_id: nil, telegram_chat_id: nil,
+      telegram_token_digest: nil, telegram_requested_at: nil, telegram_sent_at: nil, telegram_error: nil)
+  end
+
+  def telegram_delivery_pending?
+    %w[queued sending].include?(telegram_status) && telegram_requested_at > 5.minutes.ago
   end
 
   def access_url(base_url:)

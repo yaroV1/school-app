@@ -36,7 +36,18 @@
   <h2 class="section-title mb-3"><%= t("exams.assign.access_links") %></h2>
 
   <% if @assignments.any? %>
-    <%= form_with url: bulk_revoke_test_assignments_path(@exam), method: :post, id: "bulk-revoke", class: "mb-3" do %>
+    <% telegram_available = TelegramBot.configured? && @exam.published? %>
+    <p class="mb-3 text-sm text-ink-muted"><%= t(telegram_available ? "telegram.delivery.hint" : "telegram.delivery.unavailable") %></p>
+    <% if telegram_available %>
+      <div class="mb-3 flex flex-wrap items-center gap-3">
+        <%= button_to t("telegram.delivery.send_all"), test_telegram_deliveries_path(@exam), params: { send_all: "1" }, class: btn_primary, data: { turbo_confirm: t("telegram.delivery.confirm") } %>
+        <%= link_to t("telegram.delivery.refresh"), manage_test_assignments_path(@exam), class: "link text-sm" %>
+      </div>
+    <% end %>
+    <%= form_with url: bulk_revoke_test_assignments_path(@exam), method: :post, authenticity_token: form_authenticity_token, id: "bulk-revoke", class: "mb-3 flex flex-wrap gap-2" do %>
+      <% if telegram_available %>
+        <%= button_tag t("telegram.delivery.send_selected"), formaction: test_telegram_deliveries_path(@exam), class: btn_secondary, data: { turbo_confirm: t("telegram.delivery.confirm") } %>
+      <% end %>
       <%= button_tag safe_join([ ui_icon("ban"), t("exams.assign.revoke_selected") ]), class: btn_danger, data: { turbo_confirm: t("exams.assign.revoke_confirm") } %>
     <% end %>
     <div class="table-wrap">
@@ -48,6 +59,7 @@
             <th><%= t("exams.assign.link") %></th>
             <th><%= t("exams.assign.status") %></th>
             <th><%= t("exams.assign.attempts") %></th>
+            <th><%= t("telegram.title") %></th>
             <th></th>
           </tr>
         </thead>

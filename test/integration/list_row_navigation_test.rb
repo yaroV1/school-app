@@ -42,6 +42,7 @@ class ListRowNavigationTest < ActionDispatch::IntegrationTest
   end
 
   test "a student row keeps the actions that are not the row's destination" do
+    @student.update!(telegram_pending_chat_id: 123, telegram_pending_name: "Ada")
     get students_class_group_path(@group)
 
     assert_row_opens_once student_path(@student)
