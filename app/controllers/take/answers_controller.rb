@@ -1,5 +1,7 @@
 module Take
   class AnswersController < BaseController
+    before_action :require_device
+
     def upsert
       attempt = @assignment.attempts.find(params.require(:attempt_id))
       AttemptLifecycle.autosave!(attempt, normalize_answers(params[:answers]))
@@ -21,6 +23,10 @@ module Take
     end
 
     private
+
+    def reject_other_device
+      render json: { error: t("take.errors.other_device") }, status: :forbidden
+    end
 
     def normalize_answers(raw)
       case raw

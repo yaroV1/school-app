@@ -25,4 +25,29 @@ class AssignmentTest < ActiveSupport::TestCase
       assert_equal in_progress.id, loaded.latest_attempt.id
     end
   end
+
+  test "the first device to claim a link keeps it" do
+    assert @assignment.claim_device("first")
+    assert @assignment.reload.claim_device("first")
+    assert_not @assignment.claim_device("second")
+
+    assert_not @assignment.held_by_other_device?("first")
+    assert @assignment.held_by_other_device?("second")
+  end
+
+  test "a device that loaded the link before another claimed it loses the claim" do
+    stale = Assignment.find(@assignment.id)
+
+    assert @assignment.claim_device("first")
+    assert_not stale.claim_device("second")
+    assert_equal Digest::SHA256.hexdigest("first"), @assignment.reload.device_digest
+  end
+
+  test "regenerating the link frees it" do
+    @assignment.claim_device("first")
+
+    @assignment.reload.regenerate_token!
+    assert_nil @assignment.device_digest
+    assert @assignment.claim_device("second")
+  end
 end

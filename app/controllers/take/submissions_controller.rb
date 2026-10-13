@@ -1,5 +1,7 @@
 module Take
   class SubmissionsController < BaseController
+    before_action :require_device, only: :create
+
     def create
       attempt = @assignment.attempts.find(params.require(:attempt_id))
       AttemptLifecycle.submit!(attempt, answers: submitted_answers)
