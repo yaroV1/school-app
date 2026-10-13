@@ -7,6 +7,7 @@ module Take
       @can_start = @assignment.can_start?
       @attempts_used = @assignment.attempts_used
       @availability = @exam.availability_status
+      @other_device = @assignment.held_by_other_device?(device_key)
     end
 
     private

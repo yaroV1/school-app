@@ -26,6 +26,8 @@
 
   <% if @assignment.revoked? %>
     <p class="flash flash-alert"><%= t("take.errors.link_revoked") %></p>
+  <% elsif @other_device %>
+    <p class="flash flash-alert"><%= t("take.errors.other_device") %></p>
   <% elsif @active_attempt %>
     <%= button_to safe_join([ ui_icon("play"), t("take.resume") ]), student_start_path(token: @assignment.access_token), class: "btn btn-primary btn-lg w-full" %>
   <% elsif @can_start %>

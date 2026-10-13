@@ -1,5 +1,7 @@
 module Take
   class RunsController < BaseController
+    before_action :require_device
+
     def create
       @attempt = AttemptLifecycle.start!(@assignment)
       redirect_to student_run_path(token: @assignment.access_token)

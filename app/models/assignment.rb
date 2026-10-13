@@ -28,9 +28,21 @@ class Assignment < ApplicationRecord
   end
 
   def regenerate_token!
-    update!(access_token: TokenGenerator.call, revoked_at: nil,
+    update!(access_token: TokenGenerator.call, revoked_at: nil, device_digest: nil,
       telegram_status: "unsent", telegram_request_id: nil, telegram_chat_id: nil,
       telegram_token_digest: nil, telegram_requested_at: nil, telegram_sent_at: nil, telegram_error: nil)
+  end
+
+  def held_by_other_device?(device_key)
+    device_digest.present? && device_digest != Digest::SHA256.hexdigest(device_key)
+  end
+
+  def claim_device(device_key)
+    digest = Digest::SHA256.hexdigest(device_key)
+    return device_digest == digest if device_digest.present?
+
+    Assignment.where(id: id, device_digest: nil).update_all(device_digest: digest)
+    Assignment.where(id: id).pick(:device_digest) == digest
   end
 
   def telegram_delivery_pending?
