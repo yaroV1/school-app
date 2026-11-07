@@ -104,6 +104,15 @@ module ApplicationHelper
       max: exam.max_attempts)
   end
 
+  # Only the student's typed answers. Closed questions and the teacher's grade
+  # form never receive these actions, so the paste ban cannot spread to them.
+  def paste_guard_data
+    {
+      controller: "paste-guard",
+      action: "paste->paste-guard#block drop->paste-guard#block dragover->paste-guard#block beforeinput->paste-guard#blockInsert"
+    }
+  end
+
   # A browser tab shows the start of the title and cuts the end. The record a
   # person would look for comes first, the section of that record after it, and
   # the app name last; a page with no record is just its heading.

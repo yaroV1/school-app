@@ -177,7 +177,8 @@
         <%= text_field_tag "answers[#{question.id}][text]", answer&.text_response,
               maxlength: 300,
               placeholder: t("take.placeholder.short_text"),
-              class: "#{field_class} mt-0" %>
+              class: "#{field_class} mt-0",
+              data: paste_guard_data %>
       <% elsif question.source? %>
         <div class="mb-3">
           <p class="mb-1.5 text-xs font-medium text-ink-muted"><%= t("take.source.label") %></p>
@@ -187,12 +188,14 @@
         <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response,
               rows: 8,
               placeholder: t("take.placeholder.source"),
-              class: "#{field_class} mt-0 min-h-40" %>
+              class: "#{field_class} mt-0 min-h-40",
+              data: paste_guard_data %>
       <% else %>
         <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response,
               rows: 8,
               placeholder: t("take.placeholder.open"),
-              class: "#{field_class} mt-0 min-h-40" %>
+              class: "#{field_class} mt-0 min-h-40",
+              data: paste_guard_data %>
       <% end %>
     </fieldset>
   <% end %>
