@@ -332,7 +332,11 @@
   }
 
   .list-row {
-    @apply relative flex flex-wrap items-center justify-between gap-3 py-5 transition-colors hover:bg-surface-sunken;
+    /* The wash is wider than the type, so a title does not sit on the edge of
+       the highlight. The matching negative margin puts that gutter back: a
+       resting row still lines up with the heading above it, and main's px-4
+       still covers the overhang. */
+    @apply relative -mx-3 flex flex-wrap items-center justify-between gap-3 px-3 py-5 transition-colors hover:bg-surface-sunken;
   }
 
   /* Hey-weight rows: the title is the row, so it carries real weight and the
