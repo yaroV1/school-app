@@ -47,18 +47,14 @@ class Scoring
   end
 
   def self.ready_to_finalize?(attempt)
-    questions = attempt.exam.questions
+    unscored_question_ids(attempt).empty?
+  end
+
+  def self.unscored_question_ids(attempt)
     answers_by_qid = attempt.answers.reload.index_by(&:question_id)
 
-    questions.all? do |question|
-      answer = answers_by_qid[question.id]
-      next false unless answer
-
-      if question.auto_gradable?
-        answer.auto_score.present? || answer.teacher_score.present?
-      else
-        answer.teacher_score.present?
-      end
+    attempt.exam.questions.filter_map do |question|
+      question.id unless score_present_for_finalize?(question, answers_by_qid[question.id])
     end
   end
 
@@ -77,4 +73,15 @@ class Scoring
   def self.partial_total(attempt)
     attempt.answers.reload.sum { |a| a.effective_score.to_d }
   end
+
+  def self.score_present_for_finalize?(question, answer)
+    return false unless answer
+
+    if question.auto_gradable?
+      answer.auto_score.present? || answer.teacher_score.present?
+    else
+      answer.teacher_score.present?
+    end
+  end
+  private_class_method :score_present_for_finalize?
 end

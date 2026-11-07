@@ -293,6 +293,12 @@
       placeholder:text-ink-muted hover:border-ink-subtle focus:border-accent;
   }
 
+  /* Turbo scrolls the anchored field to the top of the viewport, under the
+     sticky header. The margin keeps the label and the box itself in view. */
+  .field.field-invalid {
+    @apply scroll-mt-24 border-danger-line bg-danger-soft hover:border-danger-line focus:border-danger;
+  }
+
   .field-hint {
     @apply mt-1.5 text-sm text-ink-muted;
   }

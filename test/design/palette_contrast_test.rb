@@ -47,6 +47,7 @@ class PaletteContrastTest < ActiveSupport::TestCase
     [ "success", "success-soft", AA_TEXT, ".flash-notice, .btn.is-copied" ],
     [ "success", "surface-raised", AA_TEXT, ".autosave-status[data-state=saved]" ],
     [ "danger", "danger-soft", AA_TEXT, ".badge-danger, .flash-alert, .field-error" ],
+    [ "ink", "danger-soft", AA_TEXT, ".field.field-invalid" ],
     [ "danger", "surface-raised", AA_TEXT, ".btn-danger, .countdown-cell[data-urgency=urgent]" ],
     [ "warning", "warning-soft", AA_TEXT, ".badge-warning, .flash-warning" ],
     [ "warning", "surface-raised", AA_TEXT, "a warning badge lifted onto a card" ],

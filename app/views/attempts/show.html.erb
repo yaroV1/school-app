@@ -22,9 +22,11 @@
   <% end %>
 </div>
 
+<% unscored_question_ids = Array(flash[:unscored_question_ids]).map(&:to_i) %>
 <%= form_with url: attempt_path(@attempt), method: :patch, class: "space-y-4" do %>
   <% @questions.each_with_index do |question, index| %>
     <% answer = @answers[question.id] %>
+    <% missing_score = unscored_question_ids.include?(question.id) %>
     <div class="card card-pad">
       <div class="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
         <span class="num font-semibold">№<%= index + 1 %></span>
@@ -49,9 +51,16 @@
           <%# Only the teacher's own override. Prefilling the auto score copied a
               value that the live stream then leaves stale, and saving it wrote
               that stale number over a score the student had since improved. %>
-          <%= number_field_tag "answers[][teacher_score]", answer&.teacher_score, min: 0, max: question.points, step: 0.01, class: field_class %>
+          <%= number_field_tag "answers[][teacher_score]", answer&.teacher_score,
+                min: 0, max: question.points, step: 0.01,
+                id: dom_id(question, :teacher_score),
+                class: class_names(field_class, "field-invalid": missing_score),
+                aria: (missing_score ? { invalid: true, describedby: dom_id(question, :score_required) } : {}) %>
           <% if question.auto_gradable? %>
             <p class="field-hint"><%= t("attempts.grade.auto_score_hint") %></p>
+          <% end %>
+          <% if missing_score %>
+            <p class="field-error" id="<%= dom_id(question, :score_required) %>"><%= t("attempts.grade.score_required") %></p>
           <% end %>
         </div>
         <div class="fieldset">
