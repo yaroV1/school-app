@@ -1,4 +1,4 @@
-<% content_for :title, t("classes.edit.title") %>
+<% content_for :title, title_parts(@class_group.name, t("classes.edit.title")) %>
 <div class="mb-6">
   <%= render "shared/breadcrumbs", crumbs: [
         [ t("classes.index.title"), class_groups_path ],

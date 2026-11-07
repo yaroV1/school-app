@@ -1,4 +1,4 @@
-<% content_for :title, @class_group.name %>
+<% content_for :title, title_parts(@class_group.name, t("classes.show.students")) %>
 <%= render "class_groups/header", class_group: @class_group %>
 
 <section class="space-y-4">

@@ -1,4 +1,4 @@
-<% content_for :title, t("attempts.report.title", name: @attempt.student.name) %>
+<% content_for :title, title_parts(@attempt.student.name, t("attempts.show.report"), @exam.title) %>
 <% max_score = @grade&.max_score || @exam.max_score %>
 <% total_score = @grade&.total_score %>
 <% percent = total_score && max_score.to_f.positive? ? (total_score / max_score * 100).round : nil %>

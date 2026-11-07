@@ -1,4 +1,4 @@
-<% content_for :title, t("attempts.grade.title") %>
+<% content_for :title, title_parts(@attempt.student.name, t("exams.results.grade"), @exam.title) %>
 <%# Nothing broadcasts to a finished attempt, so only subscribe while one runs. %>
 <%= turbo_stream_from @attempt, :grade_live if @attempt.in_progress? %>
 <div class="mb-6">

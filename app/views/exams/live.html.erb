@@ -1,4 +1,4 @@
-<% content_for :title, t("exams.live.title", title: @exam.title) %>
+<% content_for :title, title_parts(@exam.title, t("exams.show.live_board")) %>
 <%= turbo_stream_from @exam, :live_board %>
 
 <div data-controller="live-board"

@@ -1,4 +1,4 @@
-<% content_for :title, @subject.name %>
+<% content_for :title, title_parts(@subject.name, t("subjects.show.stats"), @subject.class_group.name) %>
 <%= render "subjects/header", subject: @subject %>
 
 <section>

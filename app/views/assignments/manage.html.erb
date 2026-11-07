@@ -1,4 +1,4 @@
-<% content_for :title, t("exams.assign.title", title: @exam.title) %>
+<% content_for :title, title_parts(@exam.title, t("exams.show.assign")) %>
 <%= render "exams/header", exam: @exam %>
 
 <% unless @exam.published? %>

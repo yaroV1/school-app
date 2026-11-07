@@ -24,7 +24,7 @@ class LiveBoardTest < ActionDispatch::IntegrationTest
   test "live board page loads and frame shows assignments" do
     get live_test_path(@exam)
     assert_response :success
-    assert_match I18n.t("exams.live.title_prefix"), response.body
+    assert_match I18n.t("exams.show.live_board"), response.body
     assert_select "turbo-cable-stream-source"
 
     get live_test_path(@exam), headers: { "Turbo-Frame" => "live_board" }

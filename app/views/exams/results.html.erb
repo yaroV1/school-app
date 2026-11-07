@@ -1,4 +1,4 @@
-<% content_for :title, t("exams.results.title", title: @exam.title) %>
+<% content_for :title, title_parts(@exam.title, t("exams.show.results")) %>
 <%= render "exams/header", exam: @exam %>
 
 <div class="mb-4 flex flex-wrap items-center justify-end gap-3">

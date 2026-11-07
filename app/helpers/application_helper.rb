@@ -104,6 +104,27 @@ module ApplicationHelper
       max: exam.max_attempts)
   end
 
+  # A browser tab shows the start of the title and cuts the end. The record a
+  # person would look for comes first, the section of that record after it, and
+  # the app name last; a page with no record is just its heading.
+  # content_for appends into a safe buffer, and that append is the one escape of
+  # the record name. safe_join keeps the buffer safe: copying it to a plain
+  # string would make the layout escape the entities a second time.
+  def document_title
+    specific = content_for(:title)
+    return t("app_name") if specific.blank?
+
+    safe_join([ specific, t("app_name") ], t("titles.joiner"))
+  end
+
+  # A plain string, because marking it safe would let a name pass through
+  # content_for unescaped and close the title element.
+  def title_parts(*parts)
+    joiner = String.new(t("titles.joiner"))
+    pieces = parts.flatten.filter_map { |part| String.new(part.to_s).strip.presence }
+    String.new(pieces.join(joiner))
+  end
+
   # Ordering stores a full permutation as soon as the first autosave lands, so a
   # saved row counts as started even if the student never reordered.
   def answer_started?(question, answer)
