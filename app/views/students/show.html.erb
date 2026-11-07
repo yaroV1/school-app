@@ -1,5 +1,5 @@
-<% content_for :title, @student.name %>
 <% group = @student.class_groups.first %>
+<% content_for :title, title_parts(@student.name, group&.name) %>
 <div class="mb-6">
   <%= render "shared/breadcrumbs", crumbs: [
         [ t("classes.index.title"), class_groups_path ],

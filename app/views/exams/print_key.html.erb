@@ -1,4 +1,4 @@
-<% content_for :title, t("exams.print_key.title", title: @exam.title) %>
+<% content_for :title, title_parts(@exam.title, t("exams.print_key.heading")) %>
 
 <%# The teacher's copy, and deliberately the opposite of app/views/exams/print.html.erb:
     this file reads correct_option_id, items, pairs, rubric and model_answer on purpose.

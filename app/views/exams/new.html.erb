@@ -1,4 +1,4 @@
-<% content_for :title, t("exams.new.title") %>
+<% content_for :title, title_parts(t("exams.new.title"), @exam.subject.name) %>
 <div class="mb-6">
   <%= render "shared/breadcrumbs", crumbs: [
         [ t("classes.index.title"), class_groups_path ],

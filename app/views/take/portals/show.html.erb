@@ -1,4 +1,4 @@
-<% content_for :title, @exam.title %>
+<% content_for :title, title_parts(@exam.title, @exam.subject.name) %>
 <% content_for :shell_class, "student-shell" %>
 <div class="space-y-5">
   <div>

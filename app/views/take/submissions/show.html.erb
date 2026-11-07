@@ -1,4 +1,4 @@
-<% content_for :title, t("take.done_title") %>
+<% content_for :title, title_parts(@exam.title, t("take.done_title")) %>
 <% content_for :shell_class, "student-shell" %>
 <div class="space-y-6">
   <div class="completion-card mx-auto max-w-md space-y-3 text-center">

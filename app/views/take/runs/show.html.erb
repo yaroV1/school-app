@@ -1,4 +1,4 @@
-<% content_for :title, @exam.title %>
+<% content_for :title, title_parts(@exam.title, @exam.subject.name) %>
 <% server_now = Time.current %>
 
 <div class="mb-5">

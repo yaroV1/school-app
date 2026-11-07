@@ -1,4 +1,4 @@
-<% content_for :title, t("exams.duplicate.title", title: @exam.title) %>
+<% content_for :title, title_parts(@exam.title, t("exams.show.duplicate")) %>
 
 <%# A task screen rather than a section of the test, so it carries breadcrumbs instead of
     "exams/header": that header's tab bar has no entry for this page, and one of its

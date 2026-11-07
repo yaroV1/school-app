@@ -1,5 +1,5 @@
-<% content_for :title, t("students.edit.title") %>
 <% group = @student.class_groups.first %>
+<% content_for :title, title_parts(@student.name, t("students.edit.title")) %>
 <div class="mb-6">
   <%# Same trail as students#show, so editing does not drop a level. %>
   <%= render "shared/breadcrumbs", crumbs: [

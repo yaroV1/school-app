@@ -1,4 +1,4 @@
-<% content_for :title, t("exams.print.title", title: @exam.title) %>
+<% content_for :title, title_parts(@exam.title, t("exams.show.print")) %>
 
 <%# Chrome stays on screen so the teacher keeps the tabs and a way back; the
     print rules strip all of it, so what leaves the printer is the sheet alone. %>

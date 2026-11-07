@@ -1,4 +1,4 @@
-<% content_for :title, @exam.title %>
+<% content_for :title, title_parts(@exam.title, @exam.subject.name) %>
 <%= render "exams/header", exam: @exam %>
 
 <div class="mb-8 space-y-3">

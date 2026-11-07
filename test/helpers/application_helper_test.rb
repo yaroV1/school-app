@@ -84,6 +84,27 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal "", initials(nil)
   end
 
+  test "a tab title leads with the page and ends with the app" do
+    content_for :title, title_parts("7", I18n.t("classes.show.subjects"))
+
+    assert_equal title_parts("7", I18n.t("classes.show.subjects"), I18n.t("app_name")), document_title
+  end
+
+  test "a page with no title is just the app name" do
+    assert_equal I18n.t("app_name"), document_title
+  end
+
+  test "title parts drop blanks and stay unsafe so a name cannot close the title tag" do
+    assert_equal "Ada", title_parts("Ada", nil, "  ")
+    assert_not title_parts("7</title>").html_safe?
+
+    content_for :title, title_parts("7</title>")
+    title = document_title
+
+    assert_predicate title, :html_safe?
+    assert_equal "7&lt;/title&gt; · #{I18n.t("app_name")}", title.to_s
+  end
+
   test "answer_started? follows each question type's payload" do
     assert_not answer_started?(Question.new(question_type: :mcq), nil)
     assert_not answer_started?(Question.new(question_type: :mcq), Answer.new(payload: {}))
