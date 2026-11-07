@@ -46,14 +46,17 @@ class ScoringTest < ActiveSupport::TestCase
   end
 
   test "ready_to_finalize requires teacher scores for open answers" do
+    assert_equal [ @mcq.id, @open.id ], Scoring.unscored_question_ids(@attempt)
+
     @attempt.answers.create!(question: @mcq, payload: { "option_id" => "b" }, auto_score: 2)
     @attempt.answers.create!(question: @open, payload: { "text" => "Because" })
 
     assert_not Scoring.ready_to_finalize?(@attempt)
+    assert_equal [ @open.id ], Scoring.unscored_question_ids(@attempt)
 
-    open_answer = @attempt.answers.find_by!(question: @open)
-    open_answer.update!(teacher_score: 2)
+    @attempt.answers.find_by!(question: @open).update!(teacher_score: 0)
     assert Scoring.ready_to_finalize?(@attempt)
+    assert_empty Scoring.unscored_question_ids(@attempt)
   end
 
   test "total_for prefers teacher_score over auto_score" do

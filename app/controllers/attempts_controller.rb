@@ -30,8 +30,12 @@ class AttemptsController < ApplicationController
     grade.save!
 
     if params[:finalize].present?
-      unless Scoring.ready_to_finalize?(@attempt)
-        return redirect_to attempt_path(@attempt), alert: t("attempts.flash.need_scores")
+      missing_ids = Scoring.unscored_question_ids(@attempt)
+      if missing_ids.any?
+        anchor = helpers.dom_id(Question.new(id: missing_ids.first), :teacher_score)
+        return redirect_to attempt_path(@attempt, anchor: anchor),
+          alert: t("attempts.flash.need_scores"),
+          flash: { unscored_question_ids: missing_ids }
       end
 
       grade.finalize!

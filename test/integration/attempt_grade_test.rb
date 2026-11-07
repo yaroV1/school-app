@@ -63,4 +63,63 @@ class AttemptGradeTest < ActionDispatch::IntegrationTest
     assert_equal I18n.t("attempts.flash.finalized"), flash[:notice]
     assert_equal Credits::PER_TEST, @student.credit_balance
   end
+
+  test "a refused finalize marks the missing teacher score and leaves an auto score alone" do
+    scored = @exam.questions.create!(
+      question_type: :short_text, prompt: "Already scored", points: 1, position: 1, config: {}
+    )
+    mcq = @exam.questions.create!(
+      question_type: :mcq,
+      prompt: "2+2?",
+      points: 1,
+      position: 2,
+      config: {
+        "options" => [
+          { "id" => "a", "text" => "3", "is_correct" => false },
+          { "id" => "b", "text" => "4", "is_correct" => true }
+        ]
+      }
+    )
+    AttemptLifecycle.submit!(@attempt)
+    @attempt.answers.create!(question: mcq, payload: { "option_id" => "b" }, auto_score: 1)
+
+    patch attempt_path(@attempt), params: {
+      answers: [
+        { question_id: scored.id, teacher_score: "1" },
+        { question_id: @question.id, teacher_score: "" },
+        { question_id: mcq.id, teacher_score: "" }
+      ],
+      finalize: "1"
+    }
+
+    assert_redirected_to attempt_path(@attempt, anchor: "teacher_score_question_#{@question.id}")
+    assert_equal I18n.t("attempts.flash.need_scores"), flash[:alert]
+    assert_equal [ @question.id ], flash[:unscored_question_ids]
+
+    follow_redirect!
+    assert_select "input##{dom_id(@question, :teacher_score)}.field-invalid[aria-invalid=true]"
+    assert_select "p##{dom_id(@question, :score_required)}.field-error", text: I18n.t("attempts.grade.score_required")
+    assert_select "input##{dom_id(scored, :teacher_score)}.field-invalid", count: 0
+    assert_select "input##{dom_id(mcq, :teacher_score)}.field-invalid", count: 0
+    assert_select "input.field-invalid", count: 1
+  end
+
+  test "saving without finalizing does not mark empty scores" do
+    AttemptLifecycle.submit!(@attempt)
+
+    patch attempt_path(@attempt), params: {
+      answers: [ { question_id: @question.id, teacher_score: "" } ]
+    }
+
+    assert_redirected_to attempt_path(@attempt)
+    follow_redirect!
+    assert_select "input.field-invalid", count: 0
+    assert_select "p.field-error", count: 0
+  end
+
+  private
+
+  def dom_id(record, prefix)
+    ApplicationController.helpers.dom_id(record, prefix)
+  end
 end

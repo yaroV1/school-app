@@ -459,6 +459,7 @@ uk:
       pair_correct: "(правильно)"
       pair_expected: "(правильно: %{value})"
       teacher_score: "Бал учителя"
+      score_required: "Поставте бал."
       comment: "Коментар"
       overall_comment: "Загальний коментар"
       save: "Зберегти бали"
