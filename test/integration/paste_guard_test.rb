@@ -34,14 +34,18 @@ class PasteGuardTest < ActionDispatch::IntegrationTest
 
     [ @short, @open, @source ].each do |question|
       field = css_select(%([name="answers[#{question.id}][text]"])).sole
+      guard = field.parent
+      notice = guard.at_css("[data-paste-guard-target=notice]")
 
-      assert_equal "paste-guard", field["data-controller"]
-      assert_includes field["data-action"], "paste->paste-guard#block"
-      assert_includes field["data-action"], "drop->paste-guard#block"
+      assert_equal "paste-guard", guard["data-controller"]
+      assert_includes field["data-action"], "paste->paste-guard#refuse"
+      assert_includes field["data-action"], "drop->paste-guard#refuse"
       assert_includes field["data-action"], "dragover->paste-guard#block"
+      assert_equal I18n.t("take.paste_refused"), notice.text.strip
+      assert_includes notice["class"], "hidden"
     end
 
-    assert_select "[data-controller=paste-guard]", 3
+    assert_select "[data-paste-guard-target=notice]", text: I18n.t("take.paste_refused"), count: 3
     assert_select "input[type=radio][data-controller=paste-guard]", count: 0
   end
 
@@ -51,5 +55,6 @@ class PasteGuardTest < ActionDispatch::IntegrationTest
     get attempt_path(@attempt)
     assert_response :success
     assert_select "[data-controller=paste-guard]", count: 0
+    assert_select "[data-paste-guard-target=notice]", count: 0
   end
 end

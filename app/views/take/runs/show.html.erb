@@ -174,28 +174,37 @@
           <% end %>
         </div>
       <% elsif question.short_text? %>
-        <%= text_field_tag "answers[#{question.id}][text]", answer&.text_response,
-              maxlength: 300,
-              placeholder: t("take.placeholder.short_text"),
-              class: "#{field_class} mt-0",
-              data: paste_guard_data %>
+        <div data-controller="paste-guard">
+          <%= text_field_tag "answers[#{question.id}][text]", answer&.text_response,
+                maxlength: 300,
+                placeholder: t("take.placeholder.short_text"),
+                class: "#{field_class} mt-0",
+                data: paste_guard_data %>
+          <p class="field-error mt-2 hidden" data-paste-guard-target="notice" role="status"><%= t("take.paste_refused") %></p>
+        </div>
       <% elsif question.source? %>
         <div class="mb-3">
           <p class="mb-1.5 text-xs font-medium text-ink-muted"><%= t("take.source.label") %></p>
           <div class="source-text max-h-80"><%= question.source_text %></div>
         </div>
         <p class="mb-4 text-lg leading-relaxed font-medium whitespace-pre-wrap text-ink"><%= question.prompt %></p>
-        <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response,
-              rows: 8,
-              placeholder: t("take.placeholder.source"),
-              class: "#{field_class} mt-0 min-h-40",
-              data: paste_guard_data %>
+        <div data-controller="paste-guard">
+          <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response,
+                rows: 8,
+                placeholder: t("take.placeholder.source"),
+                class: "#{field_class} mt-0 min-h-40",
+                data: paste_guard_data %>
+          <p class="field-error mt-2 hidden" data-paste-guard-target="notice" role="status"><%= t("take.paste_refused") %></p>
+        </div>
       <% else %>
-        <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response,
-              rows: 8,
-              placeholder: t("take.placeholder.open"),
-              class: "#{field_class} mt-0 min-h-40",
-              data: paste_guard_data %>
+        <div data-controller="paste-guard">
+          <%= text_area_tag "answers[#{question.id}][text]", answer&.text_response,
+                rows: 8,
+                placeholder: t("take.placeholder.open"),
+                class: "#{field_class} mt-0 min-h-40",
+                data: paste_guard_data %>
+          <p class="field-error mt-2 hidden" data-paste-guard-target="notice" role="status"><%= t("take.paste_refused") %></p>
+        </div>
       <% end %>
     </fieldset>
   <% end %>

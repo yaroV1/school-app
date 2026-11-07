@@ -108,8 +108,7 @@ module ApplicationHelper
   # form never receive these actions, so the paste ban cannot spread to them.
   def paste_guard_data
     {
-      controller: "paste-guard",
-      action: "paste->paste-guard#block drop->paste-guard#block dragover->paste-guard#block beforeinput->paste-guard#blockInsert"
+      action: "paste->paste-guard#refuse drop->paste-guard#refuse dragover->paste-guard#block beforeinput->paste-guard#blockInsert"
     }
   end
 
